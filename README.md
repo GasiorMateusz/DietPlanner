@@ -1,94 +1,145 @@
-# 10x Astro Starter
+# Diet Planner (MVP)
 
-A modern, opinionated starter template for building fast, accessible, and AI-friendly web applications.
+A web application designed to streamline the work of dietitians by automating and accelerating the creation of personalized, 1-day meal plans using AI.
+
+## Table of Contents
+
+- [Project Description](#project-description)
+- [Tech Stack](#tech-stack)
+- [Getting Started Locally](#getting-started-locally)
+  - [Prerequisites](#prerequisites)
+  - [Installation](#installation)
+  - [Available Scripts](#available-scripts)
+- [Project Scope](#project-scope)
+  - [Key Features](#key-features)
+  - [Out of Scope (MVP Boundaries)](#out-of-scope-mvp-boundaries)
+- [Project Status](#project-status)
+- [License](#license)
+
+## Project Description
+
+Diet Planner is a Minimum Viable Product (MVP) web application built to assist dietitians. It automates the initial creation of personalized, 1-day meal plans by integrating with an AI language model (via OpenRouter).
+
+The core workflow is a three-step process:
+
+1. **Form Input**: The dietitian fills out a structured form with patient parameters, caloric goals, macronutrients, and exclusions.
+2. **AI Generation**: The AI generates a 1-day meal plan in a conversational interface, allowing for iterative corrections (e.g., "Change dinner to be dairy-free").
+3. **Manual Edit & Export**: Once accepted, the plan is transferred to a text editor for final manual modifications, saving, and exporting to a .doc file.
+
+This application is intended exclusively for use by professional dietitians.
 
 ## Tech Stack
 
-- [Astro](https://astro.build/) v5.5.5 - Modern web framework for building fast, content-focused websites
-- [React](https://react.dev/) v19.0.0 - UI library for building interactive components
-- [TypeScript](https://www.typescriptlang.org/) v5 - Type-safe JavaScript
-- [Tailwind CSS](https://tailwindcss.com/) v4.0.17 - Utility-first CSS framework
+The project uses the following technologies:
 
-## Prerequisites
+### Frontend
+- **Astro 5**: For fast, performant static site generation with minimal JavaScript.
+- **React 19**: For interactive components (e.g., chat, editor).
+- **TypeScript 5**: For static type checking.
+- **Tailwind 4**: For utility-first CSS styling.
+- **Shadcn/ui**: For the base library of accessible React components.
 
-- Node.js v22.14.0 (as specified in `.nvmrc`)
-- npm (comes with Node.js)
+### Backend
+- **Supabase**: A comprehensive BaaS (Backend-as-a-Service) solution providing:
+  - PostgreSQL Database
+  - User Authentication
+  - SDKs for backend operations
 
-## Getting Started
+### AI
+- **Openrouter.ai**: Provides access to a wide range of AI models (OpenAI, Anthropic, Google, etc.) to power the meal plan generation.
 
-1. Clone the repository:
+### CI/CD & Hosting
+- **Github Actions**: For CI/CD pipelines.
+- **DigitalOcean**: For hosting the application via a Docker image.
 
-```bash
-git clone https://github.com/przeprogramowani/10x-astro-starter.git
-cd 10x-astro-starter
-```
+## Getting Started Locally
 
-2. Install dependencies:
+To set up and run this project on your local machine, follow these steps.
 
-```bash
-npm install
-```
+### Prerequisites
 
-3. Run the development server:
+- **Node.js**: The project requires a specific version of Node.js. It is highly recommended to use nvm (Node Version Manager) to manage your Node versions.
+  - Required version: **22.14.0** (as specified in the `.nvmrc` file)
+- **npm** (comes with Node.js)
 
-```bash
-npm run dev
-```
+### Installation
 
-4. Build for production:
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/your-username/your-repository-name.git
+   cd your-repository-name
+   ```
 
-```bash
-npm run build
-```
+2. **Set the Node.js version:**
+   If you have nvm installed, simply run:
+   ```bash
+   nvm use
+   ```
+   This will automatically read the `.nvmrc` file and switch to the correct Node.js version.
 
-## Available Scripts
+3. **Install dependencies:**
+   ```bash
+   npm install
+   ```
 
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run preview` - Preview production build
-- `npm run lint` - Run ESLint
-- `npm run lint:fix` - Fix ESLint issues
+4. **Set up environment variables:**
+   This project requires API keys and service URLs to function. Create a `.env` file in the root of the project by copying the `.env.example` file (if one exists) or by creating it manually.
 
-## Project Structure
+   Your `.env` file should contain the following keys:
+   ```env
+   # Supabase credentials
+   SUPABASE_URL=your_supabase_project_url
+   SUPABASE_ANON_KEY=your_supabase_anon_key
 
-```md
-.
-├── src/
-│   ├── layouts/    # Astro layouts
-│   ├── pages/      # Astro pages
-│   │   └── api/    # API endpoints
-│   ├── components/ # UI components (Astro & React)
-│   └── assets/     # Static assets
-├── public/         # Public assets
-```
+   # OpenRouter API Key
+   OPENROUTER_API_KEY=your_openrouter_api_key
+   ```
 
-## AI Development Support
+5. **Run the development server:**
+   ```bash
+   npm run dev
+   ```
+   The application will be available at `http://localhost:4321` (or another port if specified by Astro).
 
-This project is configured with AI development tools to enhance the development experience, providing guidelines for:
+### Available Scripts
 
-- Project structure
-- Coding practices
-- Frontend development
-- Styling with Tailwind
-- Accessibility best practices
-- Astro and React guidelines
+The `package.json` file includes the following scripts for development and maintenance:
 
-### Cursor IDE
+- `npm run dev`: Starts the development server with hot-reloading.
+- `npm run build`: Builds the application for production.
+- `npm run preview`: Serves the production build locally for testing.
+- `npm run astro`: Accesses the Astro CLI for various commands.
+- `npm run lint`: Lints the codebase using ESLint.
+- `npm run lint:fix`: Lints the codebase and automatically fixes issues.
+- `npm run format`: Formats the code using Prettier.
 
-The project includes AI rules in `.cursor/rules/` directory that help Cursor IDE understand the project structure and provide better code suggestions.
+## Project Scope
 
-### GitHub Copilot
+### Key Features
 
-AI instructions for GitHub Copilot are available in `.github/copilot-instructions.md`
+- **User Authentication**: Dietitian registration and login (email/password).
+- **Dashboard**: View, search, and delete all saved meal plans.
+- **Meal Plan Creation**:
+  - **Startup Form**: Collects all necessary patient data and dietary guidelines.
+  - **AI Chat**: Generates a plan and allows for iterative conversational corrections.
+  - **Manual Editor**: A structured editor to finalize the plan's details.
+  - **Export**: Export the final meal plan to a .doc file.
 
-### Windsurf
+### Out of Scope (MVP Boundaries)
 
-The `.windsurfrules` file contains AI configuration for Windsurf.
+The following features are not included in this MVP version:
 
-## Contributing
+- Integration with external recipe databases or URL imports.
+- Social features (sharing, commenting, etc.).
+- A dedicated mobile application.
+- Creation or management of multi-day meal plans.
+- A separate "Patient" entity (plans are identified by name).
+- Automatic recalculation of nutrition values after manual edits in the editor.
 
-Please follow the AI guidelines and coding practices defined in the AI configuration files when contributing to this project.
+## Project Status
+
+This project is currently in the **MVP (Minimum Viable Product)** stage. The core functionality is defined, but it is not yet feature-complete and is intended as a baseline for further development.
 
 ## License
 
-MIT
+No license has been specified for this project.
