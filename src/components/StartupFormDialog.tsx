@@ -2,14 +2,7 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 import type { MealPlanStartupData } from "../types";
 import { mealPlanStartupDataSchema } from "../lib/validation/meal-plans.schemas";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "./ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "./ui/dialog";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
@@ -26,11 +19,7 @@ interface StartupFormDialogProps {
  * Modal dialog containing the startup form for creating a new meal plan.
  * Collects patient data, targets, and guidelines before initiating AI generation.
  */
-export function StartupFormDialog({
-  open,
-  onClose,
-  onSubmit,
-}: StartupFormDialogProps) {
+export function StartupFormDialog({ open, onClose, onSubmit }: StartupFormDialogProps) {
   const [formData, setFormData] = useState<Partial<MealPlanStartupData>>({
     patient_age: null,
     patient_weight: null,
@@ -42,15 +31,10 @@ export function StartupFormDialog({
     exclusions_guidelines: null,
   });
 
-  const [errors, setErrors] = useState<
-    Record<string, string | undefined>
-  >({});
+  const [errors, setErrors] = useState<Record<string, string | undefined>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleInputChange = (
-    field: keyof MealPlanStartupData,
-    value: string | number | null
-  ) => {
+  const handleInputChange = (field: keyof MealPlanStartupData, value: string | number | null) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     // Clear error for this field when user starts typing
     if (errors[field]) {
@@ -58,20 +42,14 @@ export function StartupFormDialog({
     }
   };
 
-  const handleNumberInputChange = (
-    field: keyof MealPlanStartupData,
-    value: string
-  ) => {
+  const handleNumberInputChange = (field: keyof MealPlanStartupData, value: string) => {
     const numValue = value === "" ? null : parseFloat(value);
     if (value === "" || (!isNaN(numValue!) && numValue! >= 0)) {
       handleInputChange(field, numValue);
     }
   };
 
-  const handleMacroChange = (
-    macro: "p_perc" | "f_perc" | "c_perc",
-    value: string
-  ) => {
+  const handleMacroChange = (macro: "p_perc" | "f_perc" | "c_perc", value: string) => {
     const numValue = value === "" ? null : parseFloat(value);
     if (value === "" || (!isNaN(numValue!) && numValue! >= 0 && numValue! <= 100)) {
       setFormData((prev) => ({
@@ -101,28 +79,21 @@ export function StartupFormDialog({
       // Prepare data for validation (convert empty strings to null)
       const dataToValidate: Partial<MealPlanStartupData> = {
         patient_age:
-          formData.patient_age === null || formData.patient_age === undefined
-            ? null
-            : Number(formData.patient_age),
+          formData.patient_age === null || formData.patient_age === undefined ? null : Number(formData.patient_age),
         patient_weight:
-          formData.patient_weight === null ||
-          formData.patient_weight === undefined
+          formData.patient_weight === null || formData.patient_weight === undefined
             ? null
             : Number(formData.patient_weight),
         patient_height:
-          formData.patient_height === null ||
-          formData.patient_height === undefined
+          formData.patient_height === null || formData.patient_height === undefined
             ? null
             : Number(formData.patient_height),
         activity_level: formData.activity_level || null,
         target_kcal:
-          formData.target_kcal === null || formData.target_kcal === undefined
-            ? null
-            : Number(formData.target_kcal),
+          formData.target_kcal === null || formData.target_kcal === undefined ? null : Number(formData.target_kcal),
         target_macro_distribution: formData.target_macro_distribution || null,
         meal_names: formData.meal_names?.trim() || null,
-        exclusions_guidelines:
-          formData.exclusions_guidelines?.trim() || null,
+        exclusions_guidelines: formData.exclusions_guidelines?.trim() || null,
       };
 
       // Validate using Zod schema
@@ -186,15 +157,12 @@ export function StartupFormDialog({
         <DialogHeader>
           <DialogTitle>Create New Meal Plan</DialogTitle>
           <DialogDescription>
-            Fill in the patient information and dietary requirements to generate
-            a personalized meal plan.
+            Fill in the patient information and dietary requirements to generate a personalized meal plan.
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {errors._form && (
-            <div className="text-sm text-destructive">{errors._form}</div>
-          )}
+          {errors._form && <div className="text-sm text-destructive">{errors._form}</div>}
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
@@ -208,14 +176,10 @@ export function StartupFormDialog({
                 max="150"
                 placeholder="Age"
                 value={formData.patient_age ?? ""}
-                onChange={(e) =>
-                  handleNumberInputChange("patient_age", e.target.value)
-                }
+                onChange={(e) => handleNumberInputChange("patient_age", e.target.value)}
                 aria-invalid={!!errors.patient_age}
               />
-              {errors.patient_age && (
-                <p className="text-sm text-destructive">{errors.patient_age}</p>
-              )}
+              {errors.patient_age && <p className="text-sm text-destructive">{errors.patient_age}</p>}
             </div>
 
             <div className="space-y-2">
@@ -230,16 +194,10 @@ export function StartupFormDialog({
                 step="0.1"
                 placeholder="Weight"
                 value={formData.patient_weight ?? ""}
-                onChange={(e) =>
-                  handleNumberInputChange("patient_weight", e.target.value)
-                }
+                onChange={(e) => handleNumberInputChange("patient_weight", e.target.value)}
                 aria-invalid={!!errors.patient_weight}
               />
-              {errors.patient_weight && (
-                <p className="text-sm text-destructive">
-                  {errors.patient_weight}
-                </p>
-              )}
+              {errors.patient_weight && <p className="text-sm text-destructive">{errors.patient_weight}</p>}
             </div>
 
             <div className="space-y-2">
@@ -254,16 +212,10 @@ export function StartupFormDialog({
                 step="0.1"
                 placeholder="Height"
                 value={formData.patient_height ?? ""}
-                onChange={(e) =>
-                  handleNumberInputChange("patient_height", e.target.value)
-                }
+                onChange={(e) => handleNumberInputChange("patient_height", e.target.value)}
                 aria-invalid={!!errors.patient_height}
               />
-              {errors.patient_height && (
-                <p className="text-sm text-destructive">
-                  {errors.patient_height}
-                </p>
-              )}
+              {errors.patient_height && <p className="text-sm text-destructive">{errors.patient_height}</p>}
             </div>
           </div>
 
@@ -272,12 +224,7 @@ export function StartupFormDialog({
             <Select
               id="activity_level"
               value={formData.activity_level ?? ""}
-              onChange={(e) =>
-                handleInputChange(
-                  "activity_level",
-                  e.target.value || null
-                )
-              }
+              onChange={(e) => handleInputChange("activity_level", e.target.value || null)}
               aria-invalid={!!errors.activity_level}
             >
               <option value="">Select activity level</option>
@@ -286,9 +233,7 @@ export function StartupFormDialog({
               <option value="moderate">Moderate</option>
               <option value="high">High</option>
             </Select>
-            {errors.activity_level && (
-              <p className="text-sm text-destructive">{errors.activity_level}</p>
-            )}
+            {errors.activity_level && <p className="text-sm text-destructive">{errors.activity_level}</p>}
           </div>
 
           <div className="space-y-2">
@@ -302,14 +247,10 @@ export function StartupFormDialog({
               max="10000"
               placeholder="Target calories"
               value={formData.target_kcal ?? ""}
-              onChange={(e) =>
-                handleNumberInputChange("target_kcal", e.target.value)
-              }
+              onChange={(e) => handleNumberInputChange("target_kcal", e.target.value)}
               aria-invalid={!!errors.target_kcal}
             />
-            {errors.target_kcal && (
-              <p className="text-sm text-destructive">{errors.target_kcal}</p>
-            )}
+            {errors.target_kcal && <p className="text-sm text-destructive">{errors.target_kcal}</p>}
           </div>
 
           <div className="space-y-2">
@@ -325,16 +266,12 @@ export function StartupFormDialog({
                   min="0"
                   max="100"
                   placeholder="%"
-                  value={
-                    formData.target_macro_distribution?.p_perc ?? ""
-                  }
+                  value={formData.target_macro_distribution?.p_perc ?? ""}
                   onChange={(e) => handleMacroChange("p_perc", e.target.value)}
                   aria-invalid={!!errors["target_macro_distribution.p_perc"]}
                 />
                 {errors["target_macro_distribution.p_perc"] && (
-                  <p className="text-xs text-destructive">
-                    {errors["target_macro_distribution.p_perc"]}
-                  </p>
+                  <p className="text-xs text-destructive">{errors["target_macro_distribution.p_perc"]}</p>
                 )}
               </div>
               <div>
@@ -347,16 +284,12 @@ export function StartupFormDialog({
                   min="0"
                   max="100"
                   placeholder="%"
-                  value={
-                    formData.target_macro_distribution?.f_perc ?? ""
-                  }
+                  value={formData.target_macro_distribution?.f_perc ?? ""}
                   onChange={(e) => handleMacroChange("f_perc", e.target.value)}
                   aria-invalid={!!errors["target_macro_distribution.f_perc"]}
                 />
                 {errors["target_macro_distribution.f_perc"] && (
-                  <p className="text-xs text-destructive">
-                    {errors["target_macro_distribution.f_perc"]}
-                  </p>
+                  <p className="text-xs text-destructive">{errors["target_macro_distribution.f_perc"]}</p>
                 )}
               </div>
               <div>
@@ -369,16 +302,12 @@ export function StartupFormDialog({
                   min="0"
                   max="100"
                   placeholder="%"
-                  value={
-                    formData.target_macro_distribution?.c_perc ?? ""
-                  }
+                  value={formData.target_macro_distribution?.c_perc ?? ""}
                   onChange={(e) => handleMacroChange("c_perc", e.target.value)}
                   aria-invalid={!!errors["target_macro_distribution.c_perc"]}
                 />
                 {errors["target_macro_distribution.c_perc"] && (
-                  <p className="text-xs text-destructive">
-                    {errors["target_macro_distribution.c_perc"]}
-                  </p>
+                  <p className="text-xs text-destructive">{errors["target_macro_distribution.c_perc"]}</p>
                 )}
               </div>
             </div>
@@ -392,45 +321,28 @@ export function StartupFormDialog({
               placeholder="e.g., Breakfast, Lunch, Dinner, Snack"
               maxLength={500}
               value={formData.meal_names ?? ""}
-              onChange={(e) =>
-                handleInputChange("meal_names", e.target.value)
-              }
+              onChange={(e) => handleInputChange("meal_names", e.target.value)}
               aria-invalid={!!errors.meal_names}
             />
-            {errors.meal_names && (
-              <p className="text-sm text-destructive">{errors.meal_names}</p>
-            )}
+            {errors.meal_names && <p className="text-sm text-destructive">{errors.meal_names}</p>}
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="exclusions_guidelines">
-              Exclusions / Guidelines
-            </Label>
+            <Label htmlFor="exclusions_guidelines">Exclusions / Guidelines</Label>
             <Textarea
               id="exclusions_guidelines"
               placeholder="Dietary restrictions, allergies, preferences, etc."
               maxLength={2000}
               rows={4}
               value={formData.exclusions_guidelines ?? ""}
-              onChange={(e) =>
-                handleInputChange("exclusions_guidelines", e.target.value)
-              }
+              onChange={(e) => handleInputChange("exclusions_guidelines", e.target.value)}
               aria-invalid={!!errors.exclusions_guidelines}
             />
-            {errors.exclusions_guidelines && (
-              <p className="text-sm text-destructive">
-                {errors.exclusions_guidelines}
-              </p>
-            )}
+            {errors.exclusions_guidelines && <p className="text-sm text-destructive">{errors.exclusions_guidelines}</p>}
           </div>
 
           <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleClose}
-              disabled={isSubmitting}
-            >
+            <Button type="button" variant="outline" onClick={handleClose} disabled={isSubmitting}>
               Cancel
             </Button>
             <Button type="submit" disabled={isSubmitting}>
