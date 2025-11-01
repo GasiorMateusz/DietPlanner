@@ -1,13 +1,15 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "../../db/database.types.ts";
 import type {
-  AssistantChatMessage,
   ChatMessage,
   CreateAiSessionCommand,
   CreateAiSessionResponseDto,
+  SendAiMessageCommand,
+  SendAiMessageResponseDto,
   UserChatMessage,
 } from "../../types.ts";
-import { OpenRouterError, OpenRouterService } from "./openrouter.service.ts";
+import { NotFoundError } from "../../lib/errors.ts";
+import { OpenRouterService } from "./openrouter.service.ts";
 
 /**
  * Formats the meal plan startup data into a system prompt for the AI.
@@ -76,6 +78,60 @@ function formatUserPrompt(command: CreateAiSessionCommand): string {
   );
 
   return parts.join("\n");
+}
+
+/**
+ * Converts message history from database format to OpenRouter API format.
+ * Detects [SYSTEM] prefix in the first user message and converts it to a system role.
+ * @param history - The message history from the database
+ * @returns Messages formatted for OpenRouter API
+ */
+function convertHistoryForOpenRouter(
+  history: ChatMessage[]
+): (
+  | { role: "system"; content: string }
+  | { role: "user"; content: string }
+  | { role: "assistant"; content: string }
+)[] {
+  if (history.length === 0) {
+    return [];
+  }
+
+  const openRouterMessages: (
+    | { role: "system"; content: string }
+    | { role: "user"; content: string }
+    | { role: "assistant"; content: string }
+  )[] = [];
+
+  // Check if the first message is a system message (has [SYSTEM] prefix)
+  const firstMessage = history[0];
+  if (firstMessage.role === "user" && firstMessage.content.startsWith("[SYSTEM] ")) {
+    // Extract system content (remove [SYSTEM] prefix)
+    const systemContent = firstMessage.content.slice(9); // "[SYSTEM] ".length = 9
+    openRouterMessages.push({
+      role: "system",
+      content: systemContent,
+    });
+
+    // Process remaining messages
+    for (let i = 1; i < history.length; i++) {
+      const msg = history[i];
+      openRouterMessages.push({
+        role: msg.role,
+        content: msg.content,
+      });
+    }
+  } else {
+    // No system message, convert all messages as-is
+    for (const msg of history) {
+      openRouterMessages.push({
+        role: msg.role,
+        content: msg.content,
+      });
+    }
+  }
+
+  return openRouterMessages;
 }
 
 /**
@@ -156,6 +212,80 @@ export class AiSessionService {
       session_id: newSessionId,
       message: assistantResponse,
       prompt_count: 1,
+    };
+
+    return responseDto;
+  }
+
+  /**
+   * Sends a follow-up message to an existing AI chat session.
+   * Retrieves the session, appends the user message, calls OpenRouter,
+   * updates the database with the new message history and incremented prompt count.
+   * @param sessionId - The UUID of the existing AI chat session
+   * @param command - The user message to send
+   * @param userId - The authenticated user's ID
+   * @param supabase - The Supabase client instance
+   * @returns The response with session ID, assistant message, and updated prompt count
+   * @throws {NotFoundError} If the session doesn't exist or doesn't belong to the user
+   * @throws {OpenRouterError} If the OpenRouter API call fails
+   * @throws {Error} If the database operation fails
+   */
+  static async sendMessage(
+    sessionId: string,
+    command: SendAiMessageCommand,
+    userId: string,
+    supabase: SupabaseClient<Database>
+  ): Promise<SendAiMessageResponseDto> {
+    // Query session by ID (RLS will enforce user ownership)
+    const { data: session, error: queryError } = await supabase
+      .from("ai_chat_sessions")
+      .select("id, message_history, final_prompt_count")
+      .eq("id", sessionId)
+      .eq("user_id", userId)
+      .single();
+
+    if (queryError || !session) {
+      throw new NotFoundError("Chat session not found");
+    }
+
+    // Extract existing message history
+    const existingHistory: ChatMessage[] = (session.message_history as ChatMessage[]) || [];
+
+    // Append user message to history
+    const updatedHistory: ChatMessage[] = [...existingHistory, command.message];
+
+    // Convert history for OpenRouter (handles [SYSTEM] prefix conversion)
+    const messagesForOpenRouter = convertHistoryForOpenRouter(updatedHistory);
+
+    // Call OpenRouter API
+    const assistantResponse = await OpenRouterService.getChatCompletion(messagesForOpenRouter);
+
+    // Append assistant response to history
+    const finalHistory: ChatMessage[] = [...updatedHistory, assistantResponse];
+
+    // Increment prompt count
+    const newPromptCount = (session.final_prompt_count || 0) + 1;
+
+    // Update database record
+    const { error: updateError } = await supabase
+      .from("ai_chat_sessions")
+      .update({
+        message_history: finalHistory,
+        final_prompt_count: newPromptCount,
+      })
+      .eq("id", sessionId)
+      .eq("user_id", userId);
+
+    if (updateError) {
+      console.error("Database update error:", updateError);
+      throw new Error(`Database operation failed: ${updateError.message}`);
+    }
+
+    // Build and return response DTO
+    const responseDto: SendAiMessageResponseDto = {
+      session_id: sessionId,
+      message: assistantResponse,
+      prompt_count: newPromptCount,
     };
 
     return responseDto;
