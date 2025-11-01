@@ -255,15 +255,14 @@ export default function AIChatInterface() {
       return;
     }
 
-    // Store in state bridge
+    // Store in state bridge using sessionStorage (persists across navigation)
     const bridge: StateBridge = {
       sessionId,
       lastAssistantMessage: lastAssistantMessage.content,
       startupData: startupData || undefined,
     };
 
-    // Use window variable for now (could switch to sessionStorage if preferred)
-    (window as any).mealPlanBridge = bridge;
+    sessionStorage.setItem("mealPlanBridge", JSON.stringify(bridge));
 
     // Navigate to editor
     window.location.href = "/app/editor";

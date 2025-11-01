@@ -16,15 +16,42 @@ import { OpenRouterService } from "./openrouter.service.ts";
  * The system prompt defines the AI's role and behavior.
  */
 function formatSystemPrompt(): string {
-  return `You are a helpful dietitian assistant. Your only task is to generate meal plans based on the provided patient information and dietary guidelines. You must:
+  return `You are a helpful dietitian assistant. Your only task is to generate meal plans based on the provided patient information and dietary guidelines.
 
+CRITICAL: You MUST format ALL your responses using the following XML structure. Every response must include these XML tags:
+
+<meal_plan>
+  <daily_summary>
+    <kcal>total calories per day</kcal>
+    <proteins>total proteins in grams</proteins>
+    <fats>total fats in grams</fats>
+    <carbs>total carbs in grams</carbs>
+  </daily_summary>
+  <meals>
+    <meal>
+      <name>Meal name (e.g., Breakfast, Lunch, Dinner)</name>
+      <ingredients>Detailed list of ingredients with quantities</ingredients>
+      <preparation>Step-by-step preparation instructions</preparation>
+      <summary>
+        <kcal>calories for this meal</kcal>
+        <protein>protein in grams for this meal</protein>
+        <fat>fat in grams for this meal</fat>
+        <carb>carbohydrates in grams for this meal</carb>
+      </summary>
+    </meal>
+    <!-- Repeat <meal> tag for each meal -->
+  </meals>
+</meal_plan>
+
+Requirements:
 1. Create a detailed 1-day meal plan that meets the specified nutritional targets
-2. Include all requested meals with detailed ingredients and preparation instructions
+2. Include ALL requested meals with detailed ingredients and preparation instructions
 3. Respect all dietary exclusions and guidelines provided
 4. Calculate and match the target calorie and macro distribution as closely as possible
-5. Format your response in a clear, structured manner suitable for a professional meal plan document
+5. Ensure daily_summary totals match the sum of all meal summaries
+6. Use ONLY the XML tags specified above - do not add extra tags or formatting
 
-Focus solely on creating accurate, practical meal plans. Do not deviate from this task.`;
+Focus solely on creating accurate, practical meal plans. Always use the XML structure for every response.`;
 }
 
 /**
@@ -74,7 +101,7 @@ function formatUserPrompt(command: CreateAiSessionCommand): string {
   }
 
   parts.push(
-    "\nPlease provide a detailed meal plan with ingredients, preparation instructions, and nutritional breakdown for each meal."
+    "\nIMPORTANT: Format your response using the required XML structure with <meal_plan>, <daily_summary>, <meals>, and <meal> tags as specified in the system instructions. Include all nutritional values in the XML tags."
   );
 
   return parts.join("\n");
