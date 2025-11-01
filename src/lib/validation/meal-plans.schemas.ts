@@ -107,3 +107,9 @@ export const mealPlanIdParamSchema = z.object({
   id: z.string().uuid(),
 });
 
+/**
+ * Schema for validating path parameters for export endpoint.
+ * Alias for consistency across endpoints.
+ */
+export const mealPlanIdPathParamSchema = mealPlanIdParamSchema;
+
