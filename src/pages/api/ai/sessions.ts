@@ -11,7 +11,7 @@ export const prerender = false;
  *
  * Creates a new AI chat session with an initial meal plan generation request.
  *
- * Requires authentication via Supabase JWT token in Authorization header.
+ * TEMPORARILY DISABLED: Authentication is disabled for testing purposes.
  * Validates the request body against CreateAiSessionCommand schema.
  * Calls OpenRouter AI service to generate the initial response.
  * Saves the session to the database for telemetry.
@@ -26,19 +26,37 @@ export const POST: APIRoute = async ({ request, locals }) => {
   try {
     const supabase = locals.supabase;
 
-    // Authenticate the request
-    // Try to get user from session (Supabase client reads from cookies/headers)
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
+    // TEMPORARILY DISABLED: Authentication bypassed for testing
+    // TODO: Re-enable authentication before production
+    // // Authenticate the request
+    // // Try to get user from session (Supabase client reads from cookies/headers)
+    // const {
+    //   data: { user },
+    //   error: authError,
+    // } = await supabase.auth.getUser();
+    //
+    // if (authError || !user) {
+    //   return new Response(JSON.stringify({ error: "Unauthorized" }), {
+    //     status: 401,
+    //     headers: { "Content-Type": "application/json" },
+    //   });
+    // }
 
-    if (authError || !user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { "Content-Type": "application/json" },
-      });
+    // Use test user from database (authentication disabled for testing)
+    const testUserId = "558ff210-94c6-4d54-8cf6-bdd5c345a984";
+    if (!testUserId) {
+      return new Response(
+        JSON.stringify({
+          error: "Test user not found",
+          details: "Authentication is disabled. Please create a test user using: bash testing/create-test-user.sh",
+        }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
     }
+    const user = { id: testUserId };
 
     // Parse request body
     let body: unknown;
