@@ -6,6 +6,7 @@ import { Label } from "./ui/label";
 import { Button } from "./ui/button";
 import { DailySummaryStaticDisplay } from "./DailySummaryStaticDisplay";
 import { MealCard } from "./MealCard";
+import { parseXmlMealPlan } from "../lib/utils/meal-plan-parser";
 import type {
   MealPlanMeal,
   MealPlanContentDailySummary,
@@ -359,111 +360,6 @@ export default function MealPlanEditor({ mealPlanId }: MealPlanEditorProps) {
     return editorState.meals.every((meal) => meal.name.trim() !== "");
   };
 
-  /**
-   * Parses XML tags from AI message to extract daily summary and meals.
-   * Returns both parsed meals and daily summary.
-   */
-  const parseXmlMealPlan = (message: string): { meals: MealPlanMeal[]; dailySummary: MealPlanContentDailySummary } => {
-    // Extract daily_summary from XML
-    const dailySummaryMatch = message.match(/<daily_summary>([\s\S]*?)<\/daily_summary>/);
-    let dailySummary: MealPlanContentDailySummary = {
-      kcal: 0,
-      proteins: 0,
-      fats: 0,
-      carbs: 0,
-    };
-
-    if (dailySummaryMatch) {
-      const summaryContent = dailySummaryMatch[1];
-
-      const extractTag = (tagName: string): number => {
-        const regex = new RegExp(`<${tagName}>([\\s\\S]*?)<\\/${tagName}>`, "i");
-        const match = summaryContent.match(regex);
-        if (match) {
-          const value = parseFloat(match[1].trim());
-          return isNaN(value) ? 0 : Math.round(value);
-        }
-        return 0;
-      };
-
-      dailySummary = {
-        kcal: extractTag("kcal"),
-        proteins: extractTag("proteins"),
-        fats: extractTag("fats"),
-        carbs: extractTag("carbs"),
-      };
-    }
-
-    // Extract all meals from XML
-    const mealsMatch = message.match(/<meals>([\s\S]*?)<\/meals>/);
-    const meals: MealPlanMeal[] = [];
-
-    if (mealsMatch) {
-      const mealsContent = mealsMatch[1];
-
-      // Extract individual meal tags
-      const mealRegex = /<meal>([\s\S]*?)<\/meal>/g;
-      let mealMatch;
-
-      while ((mealMatch = mealRegex.exec(mealsContent)) !== null) {
-        const mealContent = mealMatch[1];
-
-        const extractMealTag = (tagName: string): string => {
-          const regex = new RegExp(`<${tagName}>([\\s\\S]*?)<\\/${tagName}>`, "i");
-          const match = mealContent.match(regex);
-          return match ? match[1].trim() : "";
-        };
-
-        const extractSummaryTag = (tagName: string): number => {
-          const summaryMatch = mealContent.match(/<summary>([\s\S]*?)<\/summary>/i);
-          if (summaryMatch) {
-            const summaryContent = summaryMatch[1];
-            const regex = new RegExp(`<${tagName}>([\\s\\S]*?)<\\/${tagName}>`, "i");
-            const match = summaryContent.match(regex);
-            if (match) {
-              const value = parseFloat(match[1].trim());
-              return isNaN(value) ? 0 : Math.round(value);
-            }
-          }
-          return 0;
-        };
-
-        meals.push({
-          name: extractMealTag("name"),
-          ingredients: extractMealTag("ingredients"),
-          preparation: extractMealTag("preparation"),
-          summary: {
-            kcal: extractSummaryTag("kcal"),
-            p: extractSummaryTag("protein"),
-            f: extractSummaryTag("fat"),
-            c: extractSummaryTag("carb"),
-          },
-        });
-      }
-    }
-
-    // If no meals found in XML, return empty structure
-    if (meals.length === 0) {
-      return {
-        meals: [
-          {
-            name: "",
-            ingredients: "",
-            preparation: message,
-            summary: {
-              kcal: 0,
-              p: 0,
-              f: 0,
-              c: 0,
-            },
-          },
-        ],
-        dailySummary,
-      };
-    }
-
-    return { meals, dailySummary };
-  };
 
   /**
    * Loads meal plan data from sessionStorage bridge (Create Mode).

@@ -1,7 +1,10 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { Alert, AlertDescription } from "./ui/alert";
 import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
+import { DailySummaryStaticDisplay } from "./DailySummaryStaticDisplay";
+import { MealCardReadOnly } from "./MealCardReadOnly";
+import { parseXmlMealPlan, removeXmlTags, extractComments } from "../lib/utils/meal-plan-parser";
 import type {
   ChatMessage,
   AssistantChatMessage,
@@ -278,6 +281,36 @@ export default function AIChatInterface() {
     }
   };
 
+  /**
+   * Extract meal plan from the latest assistant message.
+   * Parses XML tags and returns structured meal plan data.
+   */
+  const currentMealPlan = useMemo(() => {
+    const lastAssistantMessage = chatState.messageHistory
+      .filter((msg): msg is AssistantChatMessage => msg.role === "assistant")
+      .pop();
+
+    if (!lastAssistantMessage) {
+      return null;
+    }
+
+    try {
+      const parsed = parseXmlMealPlan(lastAssistantMessage.content);
+      // Only return if we actually found meals (not the fallback empty structure)
+      if (
+        parsed.meals.length > 0 &&
+        parsed.meals[0].name !== "" &&
+        parsed.meals[0].preparation !== lastAssistantMessage.content
+      ) {
+        return parsed;
+      }
+    } catch (error) {
+      console.error("Failed to parse meal plan:", error);
+    }
+
+    return null;
+  }, [chatState.messageHistory]);
+
   // Render empty state if no messages yet
   if (chatState.messageHistory.length === 0 && !chatState.error) {
     return (
@@ -303,6 +336,30 @@ export default function AIChatInterface() {
         <Alert className="mb-6 border-destructive bg-destructive/10 text-destructive">
           <AlertDescription>{chatState.error}</AlertDescription>
         </Alert>
+      )}
+
+      {/* Current Meal Plan Display - Always visible at the top */}
+      {currentMealPlan && (
+        <div className="mb-6 space-y-4 border rounded-lg p-6 bg-background">
+          <h2 className="text-2xl font-bold">Current Meal Plan</h2>
+
+          {/* Daily Summary */}
+          <DailySummaryStaticDisplay summary={currentMealPlan.dailySummary} />
+
+          {/* Meals List */}
+          <div className="space-y-4">
+            <h3 className="text-xl font-semibold">Meals</h3>
+            {currentMealPlan.meals.length > 0 ? (
+              <div className="space-y-4">
+                {currentMealPlan.meals.map((meal, index) => (
+                  <MealCardReadOnly key={index} meal={meal} mealIndex={index} />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">No meals available yet.</div>
+            )}
+          </div>
+        </div>
       )}
 
       {/* Message History */}
@@ -353,6 +410,7 @@ export default function AIChatInterface() {
 /**
  * Individual message bubble component.
  * Renders either a user or assistant message with appropriate styling.
+ * For assistant messages, removes XML tags to show clean text (preserves comments).
  */
 function MessageItem({ message }: { message: ChatMessage }) {
   if (message.role === "user") {
@@ -365,10 +423,17 @@ function MessageItem({ message }: { message: ChatMessage }) {
     );
   }
 
+  // Extract comments and clean the message
+  const comments = extractComments(message.content);
+  const cleanedContent = removeXmlTags(message.content);
+
+  // Display comments if available, otherwise show cleaned content or fallback message
+  const displayText = comments || cleanedContent || "Meal plan updated above.";
+
   return (
     <div className="flex justify-start">
       <div className="max-w-[80%] rounded-lg bg-muted px-4 py-2">
-        <p className="whitespace-pre-wrap break-words">{message.content}</p>
+        <p className="whitespace-pre-wrap break-words">{displayText}</p>
       </div>
     </div>
   );

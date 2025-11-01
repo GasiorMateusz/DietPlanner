@@ -43,6 +43,10 @@ CRITICAL: You MUST format ALL your responses using the following XML structure. 
   </meals>
 </meal_plan>
 
+<comments>
+Optional: Any additional comments, explanations, or notes that are not part of the meal plan itself. Use this tag for general conversation, clarifications, or additional information you want to share with the user. This content will be displayed in the chat conversation separately from the meal plan.
+</comments>
+
 Requirements:
 1. Create a detailed 1-day meal plan that meets the specified nutritional targets
 2. Include ALL requested meals with detailed ingredients and preparation instructions
@@ -50,6 +54,7 @@ Requirements:
 4. Calculate and match the target calorie and macro distribution as closely as possible
 5. Ensure daily_summary totals match the sum of all meal summaries
 6. Use ONLY the XML tags specified above - do not add extra tags or formatting
+7. Use the <comments> tag for any general conversation or explanations that should be shown in chat but are not part of the meal plan structure
 
 Focus solely on creating accurate, practical meal plans. Always use the XML structure for every response.`;
 }
