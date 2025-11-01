@@ -97,23 +97,26 @@ export default function DashboardView() {
     setDeleteError(null);
 
     try {
-      const token = await getAuthToken();
-      if (!token) {
-        window.location.href = "/login";
-        return;
-      }
+      // TEMPORARY: Authentication disabled - API no longer requires auth
+      // const token = await getAuthToken();
+      // if (!token) {
+      //   window.location.href = "/login";
+      //   return;
+      // }
 
       const response = await fetch(`/api/meal-plans/${id}`, {
         method: "DELETE",
         headers: {
-          Authorization: `Bearer ${token}`,
+          // TEMPORARY: No auth header needed
+          // Authorization: `Bearer ${token}`,
         },
       });
 
-      if (response.status === 401) {
-        window.location.href = "/login";
-        return;
-      }
+      // TEMPORARY: No auth check needed
+      // if (response.status === 401) {
+      //   window.location.href = "/login";
+      //   return;
+      // }
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({

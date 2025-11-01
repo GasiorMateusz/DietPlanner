@@ -28,24 +28,27 @@ export const GET: APIRoute = async ({ request, locals }) => {
   try {
     const supabase = locals.supabase;
 
-    // Authenticate the request
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
+    // TEMPORARY: Authentication disabled
+    // const {
+    //   data: { user },
+    //   error: authError,
+    // } = await supabase.auth.getUser();
 
-    if (authError || !user) {
-      return new Response(
-        JSON.stringify({
-          error: 'Unauthorized',
-          details: 'Authentication required',
-        }),
-        {
-          status: 401,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      );
-    }
+    // if (authError || !user) {
+    //   return new Response(
+    //     JSON.stringify({
+    //       error: 'Unauthorized',
+    //       details: 'Authentication required',
+    //     }),
+    //     {
+    //       status: 401,
+    //       headers: { 'Content-Type': 'application/json' },
+    //     }
+    //   );
+    // }
+
+    // TEMPORARY: Use hardcoded user ID
+    const placeholderUserId = '558ff210-94c6-4d54-8cf6-bdd5c345a984';
 
     // Parse and validate query parameters
     const url = new URL(request.url);
@@ -71,7 +74,7 @@ export const GET: APIRoute = async ({ request, locals }) => {
 
     // Call service to list meal plans
     const mealPlans = await MealPlanService.listMealPlans(
-      user.id,
+      placeholderUserId,
       validation.data,
       supabase
     );
@@ -145,24 +148,27 @@ export const POST: APIRoute = async ({ request, locals }) => {
   try {
     const supabase = locals.supabase;
 
-    // Authenticate the request
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
+    // TEMPORARY: Authentication disabled
+    // const {
+    //   data: { user },
+    //   error: authError,
+    // } = await supabase.auth.getUser();
 
-    if (authError || !user) {
-      return new Response(
-        JSON.stringify({
-          error: 'Unauthorized',
-          details: 'Authentication required',
-        }),
-        {
-          status: 401,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      );
-    }
+    // if (authError || !user) {
+    //   return new Response(
+    //     JSON.stringify({
+    //       error: 'Unauthorized',
+    //       details: 'Authentication required',
+    //     }),
+    //     {
+    //       status: 401,
+    //       headers: { 'Content-Type': 'application/json' },
+    //     }
+    //   );
+    // }
+
+    // TEMPORARY: Use hardcoded user ID
+    const placeholderUserId = '558ff210-94c6-4d54-8cf6-bdd5c345a984';
 
     // Parse request body
     let body: unknown;
@@ -199,7 +205,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
     // Call service to create meal plan
     const mealPlan = await MealPlanService.createMealPlan(
       validation.data as CreateMealPlanCommand,
-      user.id,
+      placeholderUserId,
       supabase
     );
 
