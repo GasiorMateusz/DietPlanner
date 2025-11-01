@@ -46,7 +46,7 @@ const mealPlanContentSchema = z.object({
 /**
  * Schema for validating the startup_data object in CreateMealPlanCommand.
  */
-const mealPlanStartupDataSchema = z.object({
+export const mealPlanStartupDataSchema = z.object({
   patient_age: z.number().int().positive().max(150).nullable().optional(),
   patient_weight: z.number().positive().max(1000).nullable().optional(),
   patient_height: z.number().positive().max(300).nullable().optional(),
