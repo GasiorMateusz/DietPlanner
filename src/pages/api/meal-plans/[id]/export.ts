@@ -3,6 +3,7 @@ import { DatabaseError, NotFoundError } from "../../../../lib/errors.ts";
 import { MealPlanService } from "../../../../lib/meal-plans/meal-plan.service.ts";
 import { DocumentGeneratorService } from "../../../../lib/meal-plans/doc-generator.service.ts";
 import { mealPlanIdPathParamSchema } from "../../../../lib/validation/meal-plans.schemas.ts";
+import { getUserFromRequest } from "@/lib/auth/session.service.js";
 
 export const prerender = false;
 
@@ -21,31 +22,11 @@ export const prerender = false;
  * @returns 404 Not Found if meal plan doesn't exist or doesn't belong to user
  * @returns 500 Internal Server Error for database failures or document generation failures
  */
-export const GET: APIRoute = async ({ params, locals }) => {
+export const GET: APIRoute = async (context) => {
   try {
+    const { params, locals } = context;
     const supabase = locals.supabase;
-
-    // TEMPORARY: Authentication disabled
-    // const {
-    //   data: { user },
-    //   error: authError,
-    // } = await supabase.auth.getUser();
-
-    // if (authError || !user) {
-    //   return new Response(
-    //     JSON.stringify({
-    //       error: 'Unauthorized',
-    //       details: 'Authentication required',
-    //     }),
-    //     {
-    //       status: 401,
-    //       headers: { 'Content-Type': 'application/json' },
-    //     }
-    //   );
-    // }
-
-    // TEMPORARY: Use hardcoded user ID
-    const placeholderUserId = "558ff210-94c6-4d54-8cf6-bdd5c345a984";
+    const user = await getUserFromRequest(context);
 
     // Validate path parameters
     const paramValidation = mealPlanIdPathParamSchema.safeParse(params);
@@ -63,7 +44,11 @@ export const GET: APIRoute = async ({ params, locals }) => {
     }
 
     // Fetch meal plan from database
-    const mealPlan = await MealPlanService.getMealPlanById(paramValidation.data.id, placeholderUserId, supabase);
+    const mealPlan = await MealPlanService.getMealPlanById(
+      paramValidation.data.id,
+      user.id,
+      supabase,
+    );
 
     // Generate Word document
     const docBuffer = await DocumentGeneratorService.generateDoc(mealPlan);

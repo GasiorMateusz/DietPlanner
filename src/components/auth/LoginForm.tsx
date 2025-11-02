@@ -1,4 +1,5 @@
 import React from "react";
+import { navigate } from "astro:transitions/client";
 import { z } from "zod";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -6,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
 import { loginSchema, type LoginInput } from "@/lib/validation/auth.schemas";
+import { supabaseClient as supabase } from "@/db/supabase.client";
 
 type Props = {
   className?: string;
@@ -15,7 +17,7 @@ export default function LoginForm({ className }: Props) {
   const [values, setValues] = React.useState<LoginInput>({ email: "", password: "" });
   const [errors, setErrors] = React.useState<Partial<Record<keyof LoginInput, string>>>({});
   const [formError, setFormError] = React.useState<string | null>(null);
-  const [success, setSuccess] = React.useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
   const emailId = React.useId();
   const passwordId = React.useId();
 
@@ -43,10 +45,21 @@ export default function LoginForm({ className }: Props) {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setFormError(null);
-    setSuccess(null);
     if (!validate(values)) return;
-    // Backend integration will be implemented later. For now, show a placeholder.
-    setSuccess("Form is valid. Implement login logic next.");
+
+    setIsSubmitting(true);
+    const { error } = await supabase.auth.signInWithPassword({
+      email: values.email,
+      password: values.password,
+    });
+    setIsSubmitting(false);
+
+    if (error) {
+      setFormError("Invalid email or password.");
+      return;
+    }
+
+    navigate("/app/dashboard");
   }
 
   return (
@@ -55,12 +68,6 @@ export default function LoginForm({ className }: Props) {
         <Alert className="border-destructive/30 text-destructive">
           <AlertTitle>Unable to log in</AlertTitle>
           <AlertDescription>{formError}</AlertDescription>
-        </Alert>
-      ) : null}
-      {success ? (
-        <Alert className="border-green-600/30 text-green-700 dark:text-green-400">
-          <AlertTitle>Success</AlertTitle>
-          <AlertDescription>{success}</AlertDescription>
         </Alert>
       ) : null}
 
@@ -104,7 +111,7 @@ export default function LoginForm({ className }: Props) {
         ) : null}
       </div>
 
-      <Button type="submit" className="w-full">
+      <Button type="submit" className="w-full" disabled={isSubmitting}>
         Log in
       </Button>
 

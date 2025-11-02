@@ -3,6 +3,7 @@ import { createAiSessionSchema } from "../../../lib/validation/ai.schemas.ts";
 import { AiSessionService } from "../../../lib/ai/session.service.ts";
 import { OpenRouterError } from "../../../lib/ai/openrouter.service.ts";
 import type { CreateAiSessionCommand } from "../../../types.ts";
+import { getUserFromRequest } from "@/lib/auth/session.service.js";
 
 export const prerender = false;
 
@@ -22,41 +23,11 @@ export const prerender = false;
  * @returns 500 Internal Server Error for database failures
  * @returns 502 Bad Gateway for OpenRouter API failures
  */
-export const POST: APIRoute = async ({ request, locals }) => {
+export const POST: APIRoute = async (context) => {
   try {
+    const { request, locals } = context;
     const supabase = locals.supabase;
-
-    // TEMPORARILY DISABLED: Authentication bypassed for testing
-    // TODO: Re-enable authentication before production
-    // // Authenticate the request
-    // // Try to get user from session (Supabase client reads from cookies/headers)
-    // const {
-    //   data: { user },
-    //   error: authError,
-    // } = await supabase.auth.getUser();
-    //
-    // if (authError || !user) {
-    //   return new Response(JSON.stringify({ error: "Unauthorized" }), {
-    //     status: 401,
-    //     headers: { "Content-Type": "application/json" },
-    //   });
-    // }
-
-    // Use test user from database (authentication disabled for testing)
-    const testUserId = "558ff210-94c6-4d54-8cf6-bdd5c345a984";
-    if (!testUserId) {
-      return new Response(
-        JSON.stringify({
-          error: "Test user not found",
-          details: "Authentication is disabled. Please create a test user using: bash testing/create-test-user.sh",
-        }),
-        {
-          status: 500,
-          headers: { "Content-Type": "application/json" },
-        }
-      );
-    }
-    const user = { id: testUserId };
+    const user = await getUserFromRequest(context);
 
     // Parse request body
     let body: unknown;

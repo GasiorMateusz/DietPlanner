@@ -38,12 +38,11 @@ export function useMealPlansList(): UseMealPlansListReturn {
       setError(null);
 
       try {
-        // TEMPORARY: Authentication disabled - API no longer requires auth
-        // const token = await getAuthToken();
-        // if (!token) {
-        //   window.location.href = "/login";
-        //   return;
-        // }
+        const token = await getAuthToken();
+        if (!token) {
+          window.location.href = "/auth/login";
+          return;
+        }
 
         const params = new URLSearchParams();
         if (search && search.trim()) {
@@ -54,23 +53,21 @@ export function useMealPlansList(): UseMealPlansListReturn {
 
         const response = await fetch(`/api/meal-plans?${params.toString()}`, {
           headers: {
-            // TEMPORARY: No auth header needed
-            // Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
         });
 
-        // TEMPORARY: No auth check needed
-        // if (response.status === 401) {
-        //   window.location.href = "/login";
-        //   return;
-        // }
+        if (response.status === 401) {
+          window.location.href = "/auth/login";
+          return;
+        }
 
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({
-            error: "Failed to fetch meal plans",
+            error: "An internal error occurred",
           }));
-          throw new Error(errorData.error || "Failed to fetch meal plans");
+          throw new Error(errorData.error || "An internal error occurred");
         }
 
         const data: GetMealPlansResponseDto = await response.json();

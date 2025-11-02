@@ -4,6 +4,7 @@ import { NotFoundError } from "../../../../../lib/errors.ts";
 import { OpenRouterError } from "../../../../../lib/ai/openrouter.service.ts";
 import { sendAiMessageSchema } from "../../../../../lib/validation/ai.schemas.ts";
 import type { SendAiMessageCommand } from "../../../../../types.ts";
+import { getUserFromRequest } from "@/lib/auth/session.service.js";
 
 export const prerender = false;
 
@@ -26,9 +27,11 @@ export const prerender = false;
  * @returns 500 Internal Server Error for database failures
  * @returns 502 Bad Gateway for OpenRouter API failures
  */
-export const POST: APIRoute = async ({ params, request, locals }) => {
+export const POST: APIRoute = async (context) => {
   try {
+    const { params, request, locals } = context;
     const supabase = locals.supabase;
+    const user = await getUserFromRequest(context);
 
     // Extract session ID from URL path
     const sessionId = params.id;
@@ -45,77 +48,13 @@ export const POST: APIRoute = async ({ params, request, locals }) => {
       );
     }
 
-    // TEMPORARILY DISABLED: Authentication bypassed for testing
-    // TODO: Re-enable authentication before production
-    // // Authenticate the request
-    // // Try to get user from session (Supabase client reads from cookies/headers)
-    // const {
-    //   data: { user },
-    //   error: authError,
-    // } = await supabase.auth.getUser();
-    //
-    // if (authError || !user) {
-    //   return new Response(JSON.stringify({ error: "Unauthorized" }), {
-    //     status: 401,
-    //     headers: { "Content-Type": "application/json" },
-    //   });
-    // }
-
-    // Use test user from database (authentication disabled for testing)
-    const testUserId = "558ff210-94c6-4d54-8cf6-bdd5c345a984";
-    if (!testUserId) {
-      return new Response(
-        JSON.stringify({
-          error: "Test user not found",
-          details: "Authentication is disabled. Please create a test user using: bash testing/create-test-user.sh",
-        }),
-        {
-          status: 500,
-          headers: { "Content-Type": "application/json" },
-        }
-      );
-    }
-    const user = { id: testUserId };
-
-    // Parse request body
-    let body: unknown;
-    try {
-      body = await request.json();
-    } catch (error) {
-      return new Response(
-        JSON.stringify({
-          error: "Invalid JSON in request body",
-          details: error instanceof Error ? error.message : "Unknown error",
-        }),
-        {
-          status: 400,
-          headers: { "Content-Type": "application/json" },
-        }
-      );
-    }
-
-    // Validate request body
-    const validation = sendAiMessageSchema.safeParse(body);
-    if (!validation.success) {
-      return new Response(
-        JSON.stringify({
-          error: "Validation failed",
-          details: validation.error.errors,
-        }),
-        {
-          status: 400,
-          headers: { "Content-Type": "application/json" },
-        }
-      );
-    }
-
     // Send the message to the AI session
     // validation.data matches SendAiMessageCommand
     const responseDto = await AiSessionService.sendMessage(
       sessionId,
       validation.data as SendAiMessageCommand,
       user.id,
-      supabase
+      supabase,
     );
 
     return new Response(JSON.stringify(responseDto), {

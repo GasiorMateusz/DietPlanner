@@ -1,11 +1,17 @@
 import type { APIRoute } from 'astro';
-import { DatabaseError, NotFoundError, ValidationError } from '../../../lib/errors.ts';
+import {
+  DatabaseError,
+  NotFoundError,
+  UnauthorizedError,
+  ValidationError,
+} from '../../../lib/errors.ts';
 import { MealPlanService } from '../../../lib/meal-plans/meal-plan.service.ts';
 import {
   createMealPlanSchema,
   listMealPlansQuerySchema,
 } from '../../../lib/validation/meal-plans.schemas.ts';
 import type { CreateMealPlanCommand } from '../../../types.ts';
+import { getUserFromRequest } from '@/lib/auth/session.service.js';
 
 export const prerender = false;
 
@@ -24,31 +30,11 @@ export const prerender = false;
  * @returns 401 Unauthorized if authentication fails
  * @returns 500 Internal Server Error for database failures
  */
-export const GET: APIRoute = async ({ request, locals }) => {
+export const GET: APIRoute = async (context) => {
   try {
+    const { request, locals } = context;
     const supabase = locals.supabase;
-
-    // TEMPORARY: Authentication disabled
-    // const {
-    //   data: { user },
-    //   error: authError,
-    // } = await supabase.auth.getUser();
-
-    // if (authError || !user) {
-    //   return new Response(
-    //     JSON.stringify({
-    //       error: 'Unauthorized',
-    //       details: 'Authentication required',
-    //     }),
-    //     {
-    //       status: 401,
-    //       headers: { 'Content-Type': 'application/json' },
-    //     }
-    //   );
-    // }
-
-    // TEMPORARY: Use hardcoded user ID
-    const placeholderUserId = '558ff210-94c6-4d54-8cf6-bdd5c345a984';
+    const user = await getUserFromRequest(context);
 
     // Parse and validate query parameters
     const url = new URL(request.url);
@@ -74,9 +60,9 @@ export const GET: APIRoute = async ({ request, locals }) => {
 
     // Call service to list meal plans
     const mealPlans = await MealPlanService.listMealPlans(
-      placeholderUserId,
+      user.id,
       validation.data,
-      supabase
+      supabase,
     );
 
     return new Response(JSON.stringify(mealPlans), {
@@ -84,6 +70,18 @@ export const GET: APIRoute = async ({ request, locals }) => {
       headers: { 'Content-Type': 'application/json' },
     });
   } catch (error) {
+    if (error instanceof UnauthorizedError) {
+      return new Response(
+        JSON.stringify({
+          error: error.message,
+          details: error.data.details,
+        }),
+        {
+          status: 401,
+          headers: { 'Content-Type': 'application/json' },
+        },
+      );
+    }
     // Handle custom errors
     if (error instanceof ValidationError) {
       return new Response(
@@ -144,31 +142,11 @@ export const GET: APIRoute = async ({ request, locals }) => {
  * @returns 401 Unauthorized if authentication fails
  * @returns 500 Internal Server Error for database failures
  */
-export const POST: APIRoute = async ({ request, locals }) => {
+export const POST: APIRoute = async (context) => {
   try {
+    const { request, locals } = context;
     const supabase = locals.supabase;
-
-    // TEMPORARY: Authentication disabled
-    // const {
-    //   data: { user },
-    //   error: authError,
-    // } = await supabase.auth.getUser();
-
-    // if (authError || !user) {
-    //   return new Response(
-    //     JSON.stringify({
-    //       error: 'Unauthorized',
-    //       details: 'Authentication required',
-    //     }),
-    //     {
-    //       status: 401,
-    //       headers: { 'Content-Type': 'application/json' },
-    //     }
-    //   );
-    // }
-
-    // TEMPORARY: Use hardcoded user ID
-    const placeholderUserId = '558ff210-94c6-4d54-8cf6-bdd5c345a984';
+    const user = await getUserFromRequest(context);
 
     // Parse request body
     let body: unknown;
@@ -205,8 +183,8 @@ export const POST: APIRoute = async ({ request, locals }) => {
     // Call service to create meal plan
     const mealPlan = await MealPlanService.createMealPlan(
       validation.data as CreateMealPlanCommand,
-      placeholderUserId,
-      supabase
+      user.id,
+      supabase,
     );
 
     return new Response(JSON.stringify(mealPlan), {
@@ -214,6 +192,18 @@ export const POST: APIRoute = async ({ request, locals }) => {
       headers: { 'Content-Type': 'application/json' },
     });
   } catch (error) {
+    if (error instanceof UnauthorizedError) {
+      return new Response(
+        JSON.stringify({
+          error: error.message,
+          details: error.data.details,
+        }),
+        {
+          status: 401,
+          headers: { 'Content-Type': 'application/json' },
+        },
+      );
+    }
     // Handle custom errors
     if (error instanceof ValidationError) {
       return new Response(

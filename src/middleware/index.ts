@@ -1,12 +1,29 @@
-import { defineMiddleware } from 'astro:middleware';
-
-import { supabaseClient } from '../db/supabase.client.ts';
+import { defineMiddleware } from "astro:middleware";
+import { createSupabaseServerClient } from "../db/supabase.server";
 
 export const onRequest = defineMiddleware(async (context, next) => {
-  context.locals.supabase = supabaseClient;
+  const supabase = createSupabaseServerClient(context.cookies);
+  context.locals.supabase = supabase;
 
-  // TEMPORARY: Authentication disabled for /api/meal-plans/* endpoints
-  // (handled in the endpoint handlers themselves)
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  const accessToken = session?.access_token ?? null;
+  const refreshToken = session?.refresh_token ?? null;
+
+  if (accessToken && refreshToken) {
+    context.cookies.set("sb-access-token", accessToken, {
+      sameSite: "strict",
+      path: "/",
+      secure: import.meta.env.PROD,
+    });
+    context.cookies.set("sb-refresh-token", refreshToken, {
+      sameSite: "strict",
+      path: "/",
+      secure: import.meta.env.PROD,
+    });
+  }
 
   // TEMPORARY: Authentication disabled for /app/* routes (redirect disabled)
   // if (context.url.pathname.startsWith('/app/')) {

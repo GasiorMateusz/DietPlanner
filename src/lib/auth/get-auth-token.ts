@@ -1,15 +1,16 @@
-import { supabaseClient } from "../../db/supabase.client";
+import { supabaseClient } from "@/db/supabase.client";
 
-/**
- * Retrieves the Supabase JWT token from the current session.
- * Returns null if no session exists.
- *
- * @returns The JWT access token, or null if not authenticated
- */
 export async function getAuthToken(): Promise<string | null> {
   const {
     data: { session },
+    error,
   } = await supabaseClient.auth.getSession();
+
+  if (error) {
+    // eslint-disable-next-line no-console
+    console.error("Error getting session:", error);
+    return null;
+  }
 
   return session?.access_token ?? null;
 }
