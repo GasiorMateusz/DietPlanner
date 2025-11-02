@@ -5,6 +5,7 @@ import { Textarea } from "./ui/textarea";
 import { DailySummaryStaticDisplay } from "./DailySummaryStaticDisplay";
 import { MealCardReadOnly } from "./MealCardReadOnly";
 import { parseXmlMealPlan, removeXmlTags, extractComments } from "../lib/utils/meal-plan-parser";
+import { getAuthToken } from "@/lib/auth/get-auth-token";
 import type {
   ChatMessage,
   AssistantChatMessage,
@@ -110,20 +111,26 @@ export default function AIChatInterface() {
    * Creates a new AI chat session.
    */
   const createAiSession = async (data: MealPlanStartupData): Promise<CreateAiSessionResponseDto> => {
+    const token = await getAuthToken();
+    if (!token) {
+      window.location.href = "/auth/login";
+      throw new Error("Unauthorized");
+    }
     const response = await fetch("/api/ai/sessions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify(data),
     });
 
     if (!response.ok) {
       if (response.status === 401) {
-        window.location.href = "/login";
+        window.location.href = "/auth/login";
         throw new Error("Unauthorized");
       }
-      const errorData = await response.json().catch(() => ({ error: "Unknown error" }));
+      const errorData = await response.json().catch(() => ({ error: "An internal error occurred" }));
       throw new Error(errorData.error || "Failed to create AI session");
     }
 
@@ -134,17 +141,23 @@ export default function AIChatInterface() {
    * Sends a follow-up message to the AI.
    */
   const sendMessage = async (sessionId: string, message: UserChatMessage): Promise<SendAiMessageResponseDto> => {
+    const token = await getAuthToken();
+    if (!token) {
+      window.location.href = "/auth/login";
+      throw new Error("Unauthorized");
+    }
     const response = await fetch(`/api/ai/sessions/${sessionId}/message`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({ message } satisfies SendAiMessageCommand),
     });
 
     if (!response.ok) {
       if (response.status === 401) {
-        window.location.href = "/login";
+        window.location.href = "/auth/login";
         throw new Error("Unauthorized");
       }
       if (response.status === 404) {
@@ -156,7 +169,7 @@ export default function AIChatInterface() {
       if (response.status === 500) {
         throw new Error("An internal error occurred. Please try again later.");
       }
-      const errorData = await response.json().catch(() => ({ error: "Unknown error" }));
+      const errorData = await response.json().catch(() => ({ error: "An internal error occurred" }));
       throw new Error(errorData.error || "Failed to send message");
     }
 
