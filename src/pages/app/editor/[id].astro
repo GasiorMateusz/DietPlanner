@@ -1,0 +1,17 @@
+---
+import PrivateLayout from "../../../layouts/PrivateLayout.astro";
+import MealPlanEditor from "../../../components/MealPlanEditor";
+
+// Edit Mode: ID parameter from URL
+const { id } = Astro.params;
+
+if (!id) {
+  // Redirect to create mode if somehow no ID is provided
+  return Astro.redirect("/app/editor", 302);
+}
+---
+
+<PrivateLayout title="Editor - Diet Planner">
+  <MealPlanEditor client:load mealPlanId={id} />
+</PrivateLayout>
+

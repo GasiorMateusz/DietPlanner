@@ -1,0 +1,11 @@
+---
+import PrivateLayout from "../../layouts/PrivateLayout.astro";
+import MealPlanEditor from "../../components/MealPlanEditor";
+
+// Create Mode: No ID parameter, component will read from window bridge
+---
+
+<PrivateLayout title="Editor - Diet Planner">
+  <MealPlanEditor client:load />
+</PrivateLayout>
+
