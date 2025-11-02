@@ -1,11 +1,11 @@
 import React from "react";
-import { z } from "zod";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
 import { registerSchema, type RegisterInput } from "@/lib/validation/auth.schemas";
+import { supabaseClient as supabase } from "@/db/supabase.client";
 
 type Props = {
   className?: string;
@@ -21,6 +21,7 @@ export default function RegisterForm({ className }: Props) {
   const [errors, setErrors] = React.useState<Partial<Record<keyof RegisterInput, string>>>({});
   const [formError, setFormError] = React.useState<string | null>(null);
   const [success, setSuccess] = React.useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
   const emailId = React.useId();
   const passwordId = React.useId();
   const confirmId = React.useId();
@@ -53,8 +54,39 @@ export default function RegisterForm({ className }: Props) {
     setFormError(null);
     setSuccess(null);
     if (!validate(values)) return;
-    // Backend integration will be implemented later. For now, show a placeholder.
-    setSuccess("Form is valid. Implement registration logic next.");
+
+    setIsSubmitting(true);
+    const { data, error } = await supabase.auth.signUp({
+      email: values.email,
+      password: values.password,
+    });
+    setIsSubmitting(false);
+
+    if (error) {
+      // Handle specific error cases
+      if (error.message.includes("already registered") || error.message.includes("already exists")) {
+        setFormError("An account with this email already exists.");
+      } else if (error.message.includes("Password") || error.message.includes("password")) {
+        setFormError("Password does not meet security requirements.");
+      } else {
+        setFormError("Unable to register right now. Please try again later.");
+      }
+      return;
+    }
+
+    // Check if email confirmation is required
+    // If session is null, user needs to confirm email
+    // If session exists, user is automatically logged in
+    if (!data.session) {
+      // Email confirmation required
+      setSuccess(
+        "Account created! Please check your email to confirm your account before signing in."
+      );
+    } else {
+      // Email confirmation disabled - user is automatically logged in
+      // Use full page reload to ensure cookies are synced and middleware can detect session
+      window.location.href = "/app/dashboard";
+    }
   }
 
   return (
@@ -156,7 +188,7 @@ export default function RegisterForm({ className }: Props) {
         </div>
       </div>
 
-      <Button type="submit" className="w-full">
+      <Button type="submit" className="w-full" disabled={isSubmitting}>
         Create account
       </Button>
 

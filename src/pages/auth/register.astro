@@ -1,6 +1,25 @@
 ---
 import Layout from "@/layouts/Layout.astro";
 import RegisterForm from "@/components/auth/RegisterForm";
+import { createSupabaseServerClient } from "@/db/supabase.server";
+
+const supabase = createSupabaseServerClient(Astro.cookies);
+
+// Verify if user is already authenticated using getUser() to ensure session is valid
+const {
+  data: { session },
+} = await supabase.auth.getSession();
+
+if (session?.access_token) {
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser(session.access_token);
+
+  if (!error && user) {
+    return Astro.redirect("/app/dashboard");
+  }
+}
 
 const title = "Create account – Diet Planner";
 ---
