@@ -7,7 +7,8 @@ import type { AssistantChatMessage, ChatMessage } from "../../types.ts";
 export class OpenRouterError extends Error {
   constructor(
     message: string,
-    public readonly statusCode?: number
+    public readonly statusCode?: number,
+    public readonly originalError?: unknown
   ) {
     super(message);
     this.name = "OpenRouterError";
@@ -23,25 +24,76 @@ type OpenRouterMessage =
   | { role: "assistant"; content: string };
 
 /**
- * Configuration for the OpenRouter API call.
+ * JSON Schema definition for structured responses.
  */
-const OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions";
-const OPENROUTER_MODEL = "anthropic/claude-3.5-sonnet"; // Default model - can be made configurable
-const REQUEST_TIMEOUT_MS = 30000; // 30 seconds timeout
+interface JSONSchema {
+  type: "object" | "array" | "string" | "number" | "boolean";
+  properties?: Record<string, JSONSchema>;
+  required?: string[];
+  items?: JSONSchema;
+  minimum?: number;
+  maximum?: number;
+}
 
 /**
- * Converts messages to the format expected by OpenRouter API.
- * Handles both ChatMessage[] (user/assistant) and OpenRouterMessage[] (includes system).
+ * Response format configuration for structured output.
  */
-function formatMessagesForOpenRouter(messages: (ChatMessage | OpenRouterMessage)[]): OpenRouterMessage[] {
-  return messages.map((msg) => {
-    // If it's already an OpenRouterMessage with system role, return as-is
-    if ("role" in msg && msg.role === "system") {
-      return msg as OpenRouterMessage;
-    }
-    // Otherwise, cast ChatMessage to OpenRouterMessage (user or assistant)
-    return msg as OpenRouterMessage;
-  });
+type ResponseFormat =
+  | { type: "json_object" }
+  | {
+      type: "json_schema";
+      json_schema: {
+        name: string;
+        strict: boolean;
+        schema: JSONSchema;
+      };
+    };
+
+/**
+ * Configuration options for chat completion requests.
+ */
+interface ChatCompletionOptions {
+  model?: string;
+  temperature?: number;
+  max_tokens?: number;
+  top_p?: number;
+  frequency_penalty?: number;
+  presence_penalty?: number;
+  response_format?: ResponseFormat;
+  stream?: boolean;
+}
+
+/**
+ * Full response structure from OpenRouter API.
+ */
+interface OpenRouterApiResponse {
+  id: string;
+  model: string;
+  choices: {
+    index: number;
+    message: {
+      role: string;
+      content: string;
+    };
+    finish_reason: string;
+  }[];
+  usage?: {
+    prompt_tokens: number;
+    completion_tokens: number;
+    total_tokens: number;
+  };
+}
+
+/**
+ * Service configuration options.
+ */
+interface OpenRouterServiceConfig {
+  apiKey?: string;
+  baseUrl?: string;
+  defaultModel?: string;
+  defaultHeaders?: Record<string, string>;
+  timeout?: number;
+  maxRetries?: number;
 }
 
 /**
@@ -49,53 +101,287 @@ function formatMessagesForOpenRouter(messages: (ChatMessage | OpenRouterMessage)
  * Handles chat completion requests and error handling.
  */
 export class OpenRouterService {
-  /**
-   * Sends a chat completion request to OpenRouter.ai.
-   * @param messages - The conversation history (can include system, user, and assistant messages)
-   * @returns The assistant's response message
-   * @throws {OpenRouterError} If the API call fails or returns an error
-   */
-  static async getChatCompletion(messages: (ChatMessage | OpenRouterMessage)[]): Promise<AssistantChatMessage> {
-    const apiKey = import.meta.env.OPENROUTER_API_KEY;
+  private apiKey: string;
+  private baseUrl: string;
+  private defaultModel: string;
+  private defaultHeaders: Record<string, string>;
+  private timeout: number;
+  private maxRetries: number;
 
-    if (!apiKey) {
+  /**
+   * Constructor for OpenRouterService.
+   * @param config - Optional configuration for the service
+   */
+  constructor(config?: OpenRouterServiceConfig) {
+    // Resolve API key from config or environment
+    this.apiKey = config?.apiKey || import.meta.env.OPENROUTER_API_KEY || "";
+
+    if (!this.apiKey) {
       throw new OpenRouterError("OpenRouter API key is not configured", 500);
     }
 
-    const formattedMessages = formatMessagesForOpenRouter(messages);
+    // Set default values
+    this.baseUrl = config?.baseUrl || "https://openrouter.ai/api/v1";
+    this.defaultModel = config?.defaultModel || "nvidia/nemotron-nano-12b-v2-vl:free";
+    this.defaultHeaders = config?.defaultHeaders || {};
+    this.timeout = config?.timeout || 30000;
+    this.maxRetries = config?.maxRetries || 3;
+  }
 
-    const requestBody = {
-      model: OPENROUTER_MODEL,
-      messages: formattedMessages,
+  /**
+   * Converts messages to the format expected by OpenRouter API.
+   * Handles both ChatMessage[] (user/assistant) and OpenRouterMessage[] (includes system).
+   */
+  private formatMessagesForOpenRouter(messages: (ChatMessage | OpenRouterMessage)[]): OpenRouterMessage[] {
+    if (!Array.isArray(messages) || messages.length === 0) {
+      throw new OpenRouterError("Messages array must not be empty", 400);
+    }
+
+    return messages.map((msg) => {
+      // Validate message structure
+      if (!msg || typeof msg !== "object" || !("role" in msg) || !("content" in msg)) {
+        throw new OpenRouterError("Invalid message format: must have role and content", 400);
+      }
+
+      const content = msg.content;
+      if (typeof content !== "string" || content.trim().length === 0) {
+        throw new OpenRouterError("Message content must be a non-empty string", 400);
+      }
+
+      // Return as OpenRouterMessage (system, user, or assistant)
+      return msg as OpenRouterMessage;
+    });
+  }
+
+  /**
+   * Builds the request body for the API call with parameter validation.
+   */
+  private buildRequestBody(messages: OpenRouterMessage[], options?: ChatCompletionOptions): unknown {
+    const model = options?.model || this.defaultModel;
+
+    // Validate parameter ranges
+    if (options?.temperature !== undefined) {
+      if (typeof options.temperature !== "number" || options.temperature < 0 || options.temperature > 2) {
+        throw new OpenRouterError("Temperature must be between 0 and 2", 400);
+      }
+    }
+
+    if (options?.max_tokens !== undefined) {
+      if (!Number.isInteger(options.max_tokens) || options.max_tokens <= 0) {
+        throw new OpenRouterError("max_tokens must be a positive integer", 400);
+      }
+    }
+
+    if (options?.top_p !== undefined) {
+      if (typeof options.top_p !== "number" || options.top_p < 0 || options.top_p > 1) {
+        throw new OpenRouterError("top_p must be between 0 and 1", 400);
+      }
+    }
+
+    if (options?.frequency_penalty !== undefined) {
+      if (
+        typeof options.frequency_penalty !== "number" ||
+        options.frequency_penalty < -2 ||
+        options.frequency_penalty > 2
+      ) {
+        throw new OpenRouterError("frequency_penalty must be between -2.0 and 2.0", 400);
+      }
+    }
+
+    if (options?.presence_penalty !== undefined) {
+      if (
+        typeof options.presence_penalty !== "number" ||
+        options.presence_penalty < -2 ||
+        options.presence_penalty > 2
+      ) {
+        throw new OpenRouterError("presence_penalty must be between -2.0 and 2.0", 400);
+      }
+    }
+
+    // Build request body
+    const body: Record<string, unknown> = {
+      model,
+      messages,
     };
 
-    let response: Response;
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+    if (options?.temperature !== undefined) {
+      body.temperature = options.temperature;
+    }
+    if (options?.max_tokens !== undefined) {
+      body.max_tokens = options.max_tokens;
+    }
+    if (options?.top_p !== undefined) {
+      body.top_p = options.top_p;
+    }
+    if (options?.frequency_penalty !== undefined) {
+      body.frequency_penalty = options.frequency_penalty;
+    }
+    if (options?.presence_penalty !== undefined) {
+      body.presence_penalty = options.presence_penalty;
+    }
+    if (options?.response_format !== undefined) {
+      body.response_format = options.response_format;
+    }
+    if (options?.stream !== undefined) {
+      body.stream = options.stream;
+    }
 
-      response = await fetch(OPENROUTER_API_URL, {
+    return body;
+  }
+
+  /**
+   * Builds the HTTP headers for the API request.
+   */
+  private buildRequestHeaders(): HeadersInit {
+    const headers: Record<string, string> = {
+      Authorization: `Bearer ${this.apiKey}`,
+      "Content-Type": "application/json",
+      ...this.defaultHeaders,
+    };
+
+    return headers;
+  }
+
+  /**
+   * Makes the HTTP request with retry logic and timeout handling.
+   */
+  private async makeRequest(body: unknown, retryCount = 0): Promise<Response> {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), this.timeout);
+
+    try {
+      const response = await fetch(`${this.baseUrl}/chat/completions`, {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(requestBody),
+        headers: this.buildRequestHeaders(),
+        body: JSON.stringify(body),
         signal: controller.signal,
       });
 
       clearTimeout(timeoutId);
-    } catch (error) {
-      if (error instanceof Error && error.name === "AbortError") {
-        throw new OpenRouterError("Request timeout", 504);
+
+      // Check if we should retry
+      const shouldRetry = this.shouldRetry(response, retryCount);
+
+      if (shouldRetry) {
+        const delay = this.calculateRetryDelay(retryCount);
+        await this.sleep(delay);
+        return this.makeRequest(body, retryCount + 1);
       }
-      throw new OpenRouterError(`Network error: ${error instanceof Error ? error.message : "Unknown error"}`, 503);
+
+      return response;
+    } catch (error) {
+      clearTimeout(timeoutId);
+
+      if (error instanceof Error && error.name === "AbortError") {
+        throw new OpenRouterError("Request timeout", 504, error);
+      }
+
+      // Check if we should retry on network error
+      const shouldRetry = retryCount < this.maxRetries;
+      if (shouldRetry) {
+        const delay = this.calculateRetryDelay(retryCount);
+        await this.sleep(delay);
+        return this.makeRequest(body, retryCount + 1);
+      }
+
+      throw new OpenRouterError(
+        `Network error: ${error instanceof Error ? error.message : "Unknown error"}`,
+        503,
+        error
+      );
+    }
+  }
+
+  /**
+   * Determines if a request should be retried based on the response or retry count.
+   */
+  private shouldRetry(response: Response, retryCount: number): boolean {
+    // Don't retry if we've exceeded max retries
+    if (retryCount >= this.maxRetries) {
+      return false;
     }
 
+    // Retry on server errors (5xx) and rate limits (429)
+    if (response.status >= 500 || response.status === 429) {
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * Calculates the exponential backoff delay for retries.
+   */
+  private calculateRetryDelay(retryCount: number): number {
+    const baseDelay = 1000; // 1 second
+    const delay = baseDelay * Math.pow(2, retryCount);
+    const jitter = Math.random() * 100; // 0-100ms random jitter
+    return delay + jitter;
+  }
+
+  /**
+   * Sleeps for the specified number of milliseconds.
+   */
+  private async sleep(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  /**
+   * Sends a chat completion request to OpenRouter.ai (static method).
+   * @param messages - The conversation history (can include system, user, and assistant messages)
+   * @param options - Optional configuration for the request
+   * @returns The assistant's response message
+   * @throws {OpenRouterError} If the API call fails or returns an error
+   */
+  static async getChatCompletion(
+    messages: (ChatMessage | OpenRouterMessage)[],
+    options?: ChatCompletionOptions
+  ): Promise<AssistantChatMessage> {
+    const service = new OpenRouterService();
+    return service.getChatCompletion(messages, options);
+  }
+
+  /**
+   * Sends a chat completion request to OpenRouter.ai (instance method).
+   * @param messages - The conversation history (can include system, user, and assistant messages)
+   * @param options - Optional configuration for the request
+   * @returns The assistant's response message
+   * @throws {OpenRouterError} If the API call fails or returns an error
+   */
+  async getChatCompletion(
+    messages: (ChatMessage | OpenRouterMessage)[],
+    options?: ChatCompletionOptions
+  ): Promise<AssistantChatMessage> {
+    const formattedMessages = this.formatMessagesForOpenRouter(messages);
+    const apiResponse = await this.sendChatCompletion(formattedMessages, options);
+    return {
+      role: "assistant",
+      content: apiResponse.choices[0].message.content,
+    };
+  }
+
+  /**
+   * Sends a chat completion request and returns the full API response.
+   * @param messages - The conversation history
+   * @param options - Optional configuration for the request
+   * @returns The full API response including metadata
+   * @throws {OpenRouterError} If the API call fails or returns an error
+   */
+  async sendChatCompletion(
+    messages: OpenRouterMessage[],
+    options?: ChatCompletionOptions
+  ): Promise<OpenRouterApiResponse> {
+    const body = this.buildRequestBody(messages, options);
+
+    // Make the request with retry logic
+    const response = await this.makeRequest(body);
+
+    // Handle error responses
     if (!response.ok) {
       let errorMessage = `OpenRouter API error: ${response.status} ${response.statusText}`;
+
       try {
-        const errorData = await response.json();
+        const errorData = (await response.json()) as { error?: { message?: string } };
         if (errorData.error?.message) {
           errorMessage = errorData.error.message;
         }
@@ -106,33 +392,35 @@ export class OpenRouterService {
       throw new OpenRouterError(errorMessage, response.status);
     }
 
-    let responseData: {
-      choices?: {
-        message?: {
-          role?: string;
-          content?: string;
-        };
-      }[];
-    };
-
+    // Parse the response
+    let responseData: unknown;
     try {
       responseData = await response.json();
     } catch (error) {
       throw new OpenRouterError(
         `Failed to parse OpenRouter response: ${error instanceof Error ? error.message : "Unknown error"}`,
-        502
+        502,
+        error
       );
     }
 
-    const assistantMessage = responseData.choices?.[0]?.message;
-
-    if (!assistantMessage || assistantMessage.role !== "assistant" || !assistantMessage.content) {
+    // Validate response structure
+    if (!responseData || typeof responseData !== "object") {
       throw new OpenRouterError("Invalid response format from OpenRouter API", 502);
     }
 
-    return {
-      role: "assistant",
-      content: assistantMessage.content,
-    };
+    const parsed = responseData as OpenRouterApiResponse;
+
+    // Validate required fields
+    if (!parsed.choices || !Array.isArray(parsed.choices) || parsed.choices.length === 0) {
+      throw new OpenRouterError("Invalid response format: missing or empty choices array", 502);
+    }
+
+    const message = parsed.choices[0].message;
+    if (!message || message.role !== "assistant" || !message.content) {
+      throw new OpenRouterError("Invalid response format: invalid assistant message", 502);
+    }
+
+    return parsed;
   }
 }
