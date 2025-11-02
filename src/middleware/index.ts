@@ -15,7 +15,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
   //   } = await supabaseClient.auth.getSession();
   //
   //   if (!session) {
-  //     return context.redirect('/login', 307);
+  //     return context.redirect('/auth/login', 307);
   //   }
   // }
 
