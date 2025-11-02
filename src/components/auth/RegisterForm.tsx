@@ -7,9 +7,9 @@ import { cn } from "@/lib/utils";
 import { registerSchema, type RegisterInput } from "@/lib/validation/auth.schemas";
 import { supabaseClient as supabase } from "@/db/supabase.client";
 
-type Props = {
+interface Props {
   className?: string;
-};
+}
 
 export default function RegisterForm({ className }: Props) {
   const [values, setValues] = React.useState<RegisterInput>({
@@ -79,9 +79,7 @@ export default function RegisterForm({ className }: Props) {
     // If session exists, user is automatically logged in
     if (!data.session) {
       // Email confirmation required
-      setSuccess(
-        "Account created! Please check your email to confirm your account before signing in."
-      );
+      setSuccess("Account created! Please check your email to confirm your account before signing in.");
     } else {
       // Email confirmation disabled - user is automatically logged in
       // Use full page reload to ensure cookies are synced and middleware can detect session
@@ -201,5 +199,3 @@ export default function RegisterForm({ className }: Props) {
     </form>
   );
 }
-
-
