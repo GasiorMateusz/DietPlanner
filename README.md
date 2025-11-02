@@ -48,6 +48,14 @@ The project uses the following technologies:
 ### AI
 - **Openrouter.ai**: Provides access to a wide range of AI models (OpenAI, Anthropic, Google, etc.) to power the meal plan generation.
 
+### Testing
+- **Vitest**: Primary test runner for unit and integration tests.
+- **React Testing Library**: Component testing utilities for React components.
+- **@testing-library/jest-dom**: DOM matchers for enhanced assertions.
+- **MSW (Mock Service Worker)**: API mocking for unit tests and integration testing of external services (e.g., OpenRouter API).
+- **Supertest**: HTTP assertions for API endpoint testing.
+- **Playwright**: Cross-browser end-to-end (E2E) testing framework supporting Chromium, Firefox, and WebKit with built-in test runner, reporting, and screenshot/video capture capabilities.
+
 ### CI/CD & Hosting
 - **Github Actions**: For CI/CD pipelines.
 - **DigitalOcean**: For hosting the application via a Docker image.
