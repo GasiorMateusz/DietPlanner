@@ -31,3 +31,14 @@ export class DatabaseError extends Error {
   }
 }
 
+/**
+ * Custom error class for authorization failures.
+ * Used when a user is not logged in or does not have permission to access a resource.
+ */
+export class UnauthorizedError extends Error {
+  constructor(public data: { message: string; details?: string }) {
+    super(data.message);
+    this.name = "UnauthorizedError";
+  }
+}
+

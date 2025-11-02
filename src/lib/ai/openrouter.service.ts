@@ -88,7 +88,7 @@ interface OpenRouterApiResponse {
  * Service configuration options.
  */
 interface OpenRouterServiceConfig {
-  apiKey?: string;
+  apiKey: string;
   baseUrl?: string;
   defaultModel?: string;
   defaultHeaders?: Record<string, string>;
@@ -112,9 +112,9 @@ export class OpenRouterService {
    * Constructor for OpenRouterService.
    * @param config - Optional configuration for the service
    */
-  constructor(config?: OpenRouterServiceConfig) {
+  constructor(config: OpenRouterServiceConfig) {
     // Resolve API key from config or environment
-    this.apiKey = config?.apiKey || import.meta.env.OPENROUTER_API_KEY || "";
+    this.apiKey = config.apiKey;
 
     if (!this.apiKey) {
       throw new OpenRouterError("OpenRouter API key is not configured", 500);
@@ -328,16 +328,18 @@ export class OpenRouterService {
 
   /**
    * Sends a chat completion request to OpenRouter.ai (static method).
+   * @param apiKey - The OpenRouter API key
    * @param messages - The conversation history (can include system, user, and assistant messages)
    * @param options - Optional configuration for the request
    * @returns The assistant's response message
    * @throws {OpenRouterError} If the API call fails or returns an error
    */
   static async getChatCompletion(
+    apiKey: string,
     messages: (ChatMessage | OpenRouterMessage)[],
     options?: ChatCompletionOptions
   ): Promise<AssistantChatMessage> {
-    const service = new OpenRouterService();
+    const service = new OpenRouterService({ apiKey });
     return service.getChatCompletion(messages, options);
   }
 

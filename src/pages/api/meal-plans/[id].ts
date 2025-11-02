@@ -6,6 +6,7 @@ import {
   updateMealPlanSchema,
 } from '../../../lib/validation/meal-plans.schemas.ts';
 import type { UpdateMealPlanCommand } from '../../../types.ts';
+import { getUserFromRequest } from '@/lib/auth/session.service.js';
 
 export const prerender = false;
 
@@ -23,31 +24,11 @@ export const prerender = false;
  * @returns 404 Not Found if meal plan doesn't exist or doesn't belong to user
  * @returns 500 Internal Server Error for database failures
  */
-export const GET: APIRoute = async ({ params, locals }) => {
+export const GET: APIRoute = async (context) => {
   try {
+    const { params, locals } = context;
     const supabase = locals.supabase;
-
-    // TEMPORARY: Authentication disabled
-    // const {
-    //   data: { user },
-    //   error: authError,
-    // } = await supabase.auth.getUser();
-
-    // if (authError || !user) {
-    //   return new Response(
-    //     JSON.stringify({
-    //       error: 'Unauthorized',
-    //       details: 'Authentication required',
-    //     }),
-    //     {
-    //       status: 401,
-    //       headers: { 'Content-Type': 'application/json' },
-    //     }
-    //   );
-    // }
-
-    // TEMPORARY: Use hardcoded user ID
-    const placeholderUserId = '558ff210-94c6-4d54-8cf6-bdd5c345a984';
+    const user = await getUserFromRequest(context);
 
     // Validate path parameters
     const paramValidation = mealPlanIdParamSchema.safeParse(params);
@@ -67,8 +48,8 @@ export const GET: APIRoute = async ({ params, locals }) => {
     // Call service to get meal plan
     const mealPlan = await MealPlanService.getMealPlanById(
       paramValidation.data.id,
-      placeholderUserId,
-      supabase
+      user.id,
+      supabase,
     );
 
     return new Response(JSON.stringify(mealPlan), {
@@ -136,31 +117,11 @@ export const GET: APIRoute = async ({ params, locals }) => {
  * @returns 404 Not Found if meal plan doesn't exist or doesn't belong to user
  * @returns 500 Internal Server Error for database failures
  */
-export const PUT: APIRoute = async ({ params, request, locals }) => {
+export const PUT: APIRoute = async (context) => {
   try {
+    const { params, request, locals } = context;
     const supabase = locals.supabase;
-
-    // TEMPORARY: Authentication disabled
-    // const {
-    //   data: { user },
-    //   error: authError,
-    // } = await supabase.auth.getUser();
-
-    // if (authError || !user) {
-    //   return new Response(
-    //     JSON.stringify({
-    //       error: 'Unauthorized',
-    //       details: 'Authentication required',
-    //     }),
-    //     {
-    //       status: 401,
-    //       headers: { 'Content-Type': 'application/json' },
-    //     }
-    //   );
-    // }
-
-    // TEMPORARY: Use hardcoded user ID
-    const placeholderUserId = '558ff210-94c6-4d54-8cf6-bdd5c345a984';
+    const user = await getUserFromRequest(context);
 
     // Validate path parameters
     const paramValidation = mealPlanIdParamSchema.safeParse(params);
@@ -213,8 +174,8 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
     const mealPlan = await MealPlanService.updateMealPlan(
       paramValidation.data.id,
       bodyValidation.data as UpdateMealPlanCommand,
-      placeholderUserId,
-      supabase
+      user.id,
+      supabase,
     );
 
     return new Response(JSON.stringify(mealPlan), {
@@ -280,31 +241,11 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
  * @returns 404 Not Found if meal plan doesn't exist or doesn't belong to user
  * @returns 500 Internal Server Error for database failures
  */
-export const DELETE: APIRoute = async ({ params, locals }) => {
+export const DELETE: APIRoute = async (context) => {
   try {
+    const { params, locals } = context;
     const supabase = locals.supabase;
-
-    // TEMPORARY: Authentication disabled
-    // const {
-    //   data: { user },
-    //   error: authError,
-    // } = await supabase.auth.getUser();
-
-    // if (authError || !user) {
-    //   return new Response(
-    //     JSON.stringify({
-    //       error: 'Unauthorized',
-    //       details: 'Authentication required',
-    //     }),
-    //     {
-    //       status: 401,
-    //       headers: { 'Content-Type': 'application/json' },
-    //     }
-    //   );
-    // }
-
-    // TEMPORARY: Use hardcoded user ID
-    const placeholderUserId = '558ff210-94c6-4d54-8cf6-bdd5c345a984';
+    const user = await getUserFromRequest(context);
 
     // Validate path parameters
     const paramValidation = mealPlanIdParamSchema.safeParse(params);
@@ -322,7 +263,7 @@ export const DELETE: APIRoute = async ({ params, locals }) => {
     }
 
     // Call service to delete meal plan
-    await MealPlanService.deleteMealPlan(paramValidation.data.id, placeholderUserId, supabase);
+    await MealPlanService.deleteMealPlan(paramValidation.data.id, user.id, supabase);
 
     return new Response(null, {
       status: 204,

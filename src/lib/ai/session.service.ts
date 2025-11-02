@@ -206,7 +206,10 @@ export class AiSessionService {
     ];
 
     // Call OpenRouter API
-    const assistantResponse = await OpenRouterService.getChatCompletion(messagesForOpenRouter);
+    const assistantResponse = await OpenRouterService.getChatCompletion(
+      import.meta.env.OPENROUTER_API_KEY,
+      messagesForOpenRouter
+    );
 
     // Build message history for database storage
     // Store system, user, assistant for telemetry
@@ -290,7 +293,10 @@ export class AiSessionService {
     const messagesForOpenRouter = convertHistoryForOpenRouter(updatedHistory);
 
     // Call OpenRouter API
-    const assistantResponse = await OpenRouterService.getChatCompletion(messagesForOpenRouter);
+    const assistantResponse = await OpenRouterService.getChatCompletion(
+      import.meta.env.OPENROUTER_API_KEY,
+      messagesForOpenRouter
+    );
 
     // Append assistant response to history
     const finalHistory: ChatMessage[] = [...updatedHistory, assistantResponse];

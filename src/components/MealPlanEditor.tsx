@@ -7,6 +7,7 @@ import { Button } from "./ui/button";
 import { DailySummaryStaticDisplay } from "./DailySummaryStaticDisplay";
 import { MealCard } from "./MealCard";
 import { parseXmlMealPlan } from "../lib/utils/meal-plan-parser";
+import { getAuthToken } from "../lib/auth/get-auth-token";
 import type {
   MealPlanMeal,
   MealPlanContentDailySummary,
@@ -112,15 +113,22 @@ export default function MealPlanEditor({ mealPlanId }: MealPlanEditorProps) {
    * Loads meal plan data from API (Edit Mode).
    */
   const loadMealPlanFromApi = async (id: string) => {
+    const token = await getAuthToken();
+    if (!token) {
+      window.location.href = "/auth/login";
+      return;
+    }
+
     const response = await fetch(`/api/meal-plans/${id}`, {
       headers: {
+        Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
     });
 
     if (!response.ok) {
       if (response.status === 401) {
-        window.location.href = "/login";
+        window.location.href = "/auth/login";
         throw new Error("Unauthorized");
       }
       if (response.status === 404) {
@@ -267,9 +275,16 @@ export default function MealPlanEditor({ mealPlanId }: MealPlanEditorProps) {
           },
         };
 
+        const token = await getAuthToken();
+        if (!token) {
+          window.location.href = "/auth/login";
+          return;
+        }
+
         const response = await fetch("/api/meal-plans", {
           method: "POST",
           headers: {
+            Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
           body: JSON.stringify(command),
@@ -277,7 +292,7 @@ export default function MealPlanEditor({ mealPlanId }: MealPlanEditorProps) {
 
         if (!response.ok) {
           if (response.status === 401) {
-            window.location.href = "/login";
+            window.location.href = "/auth/login";
             return;
           }
           const errorData = await response.json().catch(() => ({
@@ -299,9 +314,16 @@ export default function MealPlanEditor({ mealPlanId }: MealPlanEditorProps) {
           plan_content: planContent,
         };
 
+        const token = await getAuthToken();
+        if (!token) {
+          window.location.href = "/auth/login";
+          return;
+        }
+
         const response = await fetch(`/api/meal-plans/${editorState.mealPlanId}`, {
           method: "PUT",
           headers: {
+            Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
           body: JSON.stringify(command),
@@ -309,7 +331,7 @@ export default function MealPlanEditor({ mealPlanId }: MealPlanEditorProps) {
 
         if (!response.ok) {
           if (response.status === 401) {
-            window.location.href = "/login";
+            window.location.href = "/auth/login";
             return;
           }
           if (response.status === 404) {
@@ -335,11 +357,64 @@ export default function MealPlanEditor({ mealPlanId }: MealPlanEditorProps) {
   };
 
   /**
-   * Handles export button click (Edit Mode only).
+   * Handles export button click (Edit Mode only) - downloads the meal plan as a .doc file.
    */
-  const handleExport = () => {
-    if (editorState.mealPlanId) {
-      window.open(`/api/meal-plans/${editorState.mealPlanId}/export`, "_blank");
+  const handleExport = async () => {
+    if (!editorState.mealPlanId) {
+      return;
+    }
+
+    try {
+      const token = await getAuthToken();
+      if (!token) {
+        window.location.href = "/auth/login";
+        return;
+      }
+
+      const response = await fetch(`/api/meal-plans/${editorState.mealPlanId}/export`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.status === 401) {
+        window.location.href = "/auth/login";
+        return;
+      }
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({
+          error: "Failed to export meal plan",
+        }));
+        throw new Error(errorData.error || "Failed to export meal plan");
+      }
+
+      // Get the filename from Content-Disposition header or use a default
+      const contentDisposition = response.headers.get("Content-Disposition");
+      let filename = "meal-plan.doc";
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename="(.+)"/);
+        if (filenameMatch) {
+          filename = filenameMatch[1];
+        }
+      }
+
+      // Create blob and download
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error("Error exporting meal plan:", error);
+      setEditorState((prev) => ({
+        ...prev,
+        error: error instanceof Error ? error.message : "Failed to export meal plan",
+      }));
     }
   };
 

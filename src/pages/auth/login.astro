@@ -1,0 +1,39 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import LoginForm from "@/components/auth/LoginForm";
+import { createSupabaseServerClient } from "@/db/supabase.server";
+
+const supabase = createSupabaseServerClient(Astro.cookies);
+
+// Verify if user is already authenticated using getUser() to ensure session is valid
+const {
+  data: { session },
+} = await supabase.auth.getSession();
+
+if (session?.access_token) {
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser(session.access_token);
+
+  if (!error && user) {
+    return Astro.redirect("/app/dashboard");
+  }
+}
+
+const title = "Log in – Diet Planner";
+---
+
+<Layout title={title}>
+  <main class="min-h-screen grid place-items-center bg-background px-4 py-12">
+    <section class="w-full max-w-md rounded-xl border bg-card text-card-foreground shadow-sm p-6">
+      <header class="mb-6 text-center">
+        <h1 class="text-2xl font-semibold">Welcome back</h1>
+        <p class="text-sm text-muted-foreground mt-1">Log in to your account</p>
+      </header>
+      <LoginForm client:load />
+    </section>
+  </main>
+</Layout>
+
+
