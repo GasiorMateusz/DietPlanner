@@ -376,23 +376,7 @@ export class OpenRouterService {
     // Make the request with retry logic
     const response = await this.makeRequest(body);
 
-    // Handle error responses
-    if (!response.ok) {
-      let errorMessage = `OpenRouter API error: ${response.status} ${response.statusText}`;
-
-      try {
-        const errorData = (await response.json()) as { error?: { message?: string } };
-        if (errorData.error?.message) {
-          errorMessage = errorData.error.message;
-        }
-      } catch {
-        // Ignore JSON parsing errors, use default error message
-      }
-
-      throw new OpenRouterError(errorMessage, response.status);
-    }
-
-    // Parse the response
+    // Parse the response (only once - cannot be consumed multiple times)
     let responseData: unknown;
     try {
       responseData = await response.json();
@@ -402,6 +386,21 @@ export class OpenRouterService {
         502,
         error
       );
+    }
+
+    // Handle error responses
+    if (!response.ok) {
+      let errorMessage = `OpenRouter API error: ${response.status} ${response.statusText}`;
+
+      // Try to extract error message from parsed data
+      if (responseData && typeof responseData === "object") {
+        const errorData = responseData as { error?: { message?: string } };
+        if (errorData.error?.message) {
+          errorMessage = errorData.error.message;
+        }
+      }
+
+      throw new OpenRouterError(errorMessage, response.status);
     }
 
     // Validate response structure
