@@ -7,6 +7,8 @@ import { Button } from "./ui/button";
 import { DailySummaryStaticDisplay } from "./DailySummaryStaticDisplay";
 import { MealCard } from "./MealCard";
 import { parseXmlMealPlan } from "../lib/utils/meal-plan-parser";
+import { resolveDailySummary } from "../lib/utils/meal-plan-calculations";
+import { validateMealPlanForm, isMealPlanFormReady } from "../lib/validation/meal-plan-form.validation";
 import { getAuthToken } from "../lib/auth/get-auth-token";
 import type {
   MealPlanMeal,
@@ -222,21 +224,10 @@ export default function MealPlanEditor({ mealPlanId }: MealPlanEditorProps) {
    * Returns error message if validation fails, null if valid.
    */
   const validateForm = (): string | null => {
-    if (!editorState.planName.trim()) {
-      return "Plan name is required";
-    }
-
-    if (editorState.meals.length === 0) {
-      return "At least one meal is required";
-    }
-
-    for (let i = 0; i < editorState.meals.length; i++) {
-      if (!editorState.meals[i].name.trim()) {
-        return `Meal ${i + 1} name is required`;
-      }
-    }
-
-    return null;
+    return validateMealPlanForm({
+      planName: editorState.planName,
+      meals: editorState.meals,
+    });
   };
 
   /**
@@ -429,10 +420,13 @@ export default function MealPlanEditor({ mealPlanId }: MealPlanEditorProps) {
    * Checks if form is ready to be saved.
    */
   const isFormReady = (): boolean => {
-    if (editorState.isLoading) return false;
-    if (!editorState.planName.trim()) return false;
-    if (editorState.meals.length === 0) return false;
-    return editorState.meals.every((meal) => meal.name.trim() !== "");
+    return isMealPlanFormReady(
+      {
+        planName: editorState.planName,
+        meals: editorState.meals,
+      },
+      editorState.isLoading
+    );
   };
 
 
@@ -457,30 +451,7 @@ export default function MealPlanEditor({ mealPlanId }: MealPlanEditorProps) {
     const { meals, dailySummary } = parseXmlMealPlan(bridge.lastAssistantMessage);
 
     // If daily summary from XML is empty, fall back to calculated values
-    const finalDailySummary =
-      dailySummary.kcal > 0
-        ? dailySummary
-        : {
-            kcal: bridge.startupData?.target_kcal || 0,
-            proteins:
-              bridge.startupData?.target_kcal && bridge.startupData?.target_macro_distribution
-                ? Math.round(
-                    (bridge.startupData.target_kcal * bridge.startupData.target_macro_distribution.p_perc) / 100 / 4
-                  )
-                : 0,
-            fats:
-              bridge.startupData?.target_kcal && bridge.startupData?.target_macro_distribution
-                ? Math.round(
-                    (bridge.startupData.target_kcal * bridge.startupData.target_macro_distribution.f_perc) / 100 / 9
-                  )
-                : 0,
-            carbs:
-              bridge.startupData?.target_kcal && bridge.startupData?.target_macro_distribution
-                ? Math.round(
-                    (bridge.startupData.target_kcal * bridge.startupData.target_macro_distribution.c_perc) / 100 / 4
-                  )
-                : 0,
-          };
+    const finalDailySummary = resolveDailySummary(dailySummary, bridge.startupData);
 
     setEditorState({
       mode: "create",
