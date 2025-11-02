@@ -1,11 +1,21 @@
 ---
 import "../styles/global.css";
+import { NavBar } from "@/components/NavBar";
+import { createSupabaseServerClient } from "@/db/supabase.server";
 
 interface Props {
   title?: string;
 }
 
-const { title = "10x Astro Starter" } = Astro.props;
+const { title = "Diet Planner" } = Astro.props;
+
+// Check user session
+const supabase = createSupabaseServerClient(Astro.cookies);
+const {
+  data: { session },
+} = await supabase.auth.getSession();
+
+const userEmail = session?.user?.email;
 ---
 
 <!doctype html>
@@ -18,7 +28,10 @@ const { title = "10x Astro Starter" } = Astro.props;
     <title>{title}</title>
   </head>
   <body>
-    <slot />
+    <NavBar userEmail={userEmail} client:load />
+    <main>
+      <slot />
+    </main>
   </body>
 </html>
 

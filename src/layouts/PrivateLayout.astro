@@ -1,5 +1,7 @@
 ---
 import "../styles/global.css";
+import { NavBar } from "@/components/NavBar";
+import { createSupabaseServerClient } from "@/db/supabase.server";
 
 interface Props {
   title?: string;
@@ -9,6 +11,12 @@ const { title = "Diet Planner" } = Astro.props;
 
 // Authentication check is handled in middleware for /app/* routes
 // This layout assumes the user is authenticated if they reached here
+const supabase = createSupabaseServerClient(Astro.cookies);
+const {
+  data: { session },
+} = await supabase.auth.getSession();
+
+const userEmail = session?.user?.email;
 ---
 
 <!doctype html>
@@ -21,7 +29,10 @@ const { title = "Diet Planner" } = Astro.props;
     <title>{title}</title>
   </head>
   <body>
-    <slot />
+    <NavBar userEmail={userEmail} client:load />
+    <main>
+      <slot />
+    </main>
   </body>
 </html>
 
