@@ -1,630 +1,551 @@
 \# REST API Plan
 
-
-
 This plan details the REST API for the Diet Planner application, based on the provided PRD, Database Plan, and Tech Stack.
-
-
 
 \## 1. Resources
 
+\- \*\*`meal\_plans`\*\*: Represents the meal plans created by dietitians. Corresponds to the `public.meal\_plans` table.
 
+\- \*\*`ai\_sessions`\*\*: Represents the conversational AI chat sessions used to generate meal plans. Corresponds to the `public.ai\_chat\_sessions` table (for telemetry and state).
 
-\-   \*\*`meal\_plans`\*\*: Represents the meal plans created by dietitians. Corresponds to the `public.meal\_plans` table.
-
-\-   \*\*`ai\_sessions`\*\*: Represents the conversational AI chat sessions used to generate meal plans. Corresponds to the `public.ai\_chat\_sessions` table (for telemetry and state).
-
-\-   \*\*`users`\*\*: Represents the dietitian's account. Corresponds to the `auth.users` table (managed by Supabase).
-
-
+\- \*\*`users`\*\*: Represents the dietitian's account. Corresponds to the `auth.users` table (managed by Supabase).
 
 \## 2. Endpoints
 
-
-
 \### Meal Plans (`/api/meal-plans`)
 
-
-
 ---
-
-
 
 \#### `GET /api/meal-plans`
 
+\- \*\*Description\*\*: Retrieves a list of all meal plans for the authenticated user. Supports search and sorting.
 
+\- \*\*Query Parameters\*\*:
 
-\-   \*\*Description\*\*: Retrieves a list of all meal plans for the authenticated user. Supports search and sorting.
+&nbsp; - `search` (string, optional): Filters the list by name (case-insensitive, partial match). Leverages the `pg\_trgm` index.
 
-\-   \*\*Query Parameters\*\*:
+&nbsp; - `sort` (string, optional): Field to sort by. Default: `updated\_at`.
 
-&nbsp;   -   `search` (string, optional): Filters the list by name (case-insensitive, partial match). Leverages the `pg\_trgm` index.
+&nbsp; - `order` (string, optional): Sort order. `asc` or `desc`. Default: `desc`.
 
-&nbsp;   -   `sort` (string, optional): Field to sort by. Default: `updated\_at`.
+\- \*\*Request Payload\*\*: None.
 
-&nbsp;   -   `order` (string, optional): Sort order. `asc` or `desc`. Default: `desc`.
+\- \*\*Response Payload\*\* (200 OK):
 
-\-   \*\*Request Payload\*\*: None.
+&nbsp; ```json
 
-\-   \*\*Response Payload\*\* (200 OK):
+&nbsp; \[
 
-&nbsp;   ```json
+&nbsp; {
 
-&nbsp;   \[
+&nbsp; "id": "uuid",
 
-&nbsp;     {
+&nbsp; "name": "Weight Reduction Plan - J.K.",
 
-&nbsp;       "id": "uuid",
+&nbsp; "created_at": "timestampz",
 
-&nbsp;       "name": "Weight Reduction Plan - J.K.",
+&nbsp; "updated_at": "timestampz",
 
-&nbsp;       "created\_at": "timestampz",
+&nbsp; "startup_data": {
 
-&nbsp;       "updated\_at": "timestampz",
+&nbsp; "patient_age": 30,
 
-&nbsp;       "startup\_data": {
+&nbsp; "patient_weight": 70.5,
 
-&nbsp;           "patient\_age": 30,
+&nbsp; "patient_height": 170.0,
 
-&nbsp;           "patient\_weight": 70.5,
+&nbsp; "activity_level": "moderate",
 
-&nbsp;           "patient\_height": 170.0,
+&nbsp; "target_kcal": 2000,
 
-&nbsp;           "activity\_level": "moderate",
+&nbsp; "target_macro_distribution": { "p_perc": 30, "f_perc": 25, "c_perc": 45 },
 
-&nbsp;           "target\_kcal": 2000,
+&nbsp; "meal_names": "Breakfast, Second Breakfast, Lunch, Dinner",
 
-&nbsp;           "target\_macro\_distribution": { "p\_perc": 30, "f\_perc": 25, "c\_perc": 45 },
+&nbsp; "exclusions_guidelines": "Gluten-free, no nuts."
 
-&nbsp;           "meal\_names": "Breakfast, Second Breakfast, Lunch, Dinner",
+&nbsp; },
 
-&nbsp;           "exclusions\_guidelines": "Gluten-free, no nuts."
+&nbsp; "daily_summary": {
 
-&nbsp;       },
+&nbsp; "kcal": 2000,
 
-&nbsp;       "daily\_summary": {
+&nbsp; "proteins": 150,
 
-&nbsp;           "kcal": 2000,
+&nbsp; "fats": 60,
 
-&nbsp;           "proteins": 150,
+&nbsp; "carbs": 215
 
-&nbsp;           "fats": 60,
+&nbsp; }
 
-&nbsp;           "carbs": 215
+&nbsp; }
 
-&nbsp;       }
+&nbsp; ]
 
-&nbsp;     }
+&nbsp; ```
 
-&nbsp;   ]
+\- \*\*Success Codes\*\*:
 
-&nbsp;   ```
+&nbsp; - `200 OK`: Successfully retrieved the list of meal plans.
 
-\-   \*\*Success Codes\*\*:
+\- \*\*Error Codes\*\*:
 
-&nbsp;   -   `200 OK`: Successfully retrieved the list of meal plans.
-
-\-   \*\*Error Codes\*\*:
-
-&nbsp;   -   `401 Unauthorized`: User is not authenticated.
-
-
+&nbsp; - `401 Unauthorized`: User is not authenticated.
 
 ---
-
-
 
 \#### `POST /api/meal-plans`
 
+\- \*\*Description\*\*: Creates a new meal plan. This is called from the editor view after the AI chat is accepted.
 
+\- \*\*Request Payload\*\*:
 
-\-   \*\*Description\*\*: Creates a new meal plan. This is called from the editor view after the AI chat is accepted.
+&nbsp; ```json
 
-\-   \*\*Request Payload\*\*:
+&nbsp; {
 
-&nbsp;   ```json
+&nbsp; "source_chat_session_id": "uuid",
 
-&nbsp;   {
+&nbsp; "name": "New Patient Plan",
 
-&nbsp;     "source\_chat\_session\_id": "uuid",
+&nbsp; "plan_content": {
 
-&nbsp;     "name": "New Patient Plan",
+&nbsp; "daily_summary": {
 
-&nbsp;     "plan\_content": {
+&nbsp; "kcal": 2000,
 
-&nbsp;       "daily\_summary": {
+&nbsp; "proteins": 150,
 
-&nbsp;         "kcal": 2000,
+&nbsp; "fats": 60,
 
-&nbsp;         "proteins": 150,
+&nbsp; "carbs": 215
 
-&nbsp;         "fats": 60,
+&nbsp; },
 
-&nbsp;         "carbs": 215
+&nbsp; "meals": \[
 
-&nbsp;       },
+&nbsp; {
 
-&nbsp;       "meals": \[
+&nbsp; "name": "Breakfast",
 
-&nbsp;         {
+&nbsp; "ingredients": "Oats 50g, milk 200ml...",
 
-&nbsp;           "name": "Breakfast",
+&nbsp; "preparation": "Mix and cook...",
 
-&nbsp;           "ingredients": "Oats 50g, milk 200ml...",
+&nbsp; "summary": { "kcal": 400, "p": 20, "f": 10, "c": 58 }
 
-&nbsp;           "preparation": "Mix and cook...",
+&nbsp; },
 
-&nbsp;           "summary": { "kcal": 400, "p": 20, "f": 10, "c": 58 }
+&nbsp; ...
 
-&nbsp;         },
+&nbsp; ]
 
-&nbsp;         ...
+&nbsp; },
 
-&nbsp;       ]
+&nbsp; "startup_data": {
 
-&nbsp;     },
+&nbsp; "patient_age": 30,
 
-&nbsp;     "startup\_data": {
+&nbsp; "patient_weight": 70.5,
 
-&nbsp;       "patient\_age": 30,
+&nbsp; "patient_height": 170.0,
 
-&nbsp;       "patient\_weight": 70.5,
+&nbsp; "activity_level": "moderate",
 
-&nbsp;       "patient\_height": 170.0,
+&nbsp; "target_kcal": 2000,
 
-&nbsp;       "activity\_level": "moderate",
+&nbsp; "target_macro_distribution": { "p_perc": 30, "f_perc": 25, "c_perc": 45 },
 
-&nbsp;       "target\_kcal": 2000,
+&nbsp; "meal_names": "Breakfast, Second Breakfast, Lunch, Dinner",
 
-&nbsp;       "target\_macro\_distribution": { "p\_perc": 30, "f\_perc": 25, "c\_perc": 45 },
+&nbsp; "exclusions_guidelines": "Gluten-free, no nuts."
 
-&nbsp;       "meal\_names": "Breakfast, Second Breakfast, Lunch, Dinner",
+&nbsp; }
 
-&nbsp;       "exclusions\_guidelines": "Gluten-free, no nuts."
+&nbsp; }
 
-&nbsp;     }
+&nbsp; ```
 
-&nbsp;   }
+\- \*\*Response Payload\*\* (201 Created):
 
-&nbsp;   ```
+&nbsp; ```json
 
-\-   \*\*Response Payload\*\* (201 Created):
+&nbsp; {
 
-&nbsp;   ```json
+&nbsp; "id": "new-uuid",
 
-&nbsp;   {
+&nbsp; "user_id": "auth-user-uuid",
 
-&nbsp;     "id": "new-uuid",
+&nbsp; "source_chat_session_id": "uuid",
 
-&nbsp;     "user\_id": "auth-user-uuid",
+&nbsp; "name": "New Patient Plan",
 
-&nbsp;     "source\_chat\_session\_id": "uuid",
+&nbsp; "plan_content": { ... },
 
-&nbsp;     "name": "New Patient Plan",
+&nbsp; "patient_age": 30,
 
-&nbsp;     "plan\_content": { ... },
+&nbsp; "patient_weight": 70.5,
 
-&nbsp;     "patient\_age": 30,
+&nbsp; ...
 
-&nbsp;     "patient\_weight": 70.5,
+&nbsp; "created_at": "timestampz",
 
-&nbsp;     ...
+&nbsp; "updated_at": "timestampz"
 
-&nbsp;     "created\_at": "timestampz",
+&nbsp; }
 
-&nbsp;     "updated\_at": "timestampz"
+&nbsp; ```
 
-&nbsp;   }
+\- \*\*Success Codes\*\*:
 
-&nbsp;   ```
+&nbsp; - `201 Created`: The meal plan was successfully created.
 
-\-   \*\*Success Codes\*\*:
+\- \*\*Error Codes\*\*:
 
-&nbsp;   -   `201 Created`: The meal plan was successfully created.
+&nbsp; - `400 Bad Request`: Validation failed (e.g., `name` is missing, `plan\_content` is not valid JSON, `activity\_level` is not a valid enum).
 
-\-   \*\*Error Codes\*\*:
-
-&nbsp;   -   `400 Bad Request`: Validation failed (e.g., `name` is missing, `plan\_content` is not valid JSON, `activity\_level` is not a valid enum).
-
-&nbsp;   -   `401 Unauthorized`: User is not authenticated.
-
-
+&nbsp; - `401 Unauthorized`: User is not authenticated.
 
 ---
-
-
 
 \#### `GET /api/meal-plans/{id}`
 
+\- \*\*Description\*\*: Retrieves a single, complete meal plan by its ID for viewing or editing.
 
+\- \*\*Request Payload\*\*: None.
 
-\-   \*\*Description\*\*: Retrieves a single, complete meal plan by its ID for viewing or editing.
+\- \*\*Response Payload\*\* (200 OK):
 
-\-   \*\*Request Payload\*\*: None.
+&nbsp; ```json
 
-\-   \*\*Response Payload\*\* (200 OK):
+&nbsp; {
 
-&nbsp;   ```json
+&nbsp; "id": "uuid",
 
-&nbsp;   {
+&nbsp; "user_id": "auth-user-uuid",
 
-&nbsp;     "id": "uuid",
+&nbsp; "source_chat_session_id": "uuid",
 
-&nbsp;     "user\_id": "auth-user-uuid",
+&nbsp; "name": "New Patient Plan",
 
-&nbsp;     "source\_chat\_session\_id": "uuid",
+&nbsp; "plan_content": { ... },
 
-&nbsp;     "name": "New Patient Plan",
+&nbsp; "patient_age": 30,
 
-&nbsp;     "plan\_content": { ... },
+&nbsp; "patient_weight": 70.5,
 
-&nbsp;     "patient\_age": 30,
+&nbsp; "patient_height": 170.0,
 
-&nbsp;     "patient\_weight": 70.5,
+&nbsp; "activity_level": "moderate",
 
-&nbsp;     "patient\_height": 170.0,
+&nbsp; "target_kcal": 2000,
 
-&nbsp;     "activity\_level": "moderate",
+&nbsp; "target_macro_distribution": { ... },
 
-&nbsp;     "target\_kcal": 2000,
+&nbsp; "meal_names": "Breakfast, Second Breakfast, Lunch, Dinner",
 
-&nbsp;     "target\_macro\_distribution": { ... },
+&nbsp; "exclusions_guidelines": "Gluten-free, no nuts.",
 
-&nbsp;     "meal\_names": "Breakfast, Second Breakfast, Lunch, Dinner",
+&nbsp; "created_at": "timestampz",
 
-&nbsp;     "exclusions\_guidelines": "Gluten-free, no nuts.",
+&nbsp; "updated_at": "timestampz"
 
-&nbsp;     "created\_at": "timestampz",
+&nbsp; }
 
-&nbsp;     "updated\_at": "timestampz"
+&nbsp; ```
 
-&nbsp;   }
+\- \*\*Success Codes\*\*:
 
-&nbsp;   ```
+&nbsp; - `200 OK`: Successfully retrieved the meal plan.
 
-\-   \*\*Success Codes\*\*:
+\- \*\*Error Codes\*\*:
 
-&nbsp;   -   `200 OK`: Successfully retrieved the meal plan.
+&nbsp; - `401 Unauthorized`: User is not authenticated.
 
-\-   \*\*Error Codes\*\*:
-
-&nbsp;   -   `401 Unauthorized`: User is not authenticated.
-
-&nbsp;   -   `404 Not Found`: No meal plan found with this ID for the authenticated user (due to RLS).
-
-
+&nbsp; - `404 Not Found`: No meal plan found with this ID for the authenticated user (due to RLS).
 
 ---
-
-
 
 \#### `PUT /api/meal-plans/{id}`
 
+\- \*\*Description\*\*: Updates an existing meal plan. This is called when saving changes from the editor.
 
+\- \*\*Request Payload\*\*: (Only fields to be updated are required, but `name` and `plan\_content` are typical)
 
-\-   \*\*Description\*\*: Updates an existing meal plan. This is called when saving changes from the editor.
+&nbsp; ```json
 
-\-   \*\*Request Payload\*\*: (Only fields to be updated are required, but `name` and `plan\_content` are typical)
+&nbsp; {
 
-&nbsp;   ```json
+&nbsp; "name": "Updated Patient Plan",
 
-&nbsp;   {
+&nbsp; "plan_content": {
 
-&nbsp;     "name": "Updated Patient Plan",
+&nbsp; "daily_summary": { ... },
 
-&nbsp;     "plan\_content": {
+&nbsp; "meals": \[ ... ]
 
-&nbsp;       "daily\_summary": { ... },
+&nbsp; }
 
-&nbsp;       "meals": \[ ... ]
+&nbsp; }
 
-&nbsp;     }
+&nbsp; ```
 
-&nbsp;   }
+\- \*\*Response Payload\*\* (200 OK):
 
-&nbsp;   ```
+&nbsp; ```json
 
-\-   \*\*Response Payload\*\* (200 OK):
+&nbsp; {
 
-&nbsp;   ```json
+&nbsp; "id": "uuid",
 
-&nbsp;   {
+&nbsp; "name": "Updated Patient Plan",
 
-&nbsp;     "id": "uuid",
+&nbsp; "plan_content": { ... },
 
-&nbsp;     "name": "Updated Patient Plan",
+&nbsp; ...
 
-&nbsp;     "plan\_content": { ... },
+&nbsp; "updated_at": "new-timestampz"
 
-&nbsp;     ...
+&nbsp; }
 
-&nbsp;     "updated\_at": "new-timestampz"
+&nbsp; ```
 
-&nbsp;   }
+\- \*\*Success Codes\*\*:
 
-&nbsp;   ```
+&nbsp; - `200 OK`: The meal plan was successfully updated.
 
-\-   \*\*Success Codes\*\*:
+\- \*\*Error Codes\*\*:
 
-&nbsp;   -   `200 OK`: The meal plan was successfully updated.
+&nbsp; - `400 Bad Request`: Validation failed (e.g., `name` is empty).
 
-\-   \*\*Error Codes\*\*:
+&nbsp; - `401 Unauthorized`: User is not authenticated.
 
-&nbsp;   -   `400 Bad Request`: Validation failed (e.g., `name` is empty).
-
-&nbsp;   -   `401 Unauthorized`: User is not authenticated.
-
-&nbsp;   -   `404 Not Found`: No meal plan found with this ID for the authenticated user.
-
-
+&nbsp; - `404 Not Found`: No meal plan found with this ID for the authenticated user.
 
 ---
-
-
 
 \#### `DELETE /api/meal-plans/{id}`
 
+\- \*\*Description\*\*: Permanently deletes a meal plan.
 
+\- \*\*Request Payload\*\*: None.
 
-\-   \*\*Description\*\*: Permanently deletes a meal plan.
+\- \*\*Response Payload\*\* (204 No Content): Empty.
 
-\-   \*\*Request Payload\*\*: None.
+\- \*\*Success Codes\*\*:
 
-\-   \*\*Response Payload\*\* (204 No Content): Empty.
+&nbsp; - `204 No Content`: The meal plan was successfully deleted.
 
-\-   \*\*Success Codes\*\*:
+\- \*\*Error Codes\*\*:
 
-&nbsp;   -   `204 No Content`: The meal plan was successfully deleted.
+&nbsp; - `401 Unauthorized`: User is not authenticated.
 
-\-   \*\*Error Codes\*\*:
-
-&nbsp;   -   `401 Unauthorized`: User is not authenticated.
-
-&nbsp;   -   `404 Not Found`: No meal plan found with this ID for the authenticated user.
-
-
+&nbsp; - `404 Not Found`: No meal plan found with this ID for the authenticated user.
 
 ---
-
-
 
 \#### `GET /api/meal-plans/{id}/export`
 
+\- \*\*Description\*\*: Generates and returns a `.doc` file of the specified meal plan.
 
+\- \*\*Request Payload\*\*: None.
 
-\-   \*\*Description\*\*: Generates and returns a `.doc` file of the specified meal plan.
+\- \*\*Response Payload\*\* (200 OK):
 
-\-   \*\*Request Payload\*\*: None.
+&nbsp; - The binary data of the `.doc` file.
 
-\-   \*\*Response Payload\*\* (200 OK):
+&nbsp; - `Content-Type: application/msword`
 
-&nbsp;   -   The binary data of the `.doc` file.
+&nbsp; - `Content-Disposition: attachment; filename="plan-name.doc"`
 
-&nbsp;   -   `Content-Type: application/msword`
+\- \*\*Success Codes\*\*:
 
-&nbsp;   -   `Content-Disposition: attachment; filename="plan-name.doc"`
+&nbsp; - `200 OK`: Successfully generated and returned the file.
 
-\-   \*\*Success Codes\*\*:
+\- \*\*Error Codes\*\*:
 
-&nbsp;   -   `200 OK`: Successfully generated and returned the file.
+&nbsp; - `401 Unauthorized`: User is not authenticated.
 
-\-   \*\*Error Codes\*\*:
+&nbsp; - `404 Not Found`: No meal plan found with this ID for the authenticated user.
 
-&nbsp;   -   `401 Unauthorized`: User is not authenticated.
-
-&nbsp;   -   `404 Not Found`: No meal plan found with this ID for the authenticated user.
-
-&nbsp;   -   `500 Internal Server Error`: File generation failed.
-
-
+&nbsp; - `500 Internal Server Error`: File generation failed.
 
 \### AI Chat Sessions (`/api/ai/sessions`)
 
-
-
 ---
-
-
 
 \#### `POST /api/ai/sessions`
 
+\- \*\*Description\*\*: Initiates a new AI chat session. This takes the startup form, formats the first prompt, calls OpenRouter, and creates the `ai\_chat\_sessions` telemetry record.
 
+\- \*\*Request Payload\*\*: (Corresponds to PRD 3.3.1)
 
-\-   \*\*Description\*\*: Initiates a new AI chat session. This takes the startup form, formats the first prompt, calls OpenRouter, and creates the `ai\_chat\_sessions` telemetry record.
+&nbsp; ```json
 
-\-   \*\*Request Payload\*\*: (Corresponds to PRD 3.3.1)
+&nbsp; {
 
-&nbsp;   ```json
+&nbsp; "patient_age": 30,
 
-&nbsp;   {
+&nbsp; "patient_weight": 70.5,
 
-&nbsp;     "patient\_age": 30,
+&nbsp; "patient_height": 170.0,
 
-&nbsp;     "patient\_weight": 70.5,
+&nbsp; "activity_level": "moderate",
 
-&nbsp;     "patient\_height": 170.0,
+&nbsp; "target_kcal": 2000,
 
-&nbsp;     "activity\_level": "moderate",
+&nbsp; "target_macro_distribution": { "p_perc": 30, "f_perc": 25, "c_perc": 45 },
 
-&nbsp;     "target\_kcal": 2000,
+&nbsp; "meal_names": "Breakfast, Second Breakfast, Lunch, Dinner",
 
-&nbsp;     "target\_macro\_distribution": { "p\_perc": 30, "f\_perc": 25, "c\_perc": 45 },
+&nbsp; "exclusions_guidelines": "Gluten-free, no nuts."
 
-&nbsp;     "meal\_names": "Breakfast, Second Breakfast, Lunch, Dinner",
+&nbsp; }
 
-&nbsp;     "exclusions\_guidelines": "Gluten-free, no nuts."
+&nbsp; ```
 
-&nbsp;   }
+\- \*\*Response Payload\*\* (201 Created):
 
-&nbsp;   ```
+&nbsp; ```json
 
-\-   \*\*Response Payload\*\* (201 Created):
+&nbsp; {
 
-&nbsp;   ```json
+&nbsp; "session_id": "new-chat-session-uuid",
 
-&nbsp;   {
+&nbsp; "message": {
 
-&nbsp;     "session\_id": "new-chat-session-uuid",
+&nbsp; "role": "assistant",
 
-&nbsp;     "message": {
+&nbsp; "content": "Here is the 1-day meal plan based on your guidelines..."
 
-&nbsp;       "role": "assistant",
+&nbsp; },
 
-&nbsp;       "content": "Here is the 1-day meal plan based on your guidelines..."
+&nbsp; "prompt_count": 1
 
-&nbsp;     },
+&nbsp; }
 
-&nbsp;     "prompt\_count": 1
+&nbsp; ```
 
-&nbsp;   }
+\- \*\*Success Codes\*\*:
 
-&nbsp;   ```
+&nbsp; - `201 Created`: Session initiated and first AI response generated.
 
-\-   \*\*Success Codes\*\*:
+\- \*\*Error Codes\*\*:
 
-&nbsp;   -   `201 Created`: Session initiated and first AI response generated.
+&nbsp; - `400 Bad Request`: Validation failed (e.g., `activity\_level` is not a valid enum, `target\_kcal` is not a number).
 
-\-   \*\*Error Codes\*\*:
+&nbsp; - `401 Unauthorized`: User is not authenticated.
 
-&nbsp;   -   `400 Bad Request`: Validation failed (e.g., `activity\_level` is not a valid enum, `target\_kcal` is not a number).
-
-&nbsp;   -   `401 Unauthorized`: User is not authenticated.
-
-&nbsp;   -   `502 Bad Gateway`: Error communicating with OpenRouter.ai.
-
-
+&nbsp; - `502 Bad Gateway`: Error communicating with OpenRouter.ai.
 
 ---
-
-
 
 \#### `POST /api/ai/sessions/{id}/message`
 
+\- \*\*Description\*\*: Sends a follow-up message in an existing AI chat session. The backend appends this to the history, calls OpenRouter, updates the `message\_history` and `final\_prompt\_count` in the database, and returns the response.
 
+\- \*\*Request Payload\*\*:
 
-\-   \*\*Description\*\*: Sends a follow-up message in an existing AI chat session. The backend appends this to the history, calls OpenRouter, updates the `message\_history` and `final\_prompt\_count` in the database, and returns the response.
+&nbsp; ```json
 
-\-   \*\*Request Payload\*\*:
+&nbsp; {
 
-&nbsp;   ```json
+&nbsp; "message": {
 
-&nbsp;   {
+&nbsp; "role": "user",
 
-&nbsp;     "message": {
+&nbsp; "content": "Change dinner to something dairy-free."
 
-&nbsp;       "role": "user",
+&nbsp; }
 
-&nbsp;       "content": "Change dinner to something dairy-free."
+&nbsp; }
 
-&nbsp;     }
+&nbsp; ```
 
-&nbsp;   }
+\- \*\*Response Payload\*\* (200 OK):
 
-&nbsp;   ```
+&nbsp; ```json
 
-\-   \*\*Response Payload\*\* (200 OK):
+&nbsp; {
 
-&nbsp;   ```json
+&nbsp; "session_id": "chat-session-uuid",
 
-&nbsp;   {
+&nbsp; "message": {
 
-&nbsp;     "session\_id": "chat-session-uuid",
+&nbsp; "role": "assistant",
 
-&nbsp;     "message": {
+&nbsp; "content": "Understood. Here is the updated plan with a dairy-free dinner..."
 
-&nbsp;       "role": "assistant",
+&nbsp; },
 
-&nbsp;       "content": "Understood. Here is the updated plan with a dairy-free dinner..."
+&nbsp; "prompt_count": 2
 
-&nbsp;     },
+&nbsp; }
 
-&nbsp;     "prompt\_count": 2
+&nbsp; ```
 
-&nbsp;   }
+\- \*\*Success Codes\*\*:
 
-&nbsp;   ```
+&nbsp; - `200 OK`: Follow-up message processed and AI response returned.
 
-\-   \*\*Success Codes\*\*:
+\- \*\*Error Codes\*\*:
 
-&nbsp;   -   `200 OK`: Follow-up message processed and AI response returned.
+&nbsp; - `401 Unauthorized`: User is not authenticated.
 
-\-   \*\*Error Codes\*\*:
+&nbsp; - `404 Not Found`: No chat session found with this ID for the user.
 
-&nbsp;   -   `401 Unauthorized`: User is not authenticated.
-
-&nbsp;   -   `404 Not Found`: No chat session found with this ID for the user.
-
-&nbsp;   -   `502 Bad Gateway`: Error communicating with OpenRouter.ai.
-
-
+&nbsp; - `502 Bad Gateway`: Error communicating with OpenRouter.ai.
 
 \### User Management (`/api/users`)
 
-
-
 ---
-
-
 
 \#### `DELETE /api/users/me`
 
+\- \*\*Description\*\*: Permanently deletes the authenticated user's account and all associated data (meal plans, chat sessions) via the `ON DELETE CASCADE` rule in the database.
 
+\- \*\*Request Payload\*\*: None.
 
-\-   \*\*Description\*\*: Permanently deletes the authenticated user's account and all associated data (meal plans, chat sessions) via the `ON DELETE CASCADE` rule in the database.
+\- \*\*Response Payload\*\* (204 No Content): Empty.
 
-\-   \*\*Request Payload\*\*: None.
+\- \*\*Success Codes\*\*:
 
-\-   \*\*Response Payload\*\* (204 No Content): Empty.
+&nbsp; - `204 No Content`: The user account and all data were successfully deleted.
 
-\-   \*\*Success Codes\*\*:
+\- \*\*Error Codes\*\*:
 
-&nbsp;   -   `204 No Content`: The user account and all data were successfully deleted.
+&nbsp; - `401 Unauthorized`: User is not authenticated.
 
-\-   \*\*Error Codes\*\*:
-
-&nbsp;   -   `401 Unauthorized`: User is not authenticated.
-
-&nbsp;   -   `500 Internal Server Error`: Failed to delete the user from `auth.users`.
-
-
+&nbsp; - `500 Internal Server Error`: Failed to delete the user from `auth.users`.
 
 \## 3. Authentication and Authorization
 
+\- \*\*Authentication\*\*: Handled via Supabase's built-in authentication. All API requests (except Supabase's built-in auth endpoints for login/register) must include a valid `Authorization: Bearer <SUPABASE\_JWT>` header. The backend will use this JWT to identify the user via `auth.uid()`.
 
+\- \*\*Authorization\*\*: Implemented at the database level using PostgreSQL Row-Level Security (RLS), as defined in `db-plan.md`.
 
-\-   \*\*Authentication\*\*: Handled via Supabase's built-in authentication. All API requests (except Supabase's built-in auth endpoints for login/register) must include a valid `Authorization: Bearer <SUPABASE\_JWT>` header. The backend will use this JWT to identify the user via `auth.uid()`.
+&nbsp; - \*\*`meal\_plans`\*\*: Users can only perform CRUD operations on their \*own\* records (`auth.uid() = user\_id`).
 
-\-   \*\*Authorization\*\*: Implemented at the database level using PostgreSQL Row-Level Security (RLS), as defined in `db-plan.md`.
-
-&nbsp;   -   \*\*`meal\_plans`\*\*: Users can only perform CRUD operations on their \*own\* records (`auth.uid() = user\_id`).
-
-&nbsp;   -   \*\*`ai\_chat\_sessions`\*\*: Users can only `INSERT` new sessions. They cannot `SELECT`, `UPDATE`, or `DELETE` any sessions, including their own, ensuring telemetry data is private and immutable.
-
-
+&nbsp; - \*\*`ai\_chat\_sessions`\*\*: Users can only `INSERT` new sessions. They cannot `SELECT`, `UPDATE`, or `DELETE` any sessions, including their own, ensuring telemetry data is private and immutable.
 
 \## 4. Validation and Business Logic
 
+\- \*\*Validation\*\*:
 
+&nbsp; - Input validation will be performed by the API for all `POST`/`PUT` requests before hitting the database.
 
-\-   \*\*Validation\*\*:
+&nbsp; - This includes checking for `NOT NULL` fields (e.g., `meal\_plans.name`), correct data types (e.g., `patient\_age` is an integer), and enum constraints (e.g., `activity\_level` is one of the allowed values).
 
-&nbsp;   -   Input validation will be performed by the API for all `POST`/`PUT` requests before hitting the database.
+\- \*\*Business Logic\*\*:
 
-&nbsp;   -   This includes checking for `NOT NULL` fields (e.g., `meal\_plans.name`), correct data types (e.g., `patient\_age` is an integer), and enum constraints (e.g., `activity\_level` is one of the allowed values).
+&nbsp; - \*\*Registration/Login/Reset\*\*: Handled by the Supabase client SDK (BaaS approach), not by this custom API.
 
-\-   \*\*Business Logic\*\*:
+&nbsp; - \*\*AI Interaction\*\*: The `POST /api/ai/sessions` and `POST /api/ai/sessions/{id}/message` endpoints orchestrate the business logic of communicating with OpenRouter.ai and logging telemetry to the `ai\_chat\_sessions` table.
 
-&nbsp;   -   \*\*Registration/Login/Reset\*\*: Handled by the Supabase client SDK (BaaS approach), not by this custom API.
+&nbsp; - \*\*Plan Creation Workflow\*\*: The frontend bridges the gap between chat and editor. It takes the final response from `POST .../message`, lets the user edit, and then calls `POST /api/meal-plans` to save the final plan, linking it via the `source\_chat\_session\_id`.
 
-&nbsp;   -   \*\*AI Interaction\*\*: The `POST /api/ai/sessions` and `POST /api/ai/sessions/{id}/message` endpoints orchestrate the business logic of communicating with OpenRouter.ai and logging telemetry to the `ai\_chat\_sessions` table.
+&nbsp; - \*\*Dashboard Sorting\*\*: The `GET /api/meal-plans` endpoint defaults to sorting by `updated\_at desc` to fulfill `US-011` ("Newly saved meal plan is visible at the top..."). The `on\_meal\_plan\_update` trigger ensures `updated\_at` is always current.
 
-&nbsp;   -   \*\*Plan Creation Workflow\*\*: The frontend bridges the gap between chat and editor. It takes the final response from `POST .../message`, lets the user edit, and then calls `POST /api/meal-plans` to save the final plan, linking it via the `source\_chat\_session\_id`.
+&nbsp; - \*\*Dashboard Search\*\*: The `search` parameter on `GET /api/meal-plans` uses the `idx\_meal\_plans\_name\_trgm` index for fast, live filtering as required by `US-006`.
 
-&nbsp;   -   \*\*Dashboard Sorting\*\*: The `GET /api/meal-plans` endpoint defaults to sorting by `updated\_at desc` to fulfill `US-011` ("Newly saved meal plan is visible at the top..."). The `on\_meal\_plan\_update` trigger ensures `updated\_at` is always current.
-
-&nbsp;   -   \*\*Dashboard Search\*\*: The `search` parameter on `GET /api/meal-plans` uses the `idx\_meal\_plans\_name\_trgm` index for fast, live filtering as required by `US-006`.
-
-&nbsp;   -   \*\*Export\*\*: The `GET /api/meal-plans/{id}/export` endpoint reads the saved plan \*and\* its associated startup data (e.g., `patient\_age`, `target\_kcal`) to generate the complete .doc file as specified in `PRD 3.4`.
-
-
-
+&nbsp; - \*\*Export\*\*: The `GET /api/meal-plans/{id}/export` endpoint reads the saved plan \*and\* its associated startup data (e.g., `patient\_age`, `target\_kcal`) to generate the complete .doc file as specified in `PRD 3.4`.

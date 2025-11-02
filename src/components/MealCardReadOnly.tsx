@@ -57,4 +57,3 @@ export function MealCardReadOnly({ meal, mealIndex }: MealCardReadOnlyProps) {
     </div>
   );
 }
-

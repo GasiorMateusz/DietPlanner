@@ -1,17 +1,9 @@
-import type { APIRoute } from 'astro';
-import {
-  DatabaseError,
-  NotFoundError,
-  UnauthorizedError,
-  ValidationError,
-} from '../../../lib/errors.ts';
-import { MealPlanService } from '../../../lib/meal-plans/meal-plan.service.ts';
-import {
-  createMealPlanSchema,
-  listMealPlansQuerySchema,
-} from '../../../lib/validation/meal-plans.schemas.ts';
-import type { CreateMealPlanCommand } from '../../../types.ts';
-import { getUserFromRequest } from '@/lib/auth/session.service.js';
+import type { APIRoute } from "astro";
+import { DatabaseError, NotFoundError, UnauthorizedError, ValidationError } from "../../../lib/errors.ts";
+import { MealPlanService } from "../../../lib/meal-plans/meal-plan.service.ts";
+import { createMealPlanSchema, listMealPlansQuerySchema } from "../../../lib/validation/meal-plans.schemas.ts";
+import type { CreateMealPlanCommand } from "../../../types.ts";
+import { getUserFromRequest } from "@/lib/auth/session.service.js";
 
 export const prerender = false;
 
@@ -39,35 +31,31 @@ export const GET: APIRoute = async (context) => {
     // Parse and validate query parameters
     const url = new URL(request.url);
     const queryParams = {
-      search: url.searchParams.get('search') ?? undefined,
-      sort: url.searchParams.get('sort') ?? undefined,
-      order: url.searchParams.get('order') ?? undefined,
+      search: url.searchParams.get("search") ?? undefined,
+      sort: url.searchParams.get("sort") ?? undefined,
+      order: url.searchParams.get("order") ?? undefined,
     };
 
     const validation = listMealPlansQuerySchema.safeParse(queryParams);
     if (!validation.success) {
       return new Response(
         JSON.stringify({
-          error: 'Validation failed',
+          error: "Validation failed",
           details: validation.error.errors,
         }),
         {
           status: 400,
-          headers: { 'Content-Type': 'application/json' },
+          headers: { "Content-Type": "application/json" },
         }
       );
     }
 
     // Call service to list meal plans
-    const mealPlans = await MealPlanService.listMealPlans(
-      user.id,
-      validation.data,
-      supabase,
-    );
+    const mealPlans = await MealPlanService.listMealPlans(user.id, validation.data, supabase);
 
     return new Response(JSON.stringify(mealPlans), {
       status: 200,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { "Content-Type": "application/json" },
     });
   } catch (error) {
     if (error instanceof UnauthorizedError) {
@@ -78,8 +66,8 @@ export const GET: APIRoute = async (context) => {
         }),
         {
           status: 401,
-          headers: { 'Content-Type': 'application/json' },
-        },
+          headers: { "Content-Type": "application/json" },
+        }
       );
     }
     // Handle custom errors
@@ -91,36 +79,36 @@ export const GET: APIRoute = async (context) => {
         }),
         {
           status: 400,
-          headers: { 'Content-Type': 'application/json' },
+          headers: { "Content-Type": "application/json" },
         }
       );
     }
 
     if (error instanceof DatabaseError) {
       // eslint-disable-next-line no-console
-      console.error('Database error:', error.message, error.originalError);
+      console.error("Database error:", error.message, error.originalError);
       return new Response(
         JSON.stringify({
-          error: 'An internal error occurred',
+          error: "An internal error occurred",
         }),
         {
           status: 500,
-          headers: { 'Content-Type': 'application/json' },
+          headers: { "Content-Type": "application/json" },
         }
       );
     }
 
     // Handle unexpected errors
     // eslint-disable-next-line no-console
-    console.error('Internal server error:', error);
+    console.error("Internal server error:", error);
     return new Response(
       JSON.stringify({
-        error: 'An internal error occurred',
-        details: error instanceof Error ? error.message : 'Unknown error',
+        error: "An internal error occurred",
+        details: error instanceof Error ? error.message : "Unknown error",
       }),
       {
         status: 500,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { "Content-Type": "application/json" },
       }
     );
   }
@@ -155,12 +143,12 @@ export const POST: APIRoute = async (context) => {
     } catch (error) {
       return new Response(
         JSON.stringify({
-          error: 'Invalid JSON in request body',
-          details: error instanceof Error ? error.message : 'Unknown error',
+          error: "Invalid JSON in request body",
+          details: error instanceof Error ? error.message : "Unknown error",
         }),
         {
           status: 400,
-          headers: { 'Content-Type': 'application/json' },
+          headers: { "Content-Type": "application/json" },
         }
       );
     }
@@ -170,26 +158,22 @@ export const POST: APIRoute = async (context) => {
     if (!validation.success) {
       return new Response(
         JSON.stringify({
-          error: 'Validation failed',
+          error: "Validation failed",
           details: validation.error.errors,
         }),
         {
           status: 400,
-          headers: { 'Content-Type': 'application/json' },
+          headers: { "Content-Type": "application/json" },
         }
       );
     }
 
     // Call service to create meal plan
-    const mealPlan = await MealPlanService.createMealPlan(
-      validation.data as CreateMealPlanCommand,
-      user.id,
-      supabase,
-    );
+    const mealPlan = await MealPlanService.createMealPlan(validation.data as CreateMealPlanCommand, user.id, supabase);
 
     return new Response(JSON.stringify(mealPlan), {
       status: 201,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { "Content-Type": "application/json" },
     });
   } catch (error) {
     if (error instanceof UnauthorizedError) {
@@ -200,8 +184,8 @@ export const POST: APIRoute = async (context) => {
         }),
         {
           status: 401,
-          headers: { 'Content-Type': 'application/json' },
-        },
+          headers: { "Content-Type": "application/json" },
+        }
       );
     }
     // Handle custom errors
@@ -213,38 +197,37 @@ export const POST: APIRoute = async (context) => {
         }),
         {
           status: 400,
-          headers: { 'Content-Type': 'application/json' },
+          headers: { "Content-Type": "application/json" },
         }
       );
     }
 
     if (error instanceof DatabaseError) {
       // eslint-disable-next-line no-console
-      console.error('Database error:', error.message, error.originalError);
+      console.error("Database error:", error.message, error.originalError);
       return new Response(
         JSON.stringify({
-          error: 'An internal error occurred',
+          error: "An internal error occurred",
         }),
         {
           status: 500,
-          headers: { 'Content-Type': 'application/json' },
+          headers: { "Content-Type": "application/json" },
         }
       );
     }
 
     // Handle unexpected errors
     // eslint-disable-next-line no-console
-    console.error('Internal server error:', error);
+    console.error("Internal server error:", error);
     return new Response(
       JSON.stringify({
-        error: 'An internal error occurred',
-        details: error instanceof Error ? error.message : 'Unknown error',
+        error: "An internal error occurred",
+        details: error instanceof Error ? error.message : "Unknown error",
       }),
       {
         status: 500,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { "Content-Type": "application/json" },
       }
     );
   }
 };
-

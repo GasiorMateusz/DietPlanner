@@ -29,6 +29,7 @@ The primary objectives of this test plan are to:
 ### 1.3 Scope of Testing
 
 **In Scope:**
+
 - User authentication (registration, login, password reset, account management)
 - Meal plan CRUD operations (create, read, update, delete, list, search)
 - AI chat session creation and messaging
@@ -42,6 +43,7 @@ The primary objectives of this test plan are to:
 - UI component functionality
 
 **Out of Scope (MVP Boundaries):**
+
 - Multi-day meal plans
 - Recipe database integration
 - Social features (sharing, commenting)
@@ -57,6 +59,7 @@ The primary objectives of this test plan are to:
 ### 2.1 Functional Testing Areas
 
 #### 2.1.1 Authentication Module
+
 - User registration with email/password
 - Terms and conditions acceptance validation
 - Login/logout functionality
@@ -67,6 +70,7 @@ The primary objectives of this test plan are to:
 - Route protection (authenticated vs. unauthenticated access)
 
 #### 2.1.2 Dashboard Module
+
 - Meal plans list display
 - Search functionality (live filtering)
 - Sorting options (by name, created_at, updated_at)
@@ -76,6 +80,7 @@ The primary objectives of this test plan are to:
 - Responsive layout
 
 #### 2.1.3 AI Chat Module
+
 - Startup form data collection
 - AI session creation
 - Initial meal plan generation
@@ -87,6 +92,7 @@ The primary objectives of this test plan are to:
 - Session state management
 
 #### 2.1.4 Meal Plan Editor Module
+
 - Create mode (from AI chat)
 - Edit mode (existing plan)
 - Plan name editing
@@ -98,6 +104,7 @@ The primary objectives of this test plan are to:
 - Error handling and recovery
 
 #### 2.1.5 Export Module
+
 - `.doc` file generation
 - Document structure validation
 - Filename sanitization
@@ -107,6 +114,7 @@ The primary objectives of this test plan are to:
 #### 2.1.6 API Endpoints
 
 **Meal Plans API (`/api/meal-plans`):**
+
 - `GET /api/meal-plans` - List with search/sort
 - `POST /api/meal-plans` - Create
 - `GET /api/meal-plans/{id}` - Get by ID
@@ -115,12 +123,14 @@ The primary objectives of this test plan are to:
 - `GET /api/meal-plans/{id}/export` - Export
 
 **AI Sessions API (`/api/ai/sessions`):**
+
 - `POST /api/ai/sessions` - Create session
 - `POST /api/ai/sessions/{id}/message` - Send message
 
 ### 2.2 Non-Functional Testing Areas
 
 #### 2.2.1 Security Testing
+
 - Authentication token validation
 - Authorization checks (RLS policies)
 - SQL injection prevention (via Supabase SDK)
@@ -130,6 +140,7 @@ The primary objectives of this test plan are to:
 - Session timeout and refresh
 
 #### 2.2.2 Performance Testing
+
 - API response times
 - AI generation latency
 - Page load times
@@ -138,6 +149,7 @@ The primary objectives of this test plan are to:
 - Client-side rendering performance
 
 #### 2.2.3 Usability Testing
+
 - Form validation feedback
 - Error message clarity
 - Loading state indicators
@@ -145,6 +157,7 @@ The primary objectives of this test plan are to:
 - Responsive design (desktop, tablet, mobile viewports)
 
 #### 2.2.4 Compatibility Testing
+
 - Browser testing (Chrome, Firefox, Safari, Edge - latest versions)
 - Viewport sizes (desktop: 1920x1080, laptop: 1366x768, tablet: 768x1024, mobile: 375x667)
 
@@ -157,6 +170,7 @@ The primary objectives of this test plan are to:
 **Purpose**: Test individual functions, methods, and components in isolation.
 
 **Scope:**
+
 - Validation schemas (Zod)
 - Utility functions (`date.ts`, `meal-plan-parser.ts`, `utils.ts`)
 - Service classes (`OpenRouterService`, `AiSessionService`, `MealPlanService`, `DocumentGeneratorService`)
@@ -171,6 +185,7 @@ The primary objectives of this test plan are to:
 **Purpose**: Test interactions between components, services, and external systems.
 
 **Scope:**
+
 - API route handlers with service layer
 - Database operations with RLS policies
 - Supabase client integration
@@ -186,6 +201,7 @@ The primary objectives of this test plan are to:
 **Purpose**: Test complete user workflows from start to finish.
 
 **Scope:**
+
 - User registration → login → dashboard
 - Create meal plan (startup form → AI chat → accept → editor → save)
 - Edit existing meal plan → save
@@ -202,6 +218,7 @@ The primary objectives of this test plan are to:
 **Purpose**: Validate security mechanisms and identify vulnerabilities.
 
 **Scope:**
+
 - Authentication bypass attempts
 - Authorization checks (accessing other users' data)
 - Input validation (SQL injection, XSS attempts)
@@ -217,6 +234,7 @@ The primary objectives of this test plan are to:
 **Purpose**: Assess application responsiveness and resource usage.
 
 **Scope:**
+
 - API endpoint response times (target: < 500ms for most endpoints)
 - AI generation latency (target: < 30s, depends on model)
 - Page load times (target: < 2s initial load)
@@ -230,6 +248,7 @@ The primary objectives of this test plan are to:
 **Purpose**: Ensure new changes don't break existing functionality.
 
 **Scope:**
+
 - Smoke test suite (critical paths)
 - Full functional test suite on each release
 - Automated test execution in CI/CD pipeline
@@ -243,8 +262,10 @@ The primary objectives of this test plan are to:
 ### 4.1 Authentication Scenarios
 
 #### TC-AUTH-001: User Registration - Success
+
 **Priority**: High  
 **Steps**:
+
 1. Navigate to `/auth/register`
 2. Enter valid email address
 3. Enter password (min 6 characters)
@@ -255,8 +276,10 @@ The primary objectives of this test plan are to:
 **Expected Result**: User registered, redirected to `/app/dashboard`, session established
 
 #### TC-AUTH-002: User Registration - Validation Errors
+
 **Priority**: High  
 **Steps**:
+
 1. Navigate to `/auth/register`
 2. Attempt submission with:
    - Invalid email format
@@ -267,8 +290,10 @@ The primary objectives of this test plan are to:
 **Expected Result**: Appropriate validation errors displayed, form not submitted
 
 #### TC-AUTH-003: User Login - Success
+
 **Priority**: Critical  
 **Steps**:
+
 1. Navigate to `/auth/login`
 2. Enter valid credentials
 3. Submit form
@@ -276,8 +301,10 @@ The primary objectives of this test plan are to:
 **Expected Result**: User logged in, redirected to `/app/dashboard`
 
 #### TC-AUTH-004: User Login - Invalid Credentials
+
 **Priority**: High  
 **Steps**:
+
 1. Navigate to `/auth/login`
 2. Enter invalid email or password
 3. Submit form
@@ -285,8 +312,10 @@ The primary objectives of this test plan are to:
 **Expected Result**: Error message displayed, user remains on login page
 
 #### TC-AUTH-005: Password Reset Flow
+
 **Priority**: Medium  
 **Steps**:
+
 1. Navigate to `/auth/forgot-password`
 2. Enter registered email
 3. Submit form
@@ -298,8 +327,10 @@ The primary objectives of this test plan are to:
 **Expected Result**: Password reset, user can login with new password
 
 #### TC-AUTH-006: Session Expiry Handling
+
 **Priority**: High  
 **Steps**:
+
 1. Log in to application
 2. Wait for token expiration (or manually expire token)
 3. Attempt API call
@@ -307,16 +338,20 @@ The primary objectives of this test plan are to:
 **Expected Result**: 401 Unauthorized response, redirect to `/auth/login`
 
 #### TC-AUTH-007: Route Protection - Unauthenticated Access
+
 **Priority**: Critical  
 **Steps**:
+
 1. Clear browser cookies/session
 2. Navigate to `/app/dashboard`
 
 **Expected Result**: Redirected to `/auth/login`
 
 #### TC-AUTH-008: Route Protection - Authenticated Access to Auth Pages
+
 **Priority**: Medium  
 **Steps**:
+
 1. Log in to application
 2. Navigate to `/auth/login` or `/auth/register`
 
@@ -327,8 +362,10 @@ The primary objectives of this test plan are to:
 ### 4.2 Dashboard Scenarios
 
 #### TC-DASH-001: Display Meal Plans List
+
 **Priority**: Critical  
 **Steps**:
+
 1. Log in to application
 2. Navigate to `/app/dashboard`
 3. Verify meal plans are displayed (if any exist)
@@ -336,16 +373,20 @@ The primary objectives of this test plan are to:
 **Expected Result**: List of meal plans shown with name, dates, and action buttons
 
 #### TC-DASH-002: Empty State Display
+
 **Priority**: Medium  
 **Steps**:
+
 1. Log in as new user (no meal plans)
 2. Navigate to `/app/dashboard`
 
 **Expected Result**: Empty state message displayed with "Create new meal plan" option
 
 #### TC-DASH-003: Search Functionality
+
 **Priority**: High  
 **Steps**:
+
 1. Navigate to dashboard with multiple meal plans
 2. Enter search query in search field
 3. Verify filtered results update in real-time
@@ -353,8 +394,10 @@ The primary objectives of this test plan are to:
 **Expected Result**: Only matching meal plans displayed, case-insensitive partial match
 
 #### TC-DASH-004: Sorting Functionality
+
 **Priority**: Medium  
 **Steps**:
+
 1. Navigate to dashboard with multiple meal plans
 2. Change sort option (name, created_at, updated_at)
 3. Change order (asc/desc)
@@ -362,8 +405,10 @@ The primary objectives of this test plan are to:
 **Expected Result**: Meal plans sorted according to selected criteria
 
 #### TC-DASH-005: Delete Meal Plan - With Confirmation
+
 **Priority**: High  
 **Steps**:
+
 1. Navigate to dashboard
 2. Click "Delete" on a meal plan
 3. Confirm deletion in dialog
@@ -372,8 +417,10 @@ The primary objectives of this test plan are to:
 **Expected Result**: Confirmation dialog shown, meal plan deleted after confirmation
 
 #### TC-DASH-006: Delete Meal Plan - Cancel
+
 **Priority**: Medium  
 **Steps**:
+
 1. Navigate to dashboard
 2. Click "Delete" on a meal plan
 3. Cancel deletion in dialog
@@ -381,8 +428,10 @@ The primary objectives of this test plan are to:
 **Expected Result**: Dialog closed, meal plan remains in list
 
 #### TC-DASH-007: Navigate to Create Meal Plan
+
 **Priority**: Critical  
 **Steps**:
+
 1. Navigate to dashboard
 2. Click "Create new meal plan" button
 
@@ -393,8 +442,10 @@ The primary objectives of this test plan are to:
 ### 4.3 AI Chat Scenarios
 
 #### TC-AI-001: Create AI Session - Success
+
 **Priority**: Critical  
 **Steps**:
+
 1. Click "Create new meal plan"
 2. Fill startup form with valid data
 3. Submit form
@@ -403,8 +454,10 @@ The primary objectives of this test plan are to:
 **Expected Result**: AI session created, initial meal plan displayed in chat interface
 
 #### TC-AI-002: AI Session Creation - Validation Errors
+
 **Priority**: High  
 **Steps**:
+
 1. Click "Create new meal plan"
 2. Fill form with invalid data (e.g., negative age, invalid enum)
 3. Submit form
@@ -412,8 +465,10 @@ The primary objectives of this test plan are to:
 **Expected Result**: Validation errors displayed, form not submitted
 
 #### TC-AI-003: Send Follow-up Message
+
 **Priority**: High  
 **Steps**:
+
 1. In active AI chat session
 2. Enter message in input field
 3. Send message
@@ -422,16 +477,20 @@ The primary objectives of this test plan are to:
 **Expected Result**: Message sent, AI response displayed, conversation history updated
 
 #### TC-AI-004: AI Service Unavailable (502 Error)
+
 **Priority**: High  
 **Steps**:
+
 1. Create AI session (with mock/disabled OpenRouter)
 2. Observe error handling
 
 **Expected Result**: User-friendly error message displayed, option to retry
 
 #### TC-AI-005: Message Validation
+
 **Priority**: Medium  
 **Steps**:
+
 1. In AI chat interface
 2. Attempt to send empty message
 3. Attempt to send message exceeding max length
@@ -439,8 +498,10 @@ The primary objectives of this test plan are to:
 **Expected Result**: Send button disabled for empty, error for too long
 
 #### TC-AI-006: Accept Meal Plan
+
 **Priority**: Critical  
 **Steps**:
+
 1. Receive AI-generated meal plan
 2. Click "Accept" button
 3. Verify navigation to editor
@@ -452,8 +513,10 @@ The primary objectives of this test plan are to:
 ### 4.4 Meal Plan Editor Scenarios
 
 #### TC-EDIT-001: Create Meal Plan from AI Chat
+
 **Priority**: Critical  
 **Steps**:
+
 1. Accept meal plan from AI chat
 2. Navigate to editor (create mode)
 3. Verify all fields populated
@@ -464,8 +527,10 @@ The primary objectives of this test plan are to:
 **Expected Result**: Meal plan saved, redirected to dashboard, new plan visible in list
 
 #### TC-EDIT-002: Edit Existing Meal Plan
+
 **Priority**: Critical  
 **Steps**:
+
 1. Navigate to dashboard
 2. Click "Edit/View" on existing meal plan
 3. Modify fields
@@ -474,8 +539,10 @@ The primary objectives of this test plan are to:
 **Expected Result**: Changes saved, `updated_at` timestamp updated
 
 #### TC-EDIT-003: Add Meal to Plan
+
 **Priority**: High  
 **Steps**:
+
 1. In editor, click "Add Meal"
 2. Fill meal fields (name, ingredients, preparation, nutrition)
 3. Save meal plan
@@ -483,8 +550,10 @@ The primary objectives of this test plan are to:
 **Expected Result**: New meal added, daily summary updated (if auto-calculated)
 
 #### TC-EDIT-004: Remove Meal from Plan
+
 **Priority**: High  
 **Steps**:
+
 1. In editor, click "Remove" on a meal
 2. Confirm removal
 3. Save meal plan
@@ -492,8 +561,10 @@ The primary objectives of this test plan are to:
 **Expected Result**: Meal removed, plan saved successfully
 
 #### TC-EDIT-005: Form Validation - Incomplete Data
+
 **Priority**: High  
 **Steps**:
+
 1. In editor, attempt to save with:
    - Empty plan name
    - Empty meal name
@@ -502,16 +573,20 @@ The primary objectives of this test plan are to:
 **Expected Result**: Validation errors displayed, save disabled until valid
 
 #### TC-EDIT-006: Editor - Load Existing Plan
+
 **Priority**: Critical  
 **Steps**:
+
 1. Navigate to `/app/editor/{id}` with valid meal plan ID
 2. Verify all data loaded correctly
 
 **Expected Result**: All fields populated with existing plan data
 
 #### TC-EDIT-007: Editor - Invalid Plan ID
+
 **Priority**: Medium  
 **Steps**:
+
 1. Navigate to `/app/editor/{invalid-id}`
 2. Verify error handling
 
@@ -522,8 +597,10 @@ The primary objectives of this test plan are to:
 ### 4.5 Export Scenarios
 
 #### TC-EXPORT-001: Export Meal Plan to .doc
+
 **Priority**: High  
 **Steps**:
+
 1. Navigate to dashboard
 2. Click "Export to .doc" on a meal plan
 3. Verify file download
@@ -532,8 +609,10 @@ The primary objectives of this test plan are to:
 **Expected Result**: `.doc` file downloaded, content matches meal plan data, proper formatting
 
 #### TC-EXPORT-002: Export - Document Structure Validation
+
 **Priority**: Medium  
 **Steps**:
+
 1. Export a meal plan with full data
 2. Verify document contains:
    - Plan name as title
@@ -544,8 +623,10 @@ The primary objectives of this test plan are to:
 **Expected Result**: All sections present, data accurate
 
 #### TC-EXPORT-003: Export - Filename Sanitization
+
 **Priority**: Low  
 **Steps**:
+
 1. Create meal plan with special characters in name
 2. Export to .doc
 3. Verify filename
@@ -557,47 +638,59 @@ The primary objectives of this test plan are to:
 ### 4.6 API Endpoint Scenarios
 
 #### TC-API-001: GET /api/meal-plans - Unauthenticated
+
 **Priority**: Critical  
 **Steps**:
+
 1. Send GET request without Authorization header
 
 **Expected Result**: 401 Unauthorized response
 
 #### TC-API-002: GET /api/meal-plans - Authenticated
+
 **Priority**: Critical  
 **Steps**:
+
 1. Log in, obtain JWT token
 2. Send GET request with valid token
 
 **Expected Result**: 200 OK, array of meal plans (empty if none)
 
 #### TC-API-003: GET /api/meal-plans - With Search Query
+
 **Priority**: High  
 **Steps**:
+
 1. Send GET request with `?search=query`
 2. Verify filtered results
 
 **Expected Result**: Only matching meal plans returned
 
 #### TC-API-004: POST /api/meal-plans - Create Success
+
 **Priority**: Critical  
 **Steps**:
+
 1. Send POST with valid meal plan data
 2. Verify response
 
 **Expected Result**: 201 Created, complete meal plan object returned
 
 #### TC-API-005: POST /api/meal-plans - Validation Error
+
 **Priority**: High  
 **Steps**:
+
 1. Send POST with invalid data (missing required fields, wrong types)
 2. Verify error response
 
 **Expected Result**: 400 Bad Request, validation error details in response
 
 #### TC-API-006: GET /api/meal-plans/{id} - Access Other User's Plan
+
 **Priority**: Critical  
 **Steps**:
+
 1. Log in as User A
 2. Obtain meal plan ID from User B
 3. Attempt to GET User B's plan
@@ -605,16 +698,20 @@ The primary objectives of this test plan are to:
 **Expected Result**: 404 Not Found (RLS policy prevents access)
 
 #### TC-API-007: PUT /api/meal-plans/{id} - Update Success
+
 **Priority**: High  
 **Steps**:
+
 1. Send PUT with partial update data
 2. Verify response
 
 **Expected Result**: 200 OK, updated meal plan returned, `updated_at` changed
 
 #### TC-API-008: DELETE /api/meal-plans/{id} - Success
+
 **Priority**: High  
 **Steps**:
+
 1. Send DELETE request
 2. Verify deletion
 3. Attempt to GET same ID
@@ -622,16 +719,20 @@ The primary objectives of this test plan are to:
 **Expected Result**: 204 No Content, subsequent GET returns 404
 
 #### TC-API-009: POST /api/ai/sessions - Create Session
+
 **Priority**: Critical  
 **Steps**:
+
 1. Send POST with startup data
 2. Verify response
 
 **Expected Result**: 201 Created, session ID and initial AI message returned
 
 #### TC-API-010: POST /api/ai/sessions/{id}/message - Send Message
+
 **Priority**: High  
 **Steps**:
+
 1. Create session, obtain session ID
 2. Send follow-up message
 3. Verify response
@@ -645,6 +746,7 @@ The primary objectives of this test plan are to:
 ### 5.1 Test Environment Setup
 
 #### 5.1.1 Development Environment
+
 - **Purpose**: Manual testing, development debugging
 - **URL**: `http://localhost:4321` (or configured port)
 - **Database**: Local Supabase instance or development Supabase project
@@ -652,6 +754,7 @@ The primary objectives of this test plan are to:
 - **Access**: Developers, QA team
 
 #### 5.1.2 Staging Environment
+
 - **Purpose**: Pre-production testing, integration validation
 - **URL**: Staging server URL (TBD)
 - **Database**: Staging Supabase project
@@ -659,6 +762,7 @@ The primary objectives of this test plan are to:
 - **Access**: QA team, stakeholders
 
 #### 5.1.3 Production Environment
+
 - **Purpose**: Final acceptance testing only
 - **URL**: Production URL (TBD)
 - **Database**: Production Supabase project
@@ -668,12 +772,14 @@ The primary objectives of this test plan are to:
 ### 5.2 Test Data Management
 
 #### 5.2.1 Test User Accounts
+
 - Create dedicated test accounts for various scenarios:
   - `test-dietitian-1@example.com` - Primary test user
   - `test-dietitian-2@example.com` - Multi-user testing
   - `test-dietitian-empty@example.com` - Empty state testing
 
 #### 5.2.2 Test Meal Plans
+
 - Create sample meal plans with:
   - Various patient profiles (different ages, weights, activity levels)
   - Different macro distributions
@@ -681,6 +787,7 @@ The primary objectives of this test plan are to:
   - Edge cases (minimal data, maximum data)
 
 #### 5.2.3 Test Data Cleanup
+
 - Implement data cleanup procedures:
   - Delete test meal plans after test runs
   - Reset test user accounts if needed
@@ -758,36 +865,42 @@ APP_URL=http://localhost:4321
 ### 7.1 Testing Phases
 
 #### Phase 1: Unit Testing (Week 1-2)
+
 - **Duration**: 2 weeks
 - **Focus**: Individual functions, services, components
 - **Responsibility**: Development team
 - **Exit Criteria**: 80% code coverage, all critical paths covered
 
 #### Phase 2: Integration Testing (Week 3)
+
 - **Duration**: 1 week
 - **Focus**: API endpoints, database operations, service interactions
 - **Responsibility**: QA team, Development team
 - **Exit Criteria**: All API endpoints tested, integration issues resolved
 
 #### Phase 3: System Testing (Week 4)
+
 - **Duration**: 1 week
 - **Focus**: End-to-end workflows, UI/UX, cross-browser testing
 - **Responsibility**: QA team
 - **Exit Criteria**: All critical user flows pass, browser compatibility verified
 
 #### Phase 4: Security Testing (Week 5)
+
 - **Duration**: 3-5 days
 - **Focus**: Authentication, authorization, RLS policies, input validation
 - **Responsibility**: QA team, Security review
 - **Exit Criteria**: No critical security vulnerabilities, RLS policies verified
 
 #### Phase 5: Performance Testing (Week 5)
+
 - **Duration**: 2-3 days
 - **Focus**: API response times, page load performance, AI generation latency
 - **Responsibility**: QA team
 - **Exit Criteria**: Performance benchmarks met
 
 #### Phase 6: Regression Testing (Ongoing)
+
 - **Duration**: Before each release
 - **Focus**: Smoke tests, critical path verification
 - **Responsibility**: QA team
@@ -795,14 +908,14 @@ APP_URL=http://localhost:4321
 
 ### 7.2 Test Execution Timeline
 
-| Phase | Start Date | End Date | Status |
-|-------|------------|----------|--------|
-| Unit Testing | TBD | TBD | Pending |
-| Integration Testing | TBD | TBD | Pending |
-| System Testing | TBD | TBD | Pending |
-| Security Testing | TBD | TBD | Pending |
-| Performance Testing | TBD | TBD | Pending |
-| Regression Testing | TBD | Ongoing | Pending |
+| Phase               | Start Date | End Date | Status  |
+| ------------------- | ---------- | -------- | ------- |
+| Unit Testing        | TBD        | TBD      | Pending |
+| Integration Testing | TBD        | TBD      | Pending |
+| System Testing      | TBD        | TBD      | Pending |
+| Security Testing    | TBD        | TBD      | Pending |
+| Performance Testing | TBD        | TBD      | Pending |
+| Regression Testing  | TBD        | Ongoing  | Pending |
 
 ### 7.3 Milestones
 
@@ -874,6 +987,7 @@ APP_URL=http://localhost:4321
 ### 8.3 Quality Gates
 
 **Blocking Criteria** (Must Pass for Release):
+
 - All critical test cases (Priority: Critical) pass
 - No P1 (Critical) bugs open
 - Security review approved
@@ -881,12 +995,14 @@ APP_URL=http://localhost:4321
 - Authentication/authorization tested and validated
 
 **Non-Blocking Criteria** (Should Pass for Release):
+
 - All high-priority test cases pass
 - P2 (High) bugs < 5 open
 - Performance benchmarks met
 - Cross-browser compatibility verified
 
 **Nice-to-Have** (May Defer):
+
 - P3 (Medium) and P4 (Low) bugs documented
 - Performance optimizations beyond benchmarks
 - Additional edge case coverage
@@ -898,6 +1014,7 @@ APP_URL=http://localhost:4321
 ### 9.1 Testing Team Roles
 
 #### QA Engineer
+
 - **Responsibilities**:
   - Create and maintain test cases
   - Execute manual and automated tests
@@ -906,6 +1023,7 @@ APP_URL=http://localhost:4321
   - Maintain test documentation
 
 #### Development Team
+
 - **Responsibilities**:
   - Write unit tests for new features
   - Fix bugs identified by QA
@@ -914,6 +1032,7 @@ APP_URL=http://localhost:4321
   - Review and approve test plans
 
 #### QA Lead / Test Manager
+
 - **Responsibilities**:
   - Oversee test plan creation and execution
   - Coordinate testing phases
@@ -922,6 +1041,7 @@ APP_URL=http://localhost:4321
   - Manage test resources and schedules
 
 #### Product Owner / Stakeholder
+
 - **Responsibilities**:
   - Define acceptance criteria
   - Prioritize test scenarios
@@ -946,6 +1066,7 @@ APP_URL=http://localhost:4321
 #### Priority Levels
 
 **P1 - Critical**:
+
 - Blocks core functionality
 - Security vulnerabilities
 - Data loss or corruption
@@ -953,18 +1074,21 @@ APP_URL=http://localhost:4321
 - **Response Time**: Immediate
 
 **P2 - High**:
+
 - Major feature broken or degraded
 - Significant usability issues
 - Performance degradation
 - **Response Time**: Within 24 hours
 
 **P3 - Medium**:
+
 - Minor feature issues
 - Cosmetic issues with workaround
 - Non-critical edge cases
 - **Response Time**: Within 1 week
 
 **P4 - Low**:
+
 - Enhancement suggestions
 - Minor UI polish
 - Documentation improvements
@@ -987,12 +1111,14 @@ APP_URL=http://localhost:4321
 **Severity**: S1/S2/S3/S4
 
 **Environment**:
+
 - Browser: [Chrome/Firefox/Safari/Edge]
 - Version: [Version number]
 - OS: [Windows/Mac/Linux]
 - Test Environment: [Dev/Staging/Prod]
 
 **Steps to Reproduce**:
+
 1. [Step 1]
 2. [Step 2]
 3. [Step 3]
@@ -1011,7 +1137,7 @@ APP_URL=http://localhost:4321
 ### 10.3 Bug Tracking
 
 - **Tool**: GitHub Issues
-- **Labels**: 
+- **Labels**:
   - `bug`
   - `priority:p1`, `priority:p2`, `priority:p3`, `priority:p4`
   - `severity:s1`, `severity:s2`, `severity:s3`, `severity:s4`
@@ -1044,6 +1170,7 @@ APP_URL=http://localhost:4321
 ### 11.1 Test Metrics
 
 #### Test Execution Metrics
+
 - **Total Test Cases**: Count of all test cases
 - **Test Cases Executed**: Number of tests run
 - **Test Cases Passed**: Number of passing tests
@@ -1053,6 +1180,7 @@ APP_URL=http://localhost:4321
 - **Test Pass Rate**: (Passed / Executed) × 100%
 
 #### Defect Metrics
+
 - **Total Bugs Found**: Count of all reported bugs
 - **Bugs by Priority**: Distribution (P1, P2, P3, P4)
 - **Bugs by Severity**: Distribution (S1, S2, S3, S4)
@@ -1062,6 +1190,7 @@ APP_URL=http://localhost:4321
 - **Bug Density**: Bugs per test case or per feature
 
 #### Coverage Metrics
+
 - **Code Coverage**: Percentage of code covered by unit tests
 - **Functional Coverage**: Percentage of requirements covered by tests
 - **API Coverage**: Percentage of API endpoints tested
@@ -1069,18 +1198,21 @@ APP_URL=http://localhost:4321
 ### 11.2 Test Reporting
 
 #### Daily Test Status Report
+
 - Test cases executed (pass/fail/blocked)
 - New bugs found
 - Bugs fixed/verified
 - Blockers and risks
 
 #### Weekly Test Summary Report
+
 - Test execution progress
 - Defect summary and trends
 - Coverage metrics
 - Risks and recommendations
 
 #### Test Completion Report
+
 - Final test execution summary
 - Defect summary and closure rate
 - Quality assessment
@@ -1093,6 +1225,7 @@ APP_URL=http://localhost:4321
 ### 12.1 Testing Risks
 
 #### Risk 1: OpenRouter AI Service Unavailability
+
 - **Impact**: High - Blocks AI chat functionality
 - **Probability**: Medium
 - **Mitigation**:
@@ -1102,6 +1235,7 @@ APP_URL=http://localhost:4321
   - Use test API keys with rate limits
 
 #### Risk 2: Supabase Database Connectivity Issues
+
 - **Impact**: High - Blocks all data operations
 - **Probability**: Low
 - **Mitigation**:
@@ -1111,6 +1245,7 @@ APP_URL=http://localhost:4321
   - Have backup test database
 
 #### Risk 3: RLS Policy Misconfiguration
+
 - **Impact**: Critical - Security vulnerability
 - **Probability**: Medium
 - **Mitigation**:
@@ -1120,6 +1255,7 @@ APP_URL=http://localhost:4321
   - Regular policy audits
 
 #### Risk 4: Test Environment Data Contamination
+
 - **Impact**: Medium - Invalid test results
 - **Probability**: Medium
 - **Mitigation**:
@@ -1129,6 +1265,7 @@ APP_URL=http://localhost:4321
   - Environment reset procedures
 
 #### Risk 5: Incomplete Test Coverage
+
 - **Impact**: Medium - Undetected bugs
 - **Probability**: Medium
 - **Mitigation**:
@@ -1138,6 +1275,7 @@ APP_URL=http://localhost:4321
   - Code coverage monitoring
 
 #### Risk 6: Browser Compatibility Issues
+
 - **Impact**: Medium - User experience degradation
 - **Probability**: Low
 - **Mitigation**:
@@ -1168,6 +1306,7 @@ APP_URL=http://localhost:4321
 **Preconditions**: [Conditions that must be met]
 
 **Test Steps**:
+
 1. [Step 1]
 2. [Step 2]
 3. [Step 3]
@@ -1183,12 +1322,12 @@ APP_URL=http://localhost:4321
 
 ### 13.2 Traceability Matrix
 
-| Requirement ID | Test Case ID | Status |
-|----------------|--------------|--------|
-| US-001 | TC-AUTH-001, TC-AUTH-002 | TBD |
-| US-002 | TC-AUTH-003, TC-AUTH-004 | TBD |
-| US-003 | TC-DASH-001, TC-DASH-002 | TBD |
-| ... | ... | ... |
+| Requirement ID | Test Case ID             | Status |
+| -------------- | ------------------------ | ------ |
+| US-001         | TC-AUTH-001, TC-AUTH-002 | TBD    |
+| US-002         | TC-AUTH-003, TC-AUTH-004 | TBD    |
+| US-003         | TC-DASH-001, TC-DASH-002 | TBD    |
+| ...            | ...                      | ...    |
 
 ### 13.3 Glossary
 
@@ -1201,10 +1340,8 @@ APP_URL=http://localhost:4321
 - **CRUD**: Create, Read, Update, Delete
 - **DTO**: Data Transfer Object
 
-
 **Document Version History**
 
-| Version | Date | Author | Changes |
-|---------|------|--------|---------|
-| 1.0 | 2025-01-23 | QA Team | Initial test plan creation |
-
+| Version | Date       | Author  | Changes                    |
+| ------- | ---------- | ------- | -------------------------- |
+| 1.0     | 2025-01-23 | QA Team | Initial test plan creation |

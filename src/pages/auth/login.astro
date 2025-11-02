@@ -7,18 +7,11 @@ const supabase = createSupabaseServerClient(Astro.cookies);
 
 // Verify if user is already authenticated using getUser() to ensure session is valid
 const {
-  data: { session },
-} = await supabase.auth.getSession();
+  data: { user },
+} = await supabase.auth.getUser();
 
-if (session?.access_token) {
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser(session.access_token);
-
-  if (!error && user) {
-    return Astro.redirect("/app/dashboard");
-  }
+if (user) {
+  return Astro.redirect("/app/dashboard");
 }
 
 const title = "Log in – Diet Planner";
@@ -35,5 +28,3 @@ const title = "Log in – Diet Planner";
     </section>
   </main>
 </Layout>
-
-

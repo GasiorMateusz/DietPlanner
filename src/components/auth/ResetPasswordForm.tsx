@@ -107,5 +107,3 @@ export default function ResetPasswordForm({ className }: Props) {
     </form>
   );
 }
-
-

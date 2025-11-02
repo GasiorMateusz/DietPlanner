@@ -33,6 +33,7 @@ This application is intended exclusively for use by professional dietitians.
 The project uses the following technologies:
 
 ### Frontend
+
 - **Astro 5**: For fast, performant static site generation with minimal JavaScript.
 - **React 19**: For interactive components (e.g., chat, editor).
 - **TypeScript 5**: For static type checking.
@@ -40,15 +41,18 @@ The project uses the following technologies:
 - **Shadcn/ui**: For the base library of accessible React components.
 
 ### Backend
+
 - **Supabase**: A comprehensive BaaS (Backend-as-a-Service) solution providing:
   - PostgreSQL Database
   - User Authentication
   - SDKs for backend operations
 
 ### AI
+
 - **Openrouter.ai**: Provides access to a wide range of AI models (OpenAI, Anthropic, Google, etc.) to power the meal plan generation.
 
 ### Testing
+
 - **Vitest**: Primary test runner for unit and integration tests.
 - **React Testing Library**: Component testing utilities for React components.
 - **@testing-library/jest-dom**: DOM matchers for enhanced assertions.
@@ -57,6 +61,7 @@ The project uses the following technologies:
 - **Playwright**: Cross-browser end-to-end (E2E) testing framework supporting Chromium, Firefox, and WebKit with built-in test runner, reporting, and screenshot/video capture capabilities.
 
 ### CI/CD & Hosting
+
 - **Github Actions**: For CI/CD pipelines.
 - **DigitalOcean**: For hosting the application via a Docker image.
 
@@ -73,6 +78,7 @@ To set up and run this project on your local machine, follow these steps.
 ### Installation
 
 1. **Clone the repository:**
+
    ```bash
    git clone https://github.com/your-username/your-repository-name.git
    cd your-repository-name
@@ -80,12 +86,15 @@ To set up and run this project on your local machine, follow these steps.
 
 2. **Set the Node.js version:**
    If you have nvm installed, simply run:
+
    ```bash
    nvm use
    ```
+
    This will automatically read the `.nvmrc` file and switch to the correct Node.js version.
 
 3. **Install dependencies:**
+
    ```bash
    npm install
    ```
@@ -94,10 +103,15 @@ To set up and run this project on your local machine, follow these steps.
    This project requires API keys and service URLs to function. Create a `.env` file in the root of the project by copying the `.env.example` file (if one exists) or by creating it manually.
 
    Your `.env` file should contain the following keys:
+
    ```env
-   # Supabase credentials
+   # Supabase credentials (server-side)
    SUPABASE_URL=your_supabase_project_url
-   SUPABASE_ANON_KEY=your_supabase_anon_key
+   SUPABASE_KEY=your_supabase_anon_key
+
+   # Supabase credentials (client-side - must have PUBLIC_ prefix)
+   PUBLIC_SUPABASE_URL=your_supabase_project_url
+   PUBLIC_SUPABASE_KEY=your_supabase_anon_key
 
    # OpenRouter API Key
    OPENROUTER_API_KEY=your_openrouter_api_key

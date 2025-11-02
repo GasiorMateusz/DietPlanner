@@ -1,13 +1,10 @@
-import { describe, it, expect } from 'vitest';
-import {
-  calculateDailySummaryFromTargets,
-  resolveDailySummary,
-} from '@/lib/utils/meal-plan-calculations';
-import type { MealPlanContentDailySummary, MealPlanStartupData } from '@/types';
+import { describe, it, expect } from "vitest";
+import { calculateDailySummaryFromTargets, resolveDailySummary } from "@/lib/utils/meal-plan-calculations";
+import type { MealPlanContentDailySummary, MealPlanStartupData } from "@/types";
 
-describe('calculateDailySummaryFromTargets', () => {
-  describe('valid calculations', () => {
-    it('should calculate correctly from target kcal and macro distribution', () => {
+describe("calculateDailySummaryFromTargets", () => {
+  describe("valid calculations", () => {
+    it("should calculate correctly from target kcal and macro distribution", () => {
       const targetKcal = 2000;
       const macroDistribution = {
         p_perc: 30, // 30% protein
@@ -26,7 +23,7 @@ describe('calculateDailySummaryFromTargets', () => {
       expect(result.carbs).toBe(225);
     });
 
-    it('should round values correctly', () => {
+    it("should round values correctly", () => {
       const targetKcal = 1800;
       const macroDistribution = {
         p_perc: 33.33,
@@ -45,7 +42,7 @@ describe('calculateDailySummaryFromTargets', () => {
       expect(result.carbs).toBe(175);
     });
 
-    it('should handle high protein diet', () => {
+    it("should handle high protein diet", () => {
       const targetKcal = 2500;
       const macroDistribution = {
         p_perc: 40, // 40% protein
@@ -64,7 +61,7 @@ describe('calculateDailySummaryFromTargets', () => {
       expect(result.carbs).toBe(188);
     });
 
-    it('should handle low carb diet', () => {
+    it("should handle low carb diet", () => {
       const targetKcal = 1500;
       const macroDistribution = {
         p_perc: 35, // 35% protein
@@ -83,7 +80,7 @@ describe('calculateDailySummaryFromTargets', () => {
       expect(result.carbs).toBe(75);
     });
 
-    it('should handle very high calorie target', () => {
+    it("should handle very high calorie target", () => {
       const targetKcal = 4000;
       const macroDistribution = {
         p_perc: 25,
@@ -99,7 +96,7 @@ describe('calculateDailySummaryFromTargets', () => {
       expect(result.carbs).toBe(500); // (4000 * 50) / 100 / 4
     });
 
-    it('should handle low calorie target', () => {
+    it("should handle low calorie target", () => {
       const targetKcal = 1200;
       const macroDistribution = {
         p_perc: 30,
@@ -116,8 +113,8 @@ describe('calculateDailySummaryFromTargets', () => {
     });
   });
 
-  describe('missing data handling', () => {
-    it('should return zeros when targetKcal is null', () => {
+  describe("missing data handling", () => {
+    it("should return zeros when targetKcal is null", () => {
       const result = calculateDailySummaryFromTargets(null, {
         p_perc: 30,
         f_perc: 25,
@@ -132,7 +129,7 @@ describe('calculateDailySummaryFromTargets', () => {
       });
     });
 
-    it('should return zeros when targetKcal is undefined', () => {
+    it("should return zeros when targetKcal is undefined", () => {
       const result = calculateDailySummaryFromTargets(undefined, {
         p_perc: 30,
         f_perc: 25,
@@ -147,7 +144,7 @@ describe('calculateDailySummaryFromTargets', () => {
       });
     });
 
-    it('should return zeros when macroDistribution is null', () => {
+    it("should return zeros when macroDistribution is null", () => {
       const result = calculateDailySummaryFromTargets(2000, null);
 
       expect(result).toEqual({
@@ -158,7 +155,7 @@ describe('calculateDailySummaryFromTargets', () => {
       });
     });
 
-    it('should return zeros when macroDistribution is undefined', () => {
+    it("should return zeros when macroDistribution is undefined", () => {
       const result = calculateDailySummaryFromTargets(2000, undefined);
 
       expect(result).toEqual({
@@ -169,7 +166,7 @@ describe('calculateDailySummaryFromTargets', () => {
       });
     });
 
-    it('should return zeros when both are null', () => {
+    it("should return zeros when both are null", () => {
       const result = calculateDailySummaryFromTargets(null, null);
 
       expect(result).toEqual({
@@ -180,7 +177,7 @@ describe('calculateDailySummaryFromTargets', () => {
       });
     });
 
-    it('should return zeros when targetKcal is zero', () => {
+    it("should return zeros when targetKcal is zero", () => {
       const result = calculateDailySummaryFromTargets(0, {
         p_perc: 30,
         f_perc: 25,
@@ -197,8 +194,8 @@ describe('calculateDailySummaryFromTargets', () => {
     });
   });
 
-  describe('edge cases', () => {
-    it('should handle 100% protein distribution (edge case)', () => {
+  describe("edge cases", () => {
+    it("should handle 100% protein distribution (edge case)", () => {
       const targetKcal = 2000;
       const macroDistribution = {
         p_perc: 100,
@@ -214,7 +211,7 @@ describe('calculateDailySummaryFromTargets', () => {
       expect(result.carbs).toBe(0);
     });
 
-    it('should handle fractional percentages that sum to 100', () => {
+    it("should handle fractional percentages that sum to 100", () => {
       const targetKcal = 2000;
       const macroDistribution = {
         p_perc: 33.333,
@@ -233,12 +230,12 @@ describe('calculateDailySummaryFromTargets', () => {
   });
 });
 
-describe('resolveDailySummary', () => {
+describe("resolveDailySummary", () => {
   const mockStartupData: MealPlanStartupData = {
     patient_age: 30,
     patient_weight: 70,
     patient_height: 175,
-    activity_level: 'moderate',
+    activity_level: "moderate",
     target_kcal: 2000,
     target_macro_distribution: {
       p_perc: 30,
@@ -249,8 +246,8 @@ describe('resolveDailySummary', () => {
     exclusions_guidelines: null,
   };
 
-  describe('preferring parsed summary', () => {
-    it('should use parsed summary when kcal > 0', () => {
+  describe("preferring parsed summary", () => {
+    it("should use parsed summary when kcal > 0", () => {
       const parsedSummary: MealPlanContentDailySummary = {
         kcal: 2500,
         proteins: 180,
@@ -263,7 +260,7 @@ describe('resolveDailySummary', () => {
       expect(result).toEqual(parsedSummary);
     });
 
-    it('should use parsed summary even if different from calculated', () => {
+    it("should use parsed summary even if different from calculated", () => {
       const parsedSummary: MealPlanContentDailySummary = {
         kcal: 1800,
         proteins: 120,
@@ -278,7 +275,7 @@ describe('resolveDailySummary', () => {
       expect(result.kcal).not.toBe(mockStartupData.target_kcal);
     });
 
-    it('should use parsed summary with zero macros if kcal > 0', () => {
+    it("should use parsed summary with zero macros if kcal > 0", () => {
       const parsedSummary: MealPlanContentDailySummary = {
         kcal: 2000,
         proteins: 0,
@@ -292,8 +289,8 @@ describe('resolveDailySummary', () => {
     });
   });
 
-  describe('falling back to calculated values', () => {
-    it('should calculate from startup data when parsed kcal is 0', () => {
+  describe("falling back to calculated values", () => {
+    it("should calculate from startup data when parsed kcal is 0", () => {
       const parsedSummary: MealPlanContentDailySummary = {
         kcal: 0,
         proteins: 0,
@@ -309,7 +306,7 @@ describe('resolveDailySummary', () => {
       expect(result.carbs).toBe(225); // (2000 * 45) / 100 / 4
     });
 
-    it('should return zeros when startup data is missing', () => {
+    it("should return zeros when startup data is missing", () => {
       const parsedSummary: MealPlanContentDailySummary = {
         kcal: 0,
         proteins: 0,
@@ -327,7 +324,7 @@ describe('resolveDailySummary', () => {
       });
     });
 
-    it('should return zeros when startup data is undefined', () => {
+    it("should return zeros when startup data is undefined", () => {
       const parsedSummary: MealPlanContentDailySummary = {
         kcal: 0,
         proteins: 0,
@@ -345,7 +342,7 @@ describe('resolveDailySummary', () => {
       });
     });
 
-    it('should calculate when startup data has target_kcal but no macro distribution', () => {
+    it("should calculate when startup data has target_kcal but no macro distribution", () => {
       const parsedSummary: MealPlanContentDailySummary = {
         kcal: 0,
         proteins: 0,
@@ -368,7 +365,7 @@ describe('resolveDailySummary', () => {
       });
     });
 
-    it('should calculate when startup data has macro distribution but no target_kcal', () => {
+    it("should calculate when startup data has macro distribution but no target_kcal", () => {
       const parsedSummary: MealPlanContentDailySummary = {
         kcal: 0,
         proteins: 0,
@@ -392,8 +389,8 @@ describe('resolveDailySummary', () => {
     });
   });
 
-  describe('edge cases', () => {
-    it('should handle parsed summary with kcal = 1 (borderline case)', () => {
+  describe("edge cases", () => {
+    it("should handle parsed summary with kcal = 1 (borderline case)", () => {
       const parsedSummary: MealPlanContentDailySummary = {
         kcal: 1,
         proteins: 0,
@@ -407,7 +404,7 @@ describe('resolveDailySummary', () => {
       expect(result).toEqual(parsedSummary);
     });
 
-    it('should handle negative kcal in parsed summary', () => {
+    it("should handle negative kcal in parsed summary", () => {
       const parsedSummary: MealPlanContentDailySummary = {
         kcal: -100,
         proteins: 0,
@@ -421,7 +418,7 @@ describe('resolveDailySummary', () => {
       expect(result.kcal).toBe(2000); // Uses calculated value
     });
 
-    it('should handle very large parsed summary values', () => {
+    it("should handle very large parsed summary values", () => {
       const parsedSummary: MealPlanContentDailySummary = {
         kcal: 10000,
         proteins: 500,
@@ -435,4 +432,3 @@ describe('resolveDailySummary', () => {
     });
   });
 });
-

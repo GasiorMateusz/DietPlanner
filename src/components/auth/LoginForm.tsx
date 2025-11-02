@@ -1,5 +1,4 @@
 import React from "react";
-import { z } from "zod";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -8,9 +7,9 @@ import { cn } from "@/lib/utils";
 import { loginSchema, type LoginInput } from "@/lib/validation/auth.schemas";
 import { supabaseClient as supabase } from "@/db/supabase.client";
 
-type Props = {
+interface Props {
   className?: string;
-};
+}
 
 export default function LoginForm({ className }: Props) {
   const [values, setValues] = React.useState<LoginInput>({ email: "", password: "" });
@@ -63,7 +62,7 @@ export default function LoginForm({ className }: Props) {
   }
 
   return (
-    <form onSubmit={onSubmit} className={cn("space-y-4", className)} noValidate>
+    <form onSubmit={onSubmit} className={cn("space-y-4", className)} noValidate data-testid="login-form">
       {formError ? (
         <Alert className="border-destructive/30 text-destructive">
           <AlertTitle>Unable to log in</AlertTitle>
@@ -84,6 +83,7 @@ export default function LoginForm({ className }: Props) {
           aria-invalid={Boolean(errors.email) || undefined}
           aria-describedby={errors.email ? `${emailId}-error` : undefined}
           required
+          data-testid="login-email-input"
         />
         {errors.email ? (
           <p id={`${emailId}-error`} className="text-sm text-destructive">
@@ -103,6 +103,7 @@ export default function LoginForm({ className }: Props) {
           aria-invalid={Boolean(errors.password) || undefined}
           aria-describedby={errors.password ? `${passwordId}-error` : undefined}
           required
+          data-testid="login-password-input"
         />
         {errors.password ? (
           <p id={`${passwordId}-error`} className="text-sm text-destructive">
@@ -111,7 +112,7 @@ export default function LoginForm({ className }: Props) {
         ) : null}
       </div>
 
-      <Button type="submit" className="w-full" disabled={isSubmitting}>
+      <Button type="submit" className="w-full" disabled={isSubmitting} data-testid="login-submit-button">
         Log in
       </Button>
 
@@ -126,5 +127,3 @@ export default function LoginForm({ className }: Props) {
     </form>
   );
 }
-
-

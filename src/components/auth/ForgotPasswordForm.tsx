@@ -85,5 +85,3 @@ export default function ForgotPasswordForm({ className }: Props) {
     </form>
   );
 }
-
-

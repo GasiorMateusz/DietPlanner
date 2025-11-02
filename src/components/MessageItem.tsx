@@ -1,5 +1,5 @@
-import { extractComments, removeXmlTags } from '../lib/utils/meal-plan-parser';
-import type { ChatMessage } from '../types';
+import { extractComments, removeXmlTags } from "../lib/utils/meal-plan-parser";
+import type { ChatMessage } from "../types";
 
 /**
  * Individual message bubble component.
@@ -7,7 +7,7 @@ import type { ChatMessage } from '../types';
  * For assistant messages, removes XML tags to show clean text (preserves comments).
  */
 export function MessageItem({ message }: { message: ChatMessage }) {
-  if (message.role === 'user') {
+  if (message.role === "user") {
     return (
       <div className="flex justify-end">
         <div className="max-w-[80%] rounded-lg bg-primary text-primary-foreground px-4 py-2">
@@ -22,7 +22,7 @@ export function MessageItem({ message }: { message: ChatMessage }) {
   const cleanedContent = removeXmlTags(message.content);
 
   // Display comments if available, otherwise show cleaned content or fallback message
-  const displayText = comments || cleanedContent || 'Meal plan updated above.';
+  const displayText = comments || cleanedContent || "Meal plan updated above.";
 
   return (
     <div className="flex justify-start">
@@ -32,5 +32,3 @@ export function MessageItem({ message }: { message: ChatMessage }) {
     </div>
   );
 }
-
-

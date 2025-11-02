@@ -13,6 +13,7 @@ export default defineConfig({
   server: { port: 3000 },
   vite: {
     plugins: [tailwindcss()],
+    envPrefix: "PUBLIC_",
   },
   adapter: node({
     mode: "standalone",

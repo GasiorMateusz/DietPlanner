@@ -1,14 +1,10 @@
-import { describe, it, expect } from 'vitest';
-import {
-  parseXmlMealPlan,
-  extractComments,
-  removeXmlTags,
-} from '@/lib/utils/meal-plan-parser';
+import { describe, it, expect } from "vitest";
+import { parseXmlMealPlan, extractComments, removeXmlTags } from "@/lib/utils/meal-plan-parser";
 
-describe('meal-plan-parser', () => {
-  describe('parseXmlMealPlan', () => {
-    describe('complete valid XML structure', () => {
-      it('should parse complete meal plan with daily summary and multiple meals', () => {
+describe("meal-plan-parser", () => {
+  describe("parseXmlMealPlan", () => {
+    describe("complete valid XML structure", () => {
+      it("should parse complete meal plan with daily summary and multiple meals", () => {
         const message = `
           Here's your meal plan:
           <daily_summary>
@@ -54,9 +50,9 @@ describe('meal-plan-parser', () => {
 
         expect(result.meals).toHaveLength(2);
         expect(result.meals[0]).toEqual({
-          name: 'Breakfast',
-          ingredients: 'Eggs, toast, butter',
-          preparation: 'Scramble eggs and toast bread',
+          name: "Breakfast",
+          ingredients: "Eggs, toast, butter",
+          preparation: "Scramble eggs and toast bread",
           summary: {
             kcal: 500,
             p: 30,
@@ -65,9 +61,9 @@ describe('meal-plan-parser', () => {
           },
         });
         expect(result.meals[1]).toEqual({
-          name: 'Lunch',
-          ingredients: 'Chicken, rice, vegetables',
-          preparation: 'Grill chicken and steam vegetables',
+          name: "Lunch",
+          ingredients: "Chicken, rice, vegetables",
+          preparation: "Grill chicken and steam vegetables",
           summary: {
             kcal: 750,
             p: 60,
@@ -77,7 +73,7 @@ describe('meal-plan-parser', () => {
         });
       });
 
-      it('should parse decimal values and round them correctly', () => {
+      it("should parse decimal values and round them correctly", () => {
         const message = `
           <daily_summary>
             <kcal>1999.7</kcal>
@@ -118,8 +114,8 @@ describe('meal-plan-parser', () => {
       });
     });
 
-    describe('case-insensitive tag matching', () => {
-      it('should match inner tags regardless of case (outer tags are case-sensitive)', () => {
+    describe("case-insensitive tag matching", () => {
+      it("should match inner tags regardless of case (outer tags are case-sensitive)", () => {
         const message = `
           <daily_summary>
             <KCAL>2000</KCAL>
@@ -146,11 +142,11 @@ describe('meal-plan-parser', () => {
 
         expect(result.dailySummary.kcal).toBe(2000);
         expect(result.dailySummary.proteins).toBe(150);
-        expect(result.meals[0].name).toBe('Breakfast');
+        expect(result.meals[0].name).toBe("Breakfast");
         expect(result.meals[0].summary.kcal).toBe(500);
       });
 
-      it('should match mixed case inner tags', () => {
+      it("should match mixed case inner tags", () => {
         const message = `
           <daily_summary>
             <Kcal>2000</Kcal>
@@ -176,12 +172,12 @@ describe('meal-plan-parser', () => {
         const result = parseXmlMealPlan(message);
 
         expect(result.dailySummary.kcal).toBe(2000);
-        expect(result.meals[0].name).toBe('Breakfast');
+        expect(result.meals[0].name).toBe("Breakfast");
       });
     });
 
-    describe('missing or incomplete XML structure', () => {
-      it('should return zero values when daily_summary is missing', () => {
+    describe("missing or incomplete XML structure", () => {
+      it("should return zero values when daily_summary is missing", () => {
         const message = `
           <meals>
             <meal>
@@ -209,7 +205,7 @@ describe('meal-plan-parser', () => {
         expect(result.meals).toHaveLength(1);
       });
 
-      it('should return zero for missing daily_summary fields', () => {
+      it("should return zero for missing daily_summary fields", () => {
         const message = `
           <daily_summary>
             <kcal>2000</kcal>
@@ -239,7 +235,7 @@ describe('meal-plan-parser', () => {
         });
       });
 
-      it('should return empty strings for missing meal fields', () => {
+      it("should return empty strings for missing meal fields", () => {
         const message = `
           <daily_summary>
             <kcal>2000</kcal>
@@ -263,12 +259,12 @@ describe('meal-plan-parser', () => {
 
         const result = parseXmlMealPlan(message);
 
-        expect(result.meals[0].ingredients).toBe('');
-        expect(result.meals[0].name).toBe('Breakfast');
-        expect(result.meals[0].preparation).toBe('Cook');
+        expect(result.meals[0].ingredients).toBe("");
+        expect(result.meals[0].name).toBe("Breakfast");
+        expect(result.meals[0].preparation).toBe("Cook");
       });
 
-      it('should return zero for missing meal summary fields', () => {
+      it("should return zero for missing meal summary fields", () => {
         const message = `
           <daily_summary>
             <kcal>2000</kcal>
@@ -298,7 +294,7 @@ describe('meal-plan-parser', () => {
         });
       });
 
-      it('should return zero for missing meal summary tag entirely', () => {
+      it("should return zero for missing meal summary tag entirely", () => {
         const message = `
           <daily_summary>
             <kcal>2000</kcal>
@@ -326,8 +322,8 @@ describe('meal-plan-parser', () => {
       });
     });
 
-    describe('invalid numeric values', () => {
-      it('should return zero for NaN values in daily_summary', () => {
+    describe("invalid numeric values", () => {
+      it("should return zero for NaN values in daily_summary", () => {
         const message = `
           <daily_summary>
             <kcal>invalid</kcal>
@@ -360,7 +356,7 @@ describe('meal-plan-parser', () => {
         });
       });
 
-      it('should return zero for NaN values in meal summary', () => {
+      it("should return zero for NaN values in meal summary", () => {
         const message = `
           <daily_summary>
             <kcal>2000</kcal>
@@ -393,7 +389,7 @@ describe('meal-plan-parser', () => {
         });
       });
 
-      it('should handle empty string numeric values', () => {
+      it("should handle empty string numeric values", () => {
         const message = `
           <daily_summary>
             <kcal></kcal>
@@ -420,7 +416,7 @@ describe('meal-plan-parser', () => {
         expect(result.meals[0].summary.p).toBe(0);
       });
 
-      it('should handle negative numeric values by rounding to zero', () => {
+      it("should handle negative numeric values by rounding to zero", () => {
         const message = `
           <daily_summary>
             <kcal>-100</kcal>
@@ -453,8 +449,8 @@ describe('meal-plan-parser', () => {
       });
     });
 
-    describe('whitespace handling', () => {
-      it('should trim whitespace from text fields', () => {
+    describe("whitespace handling", () => {
+      it("should trim whitespace from text fields", () => {
         const message = `
           <daily_summary>
             <kcal>2000</kcal>
@@ -479,12 +475,12 @@ describe('meal-plan-parser', () => {
 
         const result = parseXmlMealPlan(message);
 
-        expect(result.meals[0].name).toBe('Breakfast');
-        expect(result.meals[0].ingredients).toBe('Eggs, toast');
-        expect(result.meals[0].preparation).toBe('Cook eggs');
+        expect(result.meals[0].name).toBe("Breakfast");
+        expect(result.meals[0].ingredients).toBe("Eggs, toast");
+        expect(result.meals[0].preparation).toBe("Cook eggs");
       });
 
-      it('should handle numeric values with whitespace', () => {
+      it("should handle numeric values with whitespace", () => {
         const message = `
           <daily_summary>
             <kcal>  2000  </kcal>
@@ -514,8 +510,8 @@ describe('meal-plan-parser', () => {
       });
     });
 
-    describe('fallback behavior when no meals found', () => {
-      it('should return fallback meal structure when meals tag is missing', () => {
+    describe("fallback behavior when no meals found", () => {
+      it("should return fallback meal structure when meals tag is missing", () => {
         const message = `
           <daily_summary>
             <kcal>2000</kcal>
@@ -529,10 +525,10 @@ describe('meal-plan-parser', () => {
         const result = parseXmlMealPlan(message);
 
         expect(result.meals).toHaveLength(1);
-        expect(result.meals[0].name).toBe('');
-        expect(result.meals[0].ingredients).toBe('');
-        expect(result.meals[0].preparation).toContain('<daily_summary>');
-        expect(result.meals[0].preparation).toContain('Some text here');
+        expect(result.meals[0].name).toBe("");
+        expect(result.meals[0].ingredients).toBe("");
+        expect(result.meals[0].preparation).toContain("<daily_summary>");
+        expect(result.meals[0].preparation).toContain("Some text here");
         expect(result.meals[0].summary).toEqual({
           kcal: 0,
           p: 0,
@@ -541,8 +537,8 @@ describe('meal-plan-parser', () => {
         });
       });
 
-      it('should return fallback meal with full message when no XML tags exist', () => {
-        const message = 'This is just plain text with no XML tags at all.';
+      it("should return fallback meal with full message when no XML tags exist", () => {
+        const message = "This is just plain text with no XML tags at all.";
 
         const result = parseXmlMealPlan(message);
 
@@ -554,9 +550,9 @@ describe('meal-plan-parser', () => {
         });
         expect(result.meals).toHaveLength(1);
         expect(result.meals[0]).toEqual({
-          name: '',
-          ingredients: '',
-          preparation: 'This is just plain text with no XML tags at all.',
+          name: "",
+          ingredients: "",
+          preparation: "This is just plain text with no XML tags at all.",
           summary: {
             kcal: 0,
             p: 0,
@@ -566,7 +562,7 @@ describe('meal-plan-parser', () => {
         });
       });
 
-      it('should return fallback meal when meals tag is empty', () => {
+      it("should return fallback meal when meals tag is empty", () => {
         const message = `
           <daily_summary>
             <kcal>2000</kcal>
@@ -577,12 +573,12 @@ describe('meal-plan-parser', () => {
         const result = parseXmlMealPlan(message);
 
         expect(result.meals).toHaveLength(1);
-        expect(result.meals[0].preparation).toContain('daily_summary');
+        expect(result.meals[0].preparation).toContain("daily_summary");
       });
     });
 
-    describe('multiple meals', () => {
-      it('should parse all meals from meals tag', () => {
+    describe("multiple meals", () => {
+      it("should parse all meals from meals tag", () => {
         const message = `
           <daily_summary>
             <kcal>2000</kcal>
@@ -630,17 +626,13 @@ describe('meal-plan-parser', () => {
         const result = parseXmlMealPlan(message);
 
         expect(result.meals).toHaveLength(3);
-        expect(result.meals.map((m) => m.name)).toEqual([
-          'Breakfast',
-          'Lunch',
-          'Dinner',
-        ]);
+        expect(result.meals.map((m) => m.name)).toEqual(["Breakfast", "Lunch", "Dinner"]);
       });
     });
 
-    describe('edge cases', () => {
-      it('should handle empty string input', () => {
-        const result = parseXmlMealPlan('');
+    describe("edge cases", () => {
+      it("should handle empty string input", () => {
+        const result = parseXmlMealPlan("");
 
         expect(result.dailySummary).toEqual({
           kcal: 0,
@@ -649,10 +641,10 @@ describe('meal-plan-parser', () => {
           carbs: 0,
         });
         expect(result.meals).toHaveLength(1);
-        expect(result.meals[0].preparation).toBe('');
+        expect(result.meals[0].preparation).toBe("");
       });
 
-      it('should handle newlines and multiline content', () => {
+      it("should handle newlines and multiline content", () => {
         const message = `
           <daily_summary>
             <kcal>2000</kcal>
@@ -681,12 +673,12 @@ Add butter</preparation>
 
         const result = parseXmlMealPlan(message);
 
-        expect(result.meals[0].ingredients).toContain('Eggs');
-        expect(result.meals[0].ingredients).toContain('Toast');
-        expect(result.meals[0].preparation).toContain('Scramble eggs');
+        expect(result.meals[0].ingredients).toContain("Eggs");
+        expect(result.meals[0].ingredients).toContain("Toast");
+        expect(result.meals[0].preparation).toContain("Scramble eggs");
       });
 
-      it('should handle special characters in text fields', () => {
+      it("should handle special characters in text fields", () => {
         const message = `
           <daily_summary>
             <kcal>2000</kcal>
@@ -711,12 +703,12 @@ Add butter</preparation>
 
         const result = parseXmlMealPlan(message);
 
-        expect(result.meals[0].name).toBe('Breakfast & Brunch');
-        expect(result.meals[0].ingredients).toBe('Eggs (2), Toast & Butter');
-        expect(result.meals[0].preparation).toBe('Cook at 180°C for 10-15 min');
+        expect(result.meals[0].name).toBe("Breakfast & Brunch");
+        expect(result.meals[0].ingredients).toBe("Eggs (2), Toast & Butter");
+        expect(result.meals[0].preparation).toBe("Cook at 180°C for 10-15 min");
       });
 
-      it('should handle malformed XML with unclosed tags gracefully', () => {
+      it("should handle malformed XML with unclosed tags gracefully", () => {
         const message = `
           <daily_summary>
             <kcal>2000</kcal>
@@ -749,7 +741,7 @@ Add butter</preparation>
         expect(Array.isArray(result.meals)).toBe(true);
       });
 
-      it('should handle unclosed meal tags', () => {
+      it("should handle unclosed meal tags", () => {
         const message = `
           <daily_summary>
             <kcal>2000</kcal>
@@ -779,8 +771,8 @@ Add butter</preparation>
     });
   });
 
-  describe('extractComments', () => {
-    it('should extract comments from XML tags', () => {
+  describe("extractComments", () => {
+    it("should extract comments from XML tags", () => {
       const message = `
         <meal_plan>
           Some content
@@ -790,10 +782,10 @@ Add butter</preparation>
 
       const result = extractComments(message);
 
-      expect(result).toBe('This is a comment about the meal plan');
+      expect(result).toBe("This is a comment about the meal plan");
     });
 
-    it('should return null when comments tag is missing', () => {
+    it("should return null when comments tag is missing", () => {
       const message = `
         <meal_plan>
           Some content
@@ -805,37 +797,37 @@ Add butter</preparation>
       expect(result).toBeNull();
     });
 
-    it('should handle case-insensitive comments tag', () => {
+    it("should handle case-insensitive comments tag", () => {
       const message = `
         <COMMENTS>Uppercase comment</COMMENTS>
       `;
 
       const result = extractComments(message);
 
-      expect(result).toBe('Uppercase comment');
+      expect(result).toBe("Uppercase comment");
     });
 
-    it('should handle mixed case comments tag', () => {
+    it("should handle mixed case comments tag", () => {
       const message = `
         <Comments>Mixed case comment</Comments>
       `;
 
       const result = extractComments(message);
 
-      expect(result).toBe('Mixed case comment');
+      expect(result).toBe("Mixed case comment");
     });
 
-    it('should trim whitespace from comments', () => {
+    it("should trim whitespace from comments", () => {
       const message = `
         <comments>  Comment with whitespace  </comments>
       `;
 
       const result = extractComments(message);
 
-      expect(result).toBe('Comment with whitespace');
+      expect(result).toBe("Comment with whitespace");
     });
 
-    it('should preserve multiline comments', () => {
+    it("should preserve multiline comments", () => {
       const message = `
         <comments>Line 1
 Line 2
@@ -844,18 +836,18 @@ Line 3</comments>
 
       const result = extractComments(message);
 
-      expect(result).toBe('Line 1\nLine 2\nLine 3');
+      expect(result).toBe("Line 1\nLine 2\nLine 3");
     });
 
-    it('should return empty string for empty comments tag', () => {
-      const message = '<comments></comments>';
+    it("should return empty string for empty comments tag", () => {
+      const message = "<comments></comments>";
 
       const result = extractComments(message);
 
-      expect(result).toBe('');
+      expect(result).toBe("");
     });
 
-    it('should extract first comments tag when multiple exist', () => {
+    it("should extract first comments tag when multiple exist", () => {
       const message = `
         <comments>First comment</comments>
         <comments>Second comment</comments>
@@ -863,10 +855,10 @@ Line 3</comments>
 
       const result = extractComments(message);
 
-      expect(result).toBe('First comment');
+      expect(result).toBe("First comment");
     });
 
-    it('should handle comments with XML-like content', () => {
+    it("should handle comments with XML-like content", () => {
       const message = `
         <comments>This is not <tag>XML</tag>, it's just text</comments>
       `;
@@ -877,8 +869,8 @@ Line 3</comments>
     });
   });
 
-  describe('removeXmlTags', () => {
-    it('should remove meal_plan tags and their content', () => {
+  describe("removeXmlTags", () => {
+    it("should remove meal_plan tags and their content", () => {
       const message = `
         Some introductory text
         <meal_plan>
@@ -890,12 +882,12 @@ Line 3</comments>
 
       const result = removeXmlTags(message);
 
-      expect(result).not.toContain('<meal_plan>');
-      expect(result).not.toContain('daily_summary');
-      expect(result).not.toContain('meals');
+      expect(result).not.toContain("<meal_plan>");
+      expect(result).not.toContain("daily_summary");
+      expect(result).not.toContain("meals");
     });
 
-    it('should preserve comments content but remove tags', () => {
+    it("should preserve comments content but remove tags", () => {
       const message = `
         <meal_plan>Content</meal_plan>
         <comments>Important note about the plan</comments>
@@ -904,12 +896,12 @@ Line 3</comments>
 
       const result = removeXmlTags(message);
 
-      expect(result).toContain('Important note about the plan');
-      expect(result).not.toContain('<comments>');
-      expect(result).not.toContain('</comments>');
+      expect(result).toContain("Important note about the plan");
+      expect(result).not.toContain("<comments>");
+      expect(result).not.toContain("</comments>");
     });
 
-    it('should remove all remaining XML tags', () => {
+    it("should remove all remaining XML tags", () => {
       const message = `
         <meal_plan>Content</meal_plan>
         <div>Some div</div>
@@ -919,12 +911,12 @@ Line 3</comments>
 
       const result = removeXmlTags(message);
 
-      expect(result).not.toContain('<div>');
-      expect(result).not.toContain('<span>');
-      expect(result).toContain('Regular text here');
+      expect(result).not.toContain("<div>");
+      expect(result).not.toContain("<span>");
+      expect(result).toContain("Regular text here");
     });
 
-    it('should clean up excessive whitespace', () => {
+    it("should clean up excessive whitespace", () => {
       const message = `
         <meal_plan>Content</meal_plan>
         
@@ -941,7 +933,7 @@ Line 3</comments>
       expect(result).not.toMatch(/\n\s*\n\s*\n/);
     });
 
-    it('should preserve comments when they are not included in cleaned output', () => {
+    it("should preserve comments when they are not included in cleaned output", () => {
       const message = `
         <meal_plan>Content</meal_plan>
         <comments>Important comment</comments>
@@ -949,10 +941,10 @@ Line 3</comments>
 
       const result = removeXmlTags(message);
 
-      expect(result).toContain('Important comment');
+      expect(result).toContain("Important comment");
     });
 
-    it('should handle case-insensitive tags', () => {
+    it("should handle case-insensitive tags", () => {
       const message = `
         <MEAL_PLAN>Content</MEAL_PLAN>
         <COMMENTS>Comment</COMMENTS>
@@ -960,25 +952,25 @@ Line 3</comments>
 
       const result = removeXmlTags(message);
 
-      expect(result).not.toContain('MEAL_PLAN');
-      expect(result).toContain('Comment');
+      expect(result).not.toContain("MEAL_PLAN");
+      expect(result).toContain("Comment");
     });
 
-    it('should handle messages with no XML tags', () => {
-      const message = 'This is just plain text with no XML at all.';
+    it("should handle messages with no XML tags", () => {
+      const message = "This is just plain text with no XML at all.";
 
       const result = removeXmlTags(message);
 
-      expect(result).toBe('This is just plain text with no XML at all.');
+      expect(result).toBe("This is just plain text with no XML at all.");
     });
 
-    it('should handle empty string', () => {
-      const result = removeXmlTags('');
+    it("should handle empty string", () => {
+      const result = removeXmlTags("");
 
-      expect(result).toBe('');
+      expect(result).toBe("");
     });
 
-    it('should handle multiline comments properly', () => {
+    it("should handle multiline comments properly", () => {
       const message = `
         <meal_plan>Content</meal_plan>
         <comments>Line 1
@@ -989,13 +981,13 @@ Line 3</comments>
 
       const result = removeXmlTags(message);
 
-      expect(result).toContain('Line 1');
-      expect(result).toContain('Line 2');
-      expect(result).toContain('Line 3');
-      expect(result).toContain('Some text');
+      expect(result).toContain("Line 1");
+      expect(result).toContain("Line 2");
+      expect(result).toContain("Line 3");
+      expect(result).toContain("Some text");
     });
 
-    it('should handle complex message with mixed content', () => {
+    it("should handle complex message with mixed content", () => {
       const message = `
         Introduction text here.
         <meal_plan>
@@ -1013,14 +1005,14 @@ Line 3</comments>
 
       const result = removeXmlTags(message);
 
-      expect(result).toContain('Introduction text here.');
-      expect(result).toContain('This plan looks good!');
-      expect(result).toContain('Closing remarks here.');
-      expect(result).not.toContain('<meal_plan>');
-      expect(result).not.toContain('<div>');
+      expect(result).toContain("Introduction text here.");
+      expect(result).toContain("This plan looks good!");
+      expect(result).toContain("Closing remarks here.");
+      expect(result).not.toContain("<meal_plan>");
+      expect(result).not.toContain("<div>");
     });
 
-    it('should trim the final output', () => {
+    it("should trim the final output", () => {
       const message = `
         <meal_plan>Content</meal_plan>
         Text here
@@ -1033,7 +1025,7 @@ Line 3</comments>
       expect(result).not.toMatch(/\s$/);
     });
 
-    it('should handle nested tags correctly', () => {
+    it("should handle nested tags correctly", () => {
       const message = `
         <meal_plan>
           <nested>
@@ -1045,11 +1037,10 @@ Line 3</comments>
 
       const result = removeXmlTags(message);
 
-      expect(result).not.toContain('<meal_plan>');
-      expect(result).not.toContain('<nested>');
-      expect(result).not.toContain('<deep>');
-      expect(result).toContain('Text outside');
+      expect(result).not.toContain("<meal_plan>");
+      expect(result).not.toContain("<nested>");
+      expect(result).not.toContain("<deep>");
+      expect(result).toContain("Text outside");
     });
   });
 });
-

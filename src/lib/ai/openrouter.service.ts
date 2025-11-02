@@ -122,7 +122,8 @@ export class OpenRouterService {
 
     // Set default values
     this.baseUrl = config?.baseUrl || "https://openrouter.ai/api/v1";
-    this.defaultModel = config?.defaultModel || "nvidia/nemotron-nano-12b-v2-vl:free";
+    // openai/gpt-4.1-nano
+    this.defaultModel = config?.defaultModel || "openai/gpt-4.1-nano";
     this.defaultHeaders = config?.defaultHeaders || {};
     this.timeout = config?.timeout || 30000;
     this.maxRetries = config?.maxRetries || 3;

@@ -284,14 +284,16 @@ export default function AIChatInterface() {
     return (
       <div className="container mx-auto p-4 sm:p-8 max-w-4xl">
         <div className="text-center py-20">
-          <p className="text-muted-foreground">Initializing AI chat...</p>
+          <p className="text-muted-foreground" data-testid="ai-chat-initializing">
+            Initializing AI chat...
+          </p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto p-4 sm:p-8 max-w-4xl">
+    <div className="container mx-auto p-4 sm:p-8 max-w-4xl" data-testid="ai-chat-interface">
       {/* AI Disclaimer Alert */}
       <Alert className="mb-6">
         <AlertDescription>
@@ -331,7 +333,10 @@ export default function AIChatInterface() {
       )}
 
       {/* Message History */}
-      <div className="space-y-4 mb-6 min-h-[400px] max-h-[600px] overflow-y-auto p-4 border rounded-lg bg-background">
+      <div
+        className="space-y-4 mb-6 min-h-[400px] max-h-[600px] overflow-y-auto p-4 border rounded-lg bg-background"
+        data-testid="ai-chat-message-history"
+      >
         {chatState.messageHistory.map((message, index) => (
           <MessageItem key={index} message={message} />
         ))}
@@ -339,7 +344,7 @@ export default function AIChatInterface() {
       </div>
 
       {/* Message Input Form */}
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4" data-testid="ai-chat-message-form">
         <div className="space-y-2">
           <Textarea
             value={inputValue}
@@ -349,6 +354,7 @@ export default function AIChatInterface() {
             disabled={chatState.isLoading || !sessionId}
             className="min-h-[100px] resize-none"
             maxLength={MAX_MESSAGE_LENGTH}
+            data-testid="ai-chat-message-input"
           />
           <div className="flex justify-between items-center text-sm text-muted-foreground">
             <span>Press Ctrl/Cmd+Enter to send</span>
@@ -358,10 +364,21 @@ export default function AIChatInterface() {
           </div>
         </div>
         <div className="flex gap-2">
-          <Button type="submit" disabled={!inputValue.trim() || chatState.isLoading || !sessionId} className="flex-1">
+          <Button
+            type="submit"
+            disabled={!inputValue.trim() || chatState.isLoading || !sessionId}
+            className="flex-1"
+            data-testid="ai-chat-send-button"
+          >
             {chatState.isLoading ? "Sending..." : "Send"}
           </Button>
-          <Button type="button" variant="default" onClick={handleAccept} disabled={chatState.isLoading || !sessionId}>
+          <Button
+            type="button"
+            variant="default"
+            onClick={handleAccept}
+            disabled={chatState.isLoading || !sessionId}
+            data-testid="ai-chat-accept-button"
+          >
             Accept and edit manually
           </Button>
         </div>
@@ -374,4 +391,3 @@ export default function AIChatInterface() {
     </div>
   );
 }
-

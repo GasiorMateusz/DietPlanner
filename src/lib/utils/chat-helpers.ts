@@ -1,11 +1,11 @@
-import { parseXmlMealPlan } from './meal-plan-parser';
+import { parseXmlMealPlan } from "./meal-plan-parser";
 import type {
   ChatMessage,
   AssistantChatMessage,
   MealPlanStartupData,
   MealPlanMeal,
   MealPlanContentDailySummary,
-} from '../../types';
+} from "../../types";
 
 /**
  * State bridge interface for passing data to editor view.
@@ -38,7 +38,7 @@ export interface ValidationResult {
  */
 export function extractCurrentMealPlan(messageHistory: ChatMessage[]): ParsedMealPlan | null {
   const lastAssistantMessage = messageHistory
-    .filter((msg): msg is AssistantChatMessage => msg.role === 'assistant')
+    .filter((msg): msg is AssistantChatMessage => msg.role === "assistant")
     .pop();
 
   if (!lastAssistantMessage) {
@@ -50,13 +50,13 @@ export function extractCurrentMealPlan(messageHistory: ChatMessage[]): ParsedMea
     // Only return if we actually found meals (not the fallback empty structure)
     if (
       parsed.meals.length > 0 &&
-      parsed.meals[0].name !== '' &&
+      parsed.meals[0].name !== "" &&
       parsed.meals[0].preparation !== lastAssistantMessage.content
     ) {
       return parsed;
     }
   } catch (error) {
-    console.error('Failed to parse meal plan:', error);
+    console.error("Failed to parse meal plan:", error);
   }
 
   return null;
@@ -69,11 +69,11 @@ export function validateChatMessage(input: string, maxLength: number): Validatio
   const trimmedMessage = input.trim();
 
   if (!trimmedMessage) {
-    return { valid: false, error: 'Message cannot be empty.' };
+    return { valid: false, error: "Message cannot be empty." };
   }
 
   if (trimmedMessage.length > maxLength) {
-    return { valid: false, error: 'Message too long. Please shorten your message.' };
+    return { valid: false, error: "Message too long. Please shorten your message." };
   }
 
   return { valid: true };
@@ -88,7 +88,7 @@ export function createStateBridge(
   startupData?: MealPlanStartupData | null
 ): StateBridge | null {
   const lastAssistantMessage = messageHistory
-    .filter((msg): msg is AssistantChatMessage => msg.role === 'assistant')
+    .filter((msg): msg is AssistantChatMessage => msg.role === "assistant")
     .pop();
 
   if (!lastAssistantMessage) {
@@ -105,30 +105,27 @@ export function createStateBridge(
 /**
  * Extracts user-friendly error message from API response.
  */
-export async function getChatErrorMessage(
-  response: Response,
-  defaultMessage: string
-): Promise<string> {
+export async function getChatErrorMessage(response: Response, defaultMessage: string): Promise<string> {
   if (response.status === 401) {
-    return 'Unauthorized';
+    return "Unauthorized";
   }
 
   if (response.status === 404) {
-    return 'Session not found. Please start a new meal plan from the dashboard.';
+    return "Session not found. Please start a new meal plan from the dashboard.";
   }
 
   if (response.status === 502) {
-    return 'AI service is temporarily unavailable. Please try again in a moment.';
+    return "AI service is temporarily unavailable. Please try again in a moment.";
   }
 
   if (response.status === 500) {
-    return 'An internal error occurred. Please try again later.';
+    return "An internal error occurred. Please try again later.";
   }
 
   try {
     const errorData = await response.json();
     // Ensure error is a string, not an object
-    if (errorData.error && typeof errorData.error === 'string') {
+    if (errorData.error && typeof errorData.error === "string") {
       return errorData.error;
     }
     return defaultMessage;
@@ -136,4 +133,3 @@ export async function getChatErrorMessage(
     return defaultMessage;
   }
 }
-

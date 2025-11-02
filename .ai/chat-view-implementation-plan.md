@@ -17,6 +17,7 @@ This view implements user story **US-009** (Iterative meal plan improvement in A
 **Component**: `AIChatInterface` (React component with `client:load`)
 
 **Navigation Flow**:
+
 - Entry: From Dashboard → StartupFormDialog → Navigate to `/app/create` with session data
 - Exit: Click "Accept and edit manually" → Navigate to `/app/editor` with plan data via state bridge
 
@@ -44,7 +45,8 @@ AIChatInterface (React)
 
 **Component Description**: Main container component for the AI chat interface. Manages all chat-related state, handles API calls for sending messages, displays the conversation history, and provides controls for user input and acceptance. This is a self-contained component that manages its entire lifecycle internally.
 
-**Main Elements**: 
+**Main Elements**:
+
 - `<Alert>` with variant "default" or "destructive" for AI disclaimer (permanently visible)
 - Scrollable container with `MessageHistory` div
 - `MessageInput` form with Textarea and Send button
@@ -52,6 +54,7 @@ AIChatInterface (React)
 - Loading indicator overlay or inline loading state
 
 **Handled Events**:
+
 - Component mount: Receives initial session data from Astro page props
 - Form submit: On Send button click or Enter key (with Ctrl/Cmd modifier), submits user message to `POST /api/ai/sessions/{id}/message`
 - Accept click: On "Accept and edit manually" button, stores final plan data in client-side bridge variable and navigates to `/app/editor`
@@ -59,6 +62,7 @@ AIChatInterface (React)
 - Network errors: Handles retry logic for failed API calls
 
 **Handled Validation**:
+
 - Message input validation: Non-empty string required (trim whitespace)
 - Minimum length: At least 1 character after trimming
 - Maximum length: Configurable limit (e.g., 5000 characters)
@@ -66,11 +70,13 @@ AIChatInterface (React)
 - Button disable states: Send button disabled when loading or empty input, Accept button always enabled
 
 **Types**:
+
 - Props: `AIChatInterfaceProps` (receives sessionId and initialMessage from page)
 - State: `ChatState` (messageHistory, isLoading, error, promptCount)
 - DTOs: `SendAiMessageCommand`, `SendAiMessageResponseDto`
 
 **Props**:
+
 ```typescript
 interface AIChatInterfaceProps {
   sessionId: string; // UUID of the AI chat session
@@ -83,18 +89,22 @@ interface AIChatInterfaceProps {
 **Component Description**: Internal rendering area for chat messages. Displays all messages in chronological order with appropriate styling to distinguish user messages from assistant messages.
 
 **Main Elements**:
+
 - Scrollable container div with overflow handling
 - Conditional rendering of `MessageItem` components
 - Empty state when no messages (should not occur after mount)
 
 **Handled Events**:
+
 - Auto-scroll to bottom when new messages arrive (useRef and useEffect)
 - Scroll position preservation on window resize
 
 **Handled Validation**:
+
 - None (presentation-only component)
 
 **Types**:
+
 - Props: `{ messages: ChatMessage[] }`
 
 **Props**: Receives messageHistory array from parent AIChatInterface
@@ -104,18 +114,22 @@ interface AIChatInterfaceProps {
 **Component Description**: Individual message bubble component. Renders either a user or assistant message with appropriate styling and formatting.
 
 **Main Elements**:
+
 - Conditional rendering based on `message.role`
 - User messages: Right-aligned, distinct color scheme
 - Assistant messages: Left-aligned, distinct color scheme
 - Pre-formatted text container for message content
 
 **Handled Events**:
+
 - None (presentation-only)
 
 **Handled Validation**:
+
 - None (assumes valid ChatMessage type)
 
 **Types**:
+
 - Props: `{ message: ChatMessage }`
 
 **Props**: Single ChatMessage object from messageHistory
@@ -125,23 +139,27 @@ interface AIChatInterfaceProps {
 **Component Description**: Form input area for composing and sending new messages to the AI.
 
 **Main Elements**:
+
 - Form element wrapping input controls
 - `<Textarea>` from shadcn/ui for message composition
 - `<Button>` from shadcn/ui with disabled state and loading indicator
 - Optional character counter
 
 **Handled Events**:
+
 - Form submit: Prevent default, validate input, call parent submit handler
 - Enter key: Submit if Ctrl/Cmd modifier held, otherwise allow newline
 - Input change: Update controlled input value
 - Button click: Trigger form submit
 
 **Handled Validation**:
+
 - Non-empty input required (trim whitespace before validation)
 - Maximum length enforcement with visual feedback
 - Disable submit during loading state
 
 **Types**:
+
 - Props: `{ onSubmit: (message: string) => void; isLoading: boolean; disabled?: boolean }`
 
 **Props**: Callback from AIChatInterface parent, loading state, optional disabled prop
@@ -151,18 +169,22 @@ interface AIChatInterfaceProps {
 **Component Description**: Primary action button for accepting the current meal plan and transitioning to the editor.
 
 **Main Elements**:
+
 - `<Button>` from shadcn/ui with "default" variant
 - Icon (optional) to indicate navigation
 - Loading state (optional) if transition requires async operations
 
 **Handled Events**:
+
 - Click: Extract final plan from last assistant message, store in bridge variable, navigate to `/app/editor`
 
 **Handled Validation**:
+
 - Ensure at least one assistant message exists
 - Ensure user has not already accepted (optional guard)
 
 **Types**:
+
 - Props: `{ onAccept: () => void; disabled?: boolean }`
 
 **Props**: Callback from AIChatInterface parent, optional disabled state
@@ -172,27 +194,31 @@ interface AIChatInterfaceProps {
 ### Existing DTOs (from types.ts)
 
 **ChatMessage**: Union type representing any message in the conversation
+
 ```typescript
 type ChatMessage = UserChatMessage | AssistantChatMessage;
 ```
 
 **UserChatMessage**: User prompt structure
+
 ```typescript
 type UserChatMessage = {
-  role: 'user';
+  role: "user";
   content: string; // User's message text
 };
 ```
 
 **AssistantChatMessage**: AI response structure
+
 ```typescript
 type AssistantChatMessage = {
-  role: 'assistant';
+  role: "assistant";
   content: string; // AI's response text (contains the meal plan)
 };
 ```
 
 **SendAiMessageCommand**: Request payload for POST /api/ai/sessions/{id}/message
+
 ```typescript
 type SendAiMessageCommand = {
   message: UserChatMessage; // The user's follow-up message
@@ -200,6 +226,7 @@ type SendAiMessageCommand = {
 ```
 
 **SendAiMessageResponseDto**: Response from POST /api/ai/sessions/{id}/message
+
 ```typescript
 type SendAiMessageResponseDto = {
   session_id: string; // UUID of the chat session
@@ -209,6 +236,7 @@ type SendAiMessageResponseDto = {
 ```
 
 **CreateAiSessionResponseDto**: Response from POST /api/ai/sessions (used for initial data)
+
 ```typescript
 type CreateAiSessionResponseDto = {
   session_id: string; // UUID of the chat session
@@ -220,6 +248,7 @@ type CreateAiSessionResponseDto = {
 ### ViewModel Types (component-specific)
 
 **AIChatInterfaceProps**: Props for the main component
+
 ```typescript
 interface AIChatInterfaceProps {
   sessionId: string; // UUID from CreateAiSessionResponseDto
@@ -228,6 +257,7 @@ interface AIChatInterfaceProps {
 ```
 
 **ChatState**: Internal state structure
+
 ```typescript
 interface ChatState {
   messageHistory: ChatMessage[]; // All messages in the conversation
@@ -238,6 +268,7 @@ interface ChatState {
 ```
 
 **StateBridge**: Client-side bridge for passing data to editor
+
 ```typescript
 interface StateBridge {
   sessionId: string; // For linking saved meal plan to chat session
@@ -255,7 +286,7 @@ type MealPlanStartupData = {
   patient_age: number | null;
   patient_weight: number | null;
   patient_height: number | null;
-  activity_level: 'sedentary' | 'light' | 'moderate' | 'high' | null;
+  activity_level: "sedentary" | "light" | "moderate" | "high" | null;
   target_kcal: number | null;
   target_macro_distribution: TargetMacroDistribution | null;
   meal_names: string | null;
@@ -303,6 +334,7 @@ None required for this view. All state is managed within the `AIChatInterface` c
 A simple client-side variable or sessionStorage is used to transfer data from the chat view to the editor view upon acceptance.
 
 **Option 1: Window-level variable**
+
 ```typescript
 // In AIChatInterface onAccept handler
 (window as any).mealPlanBridge = {
@@ -312,12 +344,16 @@ A simple client-side variable or sessionStorage is used to transfer data from th
 ```
 
 **Option 2: sessionStorage**
+
 ```typescript
 // In AIChatInterface onAccept handler
-sessionStorage.setItem('mealPlanBridge', JSON.stringify({
-  sessionId,
-  lastAssistantMessage: messageHistory[messageHistory.length - 1].content,
-}));
+sessionStorage.setItem(
+  "mealPlanBridge",
+  JSON.stringify({
+    sessionId,
+    lastAssistantMessage: messageHistory[messageHistory.length - 1].content,
+  })
+);
 ```
 
 The editor view will read from this bridge on mount.
@@ -335,34 +371,38 @@ The editor view will read from this bridge on mount.
 **Purpose**: Send a follow-up message in an existing AI chat session and receive an updated meal plan.
 
 **Request**:
+
 - **Method**: POST
 - **URL**: `/api/ai/sessions/{sessionId}/message`
-- **Headers**: 
+- **Headers**:
   - `Content-Type: application/json`
   - `Authorization: Bearer <SUPABASE_JWT>` (handled automatically by Astro middleware)
 - **Body**:
+
 ```typescript
 SendAiMessageCommand = {
   message: {
-    role: 'user',
-    content: string // User's message text
-  }
-}
+    role: "user",
+    content: string, // User's message text
+  },
+};
 ```
 
 **Response Success (200 OK)**:
+
 ```typescript
 SendAiMessageResponseDto = {
   session_id: string, // UUID of the chat session
   message: {
-    role: 'assistant',
-    content: string // AI's updated meal plan
+    role: "assistant",
+    content: string, // AI's updated meal plan
   },
-  prompt_count: number // Total prompts sent (telemetry)
-}
+  prompt_count: number, // Total prompts sent (telemetry)
+};
 ```
 
 **Response Errors**:
+
 - **401 Unauthorized**: User not authenticated → Redirect to `/login`
 - **404 Not Found**: Chat session not found → Display error message, allow retry or navigation back
 - **502 Bad Gateway**: OpenRouter API error → Display error message, allow retry
@@ -376,16 +416,16 @@ The API call is implemented using the native `fetch` API:
 ```typescript
 async function sendMessage(sessionId: string, message: UserChatMessage): Promise<SendAiMessageResponseDto> {
   const response = await fetch(`/api/ai/sessions/${sessionId}/message`, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
     body: JSON.stringify({ message }),
   });
 
   if (!response.ok) {
     const error = await response.json();
-    throw new Error(error.error || 'Failed to send message');
+    throw new Error(error.error || "Failed to send message");
   }
 
   return response.json();
@@ -409,6 +449,7 @@ Errors are caught in the component's submit handler and displayed to the user vi
 **User Action**: Page loads or navigates to `/app/create`
 
 **System Response**:
+
 1. React component mounts with props (`sessionId`, `initialMessage`)
 2. State is initialized with the first assistant message
 3. UI renders:
@@ -424,6 +465,7 @@ Errors are caught in the component's submit handler and displayed to the user vi
 **User Action**: User types a message in the Textarea and clicks "Send" or presses Ctrl/Cmd+Enter
 
 **System Response**:
+
 1. Validate input (non-empty, within length limits)
 2. If valid:
    - Disable Send button
@@ -449,6 +491,7 @@ Errors are caught in the component's submit handler and displayed to the user vi
 **User Action**: User clicks "Accept and edit manually" button
 
 **System Response**:
+
 1. Extract the last assistant message from messageHistory
 2. Store sessionId and message content in client-side bridge variable
 3. Navigate to `/app/editor` (no ID parameter)
@@ -461,6 +504,7 @@ Errors are caught in the component's submit handler and displayed to the user vi
 **User Action**: API call fails (502, 503, 504, network error)
 
 **System Response**:
+
 1. Catch error in API call handler
 2. Display error Alert with message: "AI service unavailable. Please try again."
 3. Keep user's input in the Textarea (not cleared)
@@ -474,6 +518,7 @@ Errors are caught in the component's submit handler and displayed to the user vi
 **User Action**: User scrolls through conversation history
 
 **System Response**:
+
 1. Auto-scroll on new messages (if user is at the bottom)
 2. Preserve scroll position if user has scrolled up
 3. Show message bubbles with appropriate styling
@@ -489,6 +534,7 @@ Errors are caught in the component's submit handler and displayed to the user vi
 **Component**: MessageInput
 
 **Conditions**:
+
 1. **Non-empty requirement**: After trimming whitespace, message must contain at least 1 character
    - Validation triggers on form submit
    - Visual feedback: Send button remains disabled if empty
@@ -508,6 +554,7 @@ Errors are caught in the component's submit handler and displayed to the user vi
 **Component**: AIChatInterface
 
 **Conditions**:
+
 1. **Session ID format**: Must be a valid UUID
    - Validated on component props
    - Error handling: Display error if invalid on mount
@@ -527,11 +574,13 @@ Errors are caught in the component's submit handler and displayed to the user vi
 Server-side validation is handled by the API endpoint and returns appropriate error responses. The frontend must handle these responses gracefully.
 
 **Validation performed by API**:
+
 1. Session ID must exist in database and belong to the authenticated user
 2. Message object must have valid structure (`role: 'user'`, `content: string`)
 3. User must be authenticated (handled by middleware)
 
 **Frontend handling**:
+
 - 400 Bad Request: Should not occur with proper validation, but display general error
 - 401 Unauthorized: Trigger global redirect to `/login`
 - 404 Not Found: Display "Session not found" error and suggest returning to dashboard
@@ -553,6 +602,7 @@ Server-side validation is handled by the API endpoint and returns appropriate er
 **Errors**: Fetch network failures, timeout, DNS resolution failure
 
 **Handling**:
+
 - Display user-friendly error message: "Network error. Please check your connection and try again."
 - Preserve user's input in the Textarea
 - Allow immediate retry
@@ -563,29 +613,34 @@ Server-side validation is handled by the API endpoint and returns appropriate er
 #### API Error Responses
 
 **401 Unauthorized**:
+
 - Cause: User session expired or invalid
 - Handling: Trigger global redirect to `/login` page
 - UI: No error message shown (redirect occurs)
 
 **404 Not Found**:
+
 - Cause: Chat session deleted or never existed
 - Handling: Display error: "Session not found. Please start a new meal plan from the dashboard."
 - UI: Alert with suggestion to return to dashboard
 - Action: Provide link back to `/app/dashboard`
 
 **502 Bad Gateway**:
+
 - Cause: OpenRouter AI service unavailable or returned error
 - Handling: Display error: "AI service is temporarily unavailable. Please try again in a moment."
 - UI: Alert with retry button
 - Action: Allow user to retry without losing their message
 
 **500 Internal Server Error**:
+
 - Cause: Database error or unexpected server failure
 - Handling: Display error: "An internal error occurred. Please try again later."
 - UI: Alert with retry option
 - Action: Allow retry, consider logging error for debugging
 
 **400 Bad Request**:
+
 - Cause: Validation error in request payload (should not occur with proper frontend validation)
 - Handling: Display error: "Invalid request. Please try again."
 - UI: Alert
@@ -594,12 +649,14 @@ Server-side validation is handled by the API endpoint and returns appropriate er
 #### State Errors
 
 **Invalid Props**:
+
 - Cause: Missing or invalid sessionId or initialMessage
 - Handling: Display "Invalid session data" error on mount
 - UI: Alert with suggestion to return to dashboard
 - Action: Provide navigation back to `/app/dashboard`
 
 **Empty Message History**:
+
 - Cause: State corruption or unexpected behavior
 - Handling: Display "No messages available" error
 - UI: Alert
@@ -614,8 +671,9 @@ Non-recoverable errors (401, 404, invalid props) either redirect the user or pro
 ### Error Logging
 
 Errors should be logged for debugging purposes:
+
 ```typescript
-console.error('AI Chat error:', {
+console.error("AI Chat error:", {
   sessionId,
   errorMessage: error.message,
   errorDetails: error,
@@ -749,6 +807,7 @@ Test end-to-end flow:
 ### Step 12: Documentation
 
 Add JSDoc comments to:
+
 1. Main component
 2. All internal components
 3. API call functions
@@ -756,9 +815,8 @@ Add JSDoc comments to:
 5. State bridge interface
 
 Document:
+
 1. Props interface
 2. State structure
 3. Error handling approach
 4. Integration with other views
-
-

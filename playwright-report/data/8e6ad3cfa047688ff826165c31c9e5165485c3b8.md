@@ -1,0 +1,78 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - navigation [ref=e3]:
+    - generic [ref=e5]:
+      - link "Diet Planner Home" [ref=e6] [cursor=pointer]:
+        - /url: /app/dashboard
+        - text: Diet Planner
+      - generic [ref=e7]:
+        - generic "Logged in as" [ref=e8]: mateo.g6@gmail.com
+        - button "Log out" [ref=e9]
+  - main [ref=e10]:
+    - generic [ref=e12]:
+      - heading "Meal Plans Dashboard" [level=1] [ref=e13]
+      - generic [ref=e14]:
+        - button "Create new meal plan" [ref=e15]
+        - textbox "Search meal plans by name" [ref=e17]:
+          - /placeholder: Search meal plans...
+      - list [ref=e18]:
+        - listitem [ref=e19]:
+          - generic [ref=e20]:
+            - generic [ref=e21]:
+              - heading "test meal plan" [level=3] [ref=e22]
+              - generic [ref=e24]: Updated just now
+              - generic [ref=e25]:
+                - generic [ref=e26]:
+                  - generic [ref=e27]: "Kcal:"
+                  - generic [ref=e28]: "2000"
+                - generic [ref=e29]:
+                  - generic [ref=e30]: "P:"
+                  - generic [ref=e31]: 90g
+                - generic [ref=e32]:
+                  - generic [ref=e33]: "F:"
+                  - generic [ref=e34]: 70g
+                - generic [ref=e35]:
+                  - generic [ref=e36]: "C:"
+                  - generic [ref=e37]: 270g
+            - generic [ref=e38]:
+              - button "Edit meal plan 2b9f8d8f-311c-4c3e-a3c1-dfacc410c720" [ref=e39]: Edit / View
+              - button "Export meal plan 2b9f8d8f-311c-4c3e-a3c1-dfacc410c720" [ref=e40]: Export
+              - button "Delete meal plan 2b9f8d8f-311c-4c3e-a3c1-dfacc410c720" [ref=e41]: Delete
+        - listitem [ref=e42]:
+          - generic [ref=e43]:
+            - generic [ref=e44]:
+              - heading "test meal plan" [level=3] [ref=e45]
+              - generic [ref=e47]: Updated just now
+              - generic [ref=e48]:
+                - generic [ref=e49]:
+                  - generic [ref=e50]: "Kcal:"
+                  - generic [ref=e51]: "2000"
+                - generic [ref=e52]:
+                  - generic [ref=e53]: "P:"
+                  - generic [ref=e54]: 100g
+                - generic [ref=e55]:
+                  - generic [ref=e56]: "F:"
+                  - generic [ref=e57]: 70g
+                - generic [ref=e58]:
+                  - generic [ref=e59]: "C:"
+                  - generic [ref=e60]: 275g
+            - generic [ref=e61]:
+              - button "Edit meal plan c614c398-9605-43d2-885a-ab8effa1da14" [ref=e62]: Edit / View
+              - button "Export meal plan c614c398-9605-43d2-885a-ab8effa1da14" [ref=e63]: Export
+              - button "Delete meal plan c614c398-9605-43d2-885a-ab8effa1da14" [ref=e64]: Delete
+  - generic [ref=e67]:
+    - button "Menu" [ref=e68]:
+      - img [ref=e70]
+      - generic: Menu
+    - button "Inspect" [ref=e74]:
+      - img [ref=e76]
+      - generic: Inspect
+    - button "Audit" [ref=e78]:
+      - img [ref=e80]
+      - generic: Audit
+    - button "Settings" [ref=e83]:
+      - img [ref=e85]
+      - generic: Settings
+```

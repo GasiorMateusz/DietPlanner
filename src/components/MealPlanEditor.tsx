@@ -429,7 +429,6 @@ export default function MealPlanEditor({ mealPlanId }: MealPlanEditorProps) {
     );
   };
 
-
   /**
    * Loads meal plan data from sessionStorage bridge (Create Mode).
    * Parses AI-generated meal plan text into structured format.
@@ -515,6 +514,7 @@ export default function MealPlanEditor({ mealPlanId }: MealPlanEditorProps) {
             onChange={(e) => handlePlanNameChange(e.target.value)}
             placeholder="Enter meal plan name..."
             required
+            data-testid="meal-plan-editor-plan-name-input"
           />
         </div>
 
@@ -554,7 +554,13 @@ export default function MealPlanEditor({ mealPlanId }: MealPlanEditorProps) {
 
         {/* Form Actions */}
         <div className="flex gap-4 pt-4 border-t">
-          <Button type="button" variant="default" onClick={handleSave} disabled={!isFormReady()}>
+          <Button
+            type="button"
+            variant="default"
+            onClick={handleSave}
+            disabled={!isFormReady()}
+            data-testid="meal-plan-editor-save-button"
+          >
             {editorState.isLoading ? "Saving..." : "Save changes"}
           </Button>
 

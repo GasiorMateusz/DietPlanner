@@ -1,4 +1,4 @@
-import type { MealPlanContentDailySummary, MealPlanStartupData } from '@/types';
+import type { MealPlanContentDailySummary, MealPlanStartupData } from "@/types";
 
 /**
  * Calculates daily nutritional summary from target kcal and macro distribution.
@@ -53,9 +53,5 @@ export function resolveDailySummary(
   }
 
   // Otherwise, calculate from startup data
-  return calculateDailySummaryFromTargets(
-    startupData?.target_kcal,
-    startupData?.target_macro_distribution
-  );
+  return calculateDailySummaryFromTargets(startupData?.target_kcal, startupData?.target_macro_distribution);
 }
-

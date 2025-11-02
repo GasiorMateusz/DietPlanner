@@ -153,7 +153,7 @@ export function StartupFormDialog({ open, onClose, onSubmit }: StartupFormDialog
 
   return (
     <Dialog open={open} onOpenChange={(openState) => !openState && handleClose()}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" data-testid="startup-form-dialog">
         <DialogHeader>
           <DialogTitle>Create New Meal Plan</DialogTitle>
           <DialogDescription>
@@ -161,7 +161,7 @@ export function StartupFormDialog({ open, onClose, onSubmit }: StartupFormDialog
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6" data-testid="startup-form">
           {errors._form && <div className="text-sm text-destructive">{errors._form}</div>}
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -178,6 +178,7 @@ export function StartupFormDialog({ open, onClose, onSubmit }: StartupFormDialog
                 value={formData.patient_age ?? ""}
                 onChange={(e) => handleNumberInputChange("patient_age", e.target.value)}
                 aria-invalid={!!errors.patient_age}
+                data-testid="startup-form-patient-age"
               />
               {errors.patient_age && <p className="text-sm text-destructive">{errors.patient_age}</p>}
             </div>
@@ -196,6 +197,7 @@ export function StartupFormDialog({ open, onClose, onSubmit }: StartupFormDialog
                 value={formData.patient_weight ?? ""}
                 onChange={(e) => handleNumberInputChange("patient_weight", e.target.value)}
                 aria-invalid={!!errors.patient_weight}
+                data-testid="startup-form-patient-weight"
               />
               {errors.patient_weight && <p className="text-sm text-destructive">{errors.patient_weight}</p>}
             </div>
@@ -214,6 +216,7 @@ export function StartupFormDialog({ open, onClose, onSubmit }: StartupFormDialog
                 value={formData.patient_height ?? ""}
                 onChange={(e) => handleNumberInputChange("patient_height", e.target.value)}
                 aria-invalid={!!errors.patient_height}
+                data-testid="startup-form-patient-height"
               />
               {errors.patient_height && <p className="text-sm text-destructive">{errors.patient_height}</p>}
             </div>
@@ -226,6 +229,7 @@ export function StartupFormDialog({ open, onClose, onSubmit }: StartupFormDialog
               value={formData.activity_level ?? ""}
               onChange={(e) => handleInputChange("activity_level", e.target.value || null)}
               aria-invalid={!!errors.activity_level}
+              data-testid="startup-form-activity-level"
             >
               <option value="">Select activity level</option>
               <option value="sedentary">Sedentary</option>
@@ -249,6 +253,7 @@ export function StartupFormDialog({ open, onClose, onSubmit }: StartupFormDialog
               value={formData.target_kcal ?? ""}
               onChange={(e) => handleNumberInputChange("target_kcal", e.target.value)}
               aria-invalid={!!errors.target_kcal}
+              data-testid="startup-form-target-kcal"
             />
             {errors.target_kcal && <p className="text-sm text-destructive">{errors.target_kcal}</p>}
           </div>
@@ -342,10 +347,16 @@ export function StartupFormDialog({ open, onClose, onSubmit }: StartupFormDialog
           </div>
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={handleClose} disabled={isSubmitting}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleClose}
+              disabled={isSubmitting}
+              data-testid="startup-form-cancel-button"
+            >
               Cancel
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
+            <Button type="submit" disabled={isSubmitting} data-testid="startup-form-generate-button">
               {isSubmitting ? "Generating..." : "Generate"}
             </Button>
           </DialogFooter>

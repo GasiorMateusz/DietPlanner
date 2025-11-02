@@ -1,12 +1,9 @@
-import type { APIRoute } from 'astro';
-import { DatabaseError, NotFoundError } from '../../../lib/errors.ts';
-import { MealPlanService } from '../../../lib/meal-plans/meal-plan.service.ts';
-import {
-  mealPlanIdParamSchema,
-  updateMealPlanSchema,
-} from '../../../lib/validation/meal-plans.schemas.ts';
-import type { UpdateMealPlanCommand } from '../../../types.ts';
-import { getUserFromRequest } from '@/lib/auth/session.service.js';
+import type { APIRoute } from "astro";
+import { DatabaseError, NotFoundError } from "../../../lib/errors.ts";
+import { MealPlanService } from "../../../lib/meal-plans/meal-plan.service.ts";
+import { mealPlanIdParamSchema, updateMealPlanSchema } from "../../../lib/validation/meal-plans.schemas.ts";
+import type { UpdateMealPlanCommand } from "../../../types.ts";
+import { getUserFromRequest } from "@/lib/auth/session.service.js";
 
 export const prerender = false;
 
@@ -35,67 +32,63 @@ export const GET: APIRoute = async (context) => {
     if (!paramValidation.success) {
       return new Response(
         JSON.stringify({
-          error: 'Validation failed',
+          error: "Validation failed",
           details: paramValidation.error.errors,
         }),
         {
           status: 400,
-          headers: { 'Content-Type': 'application/json' },
+          headers: { "Content-Type": "application/json" },
         }
       );
     }
 
     // Call service to get meal plan
-    const mealPlan = await MealPlanService.getMealPlanById(
-      paramValidation.data.id,
-      user.id,
-      supabase,
-    );
+    const mealPlan = await MealPlanService.getMealPlanById(paramValidation.data.id, user.id, supabase);
 
     return new Response(JSON.stringify(mealPlan), {
       status: 200,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { "Content-Type": "application/json" },
     });
   } catch (error) {
     // Handle custom errors
     if (error instanceof NotFoundError) {
       return new Response(
         JSON.stringify({
-          error: 'Meal plan not found',
+          error: "Meal plan not found",
           details: error.message,
         }),
         {
           status: 404,
-          headers: { 'Content-Type': 'application/json' },
+          headers: { "Content-Type": "application/json" },
         }
       );
     }
 
     if (error instanceof DatabaseError) {
       // eslint-disable-next-line no-console
-      console.error('Database error:', error.message, error.originalError);
+      console.error("Database error:", error.message, error.originalError);
       return new Response(
         JSON.stringify({
-          error: 'An internal error occurred',
+          error: "An internal error occurred",
         }),
         {
           status: 500,
-          headers: { 'Content-Type': 'application/json' },
+          headers: { "Content-Type": "application/json" },
         }
       );
     }
 
     // Handle unexpected errors
     // eslint-disable-next-line no-console
-    console.error('Internal server error:', error);
+    console.error("Internal server error:", error);
     return new Response(
       JSON.stringify({
-        error: 'An internal error occurred',
-        details: error instanceof Error ? error.message : 'Unknown error',
+        error: "An internal error occurred",
+        details: error instanceof Error ? error.message : "Unknown error",
       }),
       {
         status: 500,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { "Content-Type": "application/json" },
       }
     );
   }
@@ -128,12 +121,12 @@ export const PUT: APIRoute = async (context) => {
     if (!paramValidation.success) {
       return new Response(
         JSON.stringify({
-          error: 'Validation failed',
+          error: "Validation failed",
           details: paramValidation.error.errors,
         }),
         {
           status: 400,
-          headers: { 'Content-Type': 'application/json' },
+          headers: { "Content-Type": "application/json" },
         }
       );
     }
@@ -145,12 +138,12 @@ export const PUT: APIRoute = async (context) => {
     } catch (error) {
       return new Response(
         JSON.stringify({
-          error: 'Invalid JSON in request body',
-          details: error instanceof Error ? error.message : 'Unknown error',
+          error: "Invalid JSON in request body",
+          details: error instanceof Error ? error.message : "Unknown error",
         }),
         {
           status: 400,
-          headers: { 'Content-Type': 'application/json' },
+          headers: { "Content-Type": "application/json" },
         }
       );
     }
@@ -160,12 +153,12 @@ export const PUT: APIRoute = async (context) => {
     if (!bodyValidation.success) {
       return new Response(
         JSON.stringify({
-          error: 'Validation failed',
+          error: "Validation failed",
           details: bodyValidation.error.errors,
         }),
         {
           status: 400,
-          headers: { 'Content-Type': 'application/json' },
+          headers: { "Content-Type": "application/json" },
         }
       );
     }
@@ -175,53 +168,53 @@ export const PUT: APIRoute = async (context) => {
       paramValidation.data.id,
       bodyValidation.data as UpdateMealPlanCommand,
       user.id,
-      supabase,
+      supabase
     );
 
     return new Response(JSON.stringify(mealPlan), {
       status: 200,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { "Content-Type": "application/json" },
     });
   } catch (error) {
     // Handle custom errors
     if (error instanceof NotFoundError) {
       return new Response(
         JSON.stringify({
-          error: 'Meal plan not found',
+          error: "Meal plan not found",
           details: error.message,
         }),
         {
           status: 404,
-          headers: { 'Content-Type': 'application/json' },
+          headers: { "Content-Type": "application/json" },
         }
       );
     }
 
     if (error instanceof DatabaseError) {
       // eslint-disable-next-line no-console
-      console.error('Database error:', error.message, error.originalError);
+      console.error("Database error:", error.message, error.originalError);
       return new Response(
         JSON.stringify({
-          error: 'An internal error occurred',
+          error: "An internal error occurred",
         }),
         {
           status: 500,
-          headers: { 'Content-Type': 'application/json' },
+          headers: { "Content-Type": "application/json" },
         }
       );
     }
 
     // Handle unexpected errors
     // eslint-disable-next-line no-console
-    console.error('Internal server error:', error);
+    console.error("Internal server error:", error);
     return new Response(
       JSON.stringify({
-        error: 'An internal error occurred',
-        details: error instanceof Error ? error.message : 'Unknown error',
+        error: "An internal error occurred",
+        details: error instanceof Error ? error.message : "Unknown error",
       }),
       {
         status: 500,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { "Content-Type": "application/json" },
       }
     );
   }
@@ -252,12 +245,12 @@ export const DELETE: APIRoute = async (context) => {
     if (!paramValidation.success) {
       return new Response(
         JSON.stringify({
-          error: 'Validation failed',
+          error: "Validation failed",
           details: paramValidation.error.errors,
         }),
         {
           status: 400,
-          headers: { 'Content-Type': 'application/json' },
+          headers: { "Content-Type": "application/json" },
         }
       );
     }
@@ -273,43 +266,42 @@ export const DELETE: APIRoute = async (context) => {
     if (error instanceof NotFoundError) {
       return new Response(
         JSON.stringify({
-          error: 'Meal plan not found',
+          error: "Meal plan not found",
           details: error.message,
         }),
         {
           status: 404,
-          headers: { 'Content-Type': 'application/json' },
+          headers: { "Content-Type": "application/json" },
         }
       );
     }
 
     if (error instanceof DatabaseError) {
       // eslint-disable-next-line no-console
-      console.error('Database error:', error.message, error.originalError);
+      console.error("Database error:", error.message, error.originalError);
       return new Response(
         JSON.stringify({
-          error: 'An internal error occurred',
+          error: "An internal error occurred",
         }),
         {
           status: 500,
-          headers: { 'Content-Type': 'application/json' },
+          headers: { "Content-Type": "application/json" },
         }
       );
     }
 
     // Handle unexpected errors
     // eslint-disable-next-line no-console
-    console.error('Internal server error:', error);
+    console.error("Internal server error:", error);
     return new Response(
       JSON.stringify({
-        error: 'An internal error occurred',
-        details: error instanceof Error ? error.message : 'Unknown error',
+        error: "An internal error occurred",
+        details: error instanceof Error ? error.message : "Unknown error",
       }),
       {
         status: 500,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { "Content-Type": "application/json" },
       }
     );
   }
 };
-

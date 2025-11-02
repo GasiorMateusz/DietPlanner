@@ -10,12 +10,7 @@ interface MealPlanActionsProps {
 /**
  * Container for action buttons (Edit/View, Export, Delete) for a meal plan item.
  */
-export function MealPlanActions({
-  mealPlanId,
-  onEdit,
-  onExport,
-  onDelete,
-}: MealPlanActionsProps) {
+export function MealPlanActions({ mealPlanId, onEdit, onExport, onDelete }: MealPlanActionsProps) {
   const handleEdit = () => {
     if (mealPlanId) {
       onEdit(mealPlanId);
@@ -41,23 +36,14 @@ export function MealPlanActions({
         size="sm"
         onClick={handleEdit}
         aria-label={`Edit meal plan ${mealPlanId}`}
+        data-testid="meal-plan-edit-button"
       >
         Edit / View
       </Button>
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={handleExport}
-        aria-label={`Export meal plan ${mealPlanId}`}
-      >
+      <Button variant="outline" size="sm" onClick={handleExport} aria-label={`Export meal plan ${mealPlanId}`}>
         Export
       </Button>
-      <Button
-        variant="destructive"
-        size="sm"
-        onClick={handleDelete}
-        aria-label={`Delete meal plan ${mealPlanId}`}
-      >
+      <Button variant="destructive" size="sm" onClick={handleDelete} aria-label={`Delete meal plan ${mealPlanId}`}>
         Delete
       </Button>
     </div>

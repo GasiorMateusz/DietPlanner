@@ -1,4 +1,4 @@
-import type { MealPlanMeal } from '@/types';
+import type { MealPlanMeal } from "@/types";
 
 /**
  * Internal state structure for meal plan editor validation.
@@ -17,11 +17,11 @@ export interface MealPlanFormState {
  */
 export function validateMealPlanForm(state: MealPlanFormState): string | null {
   if (!state.planName.trim()) {
-    return 'Plan name is required';
+    return "Plan name is required";
   }
 
   if (state.meals.length === 0) {
-    return 'At least one meal is required';
+    return "At least one meal is required";
   }
 
   for (let i = 0; i < state.meals.length; i++) {
@@ -45,6 +45,5 @@ export function isMealPlanFormReady(state: MealPlanFormState, isLoading: boolean
   if (isLoading) return false;
   if (!state.planName.trim()) return false;
   if (state.meals.length === 0) return false;
-  return state.meals.every((meal) => meal.name.trim() !== '');
+  return state.meals.every((meal) => meal.name.trim() !== "");
 }
-

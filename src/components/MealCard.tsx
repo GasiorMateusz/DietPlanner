@@ -49,6 +49,7 @@ export function MealCard({
           onChange={(e) => onNameChange(mealIndex, e.target.value)}
           placeholder="e.g., Breakfast, Lunch, Dinner"
           required
+          data-testid={`meal-card-name-input-${mealIndex}`}
         />
       </div>
 

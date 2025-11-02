@@ -1,14 +1,14 @@
-import { describe, it, expect } from 'vitest';
-import { extractCurrentMealPlan } from '@/lib/utils/chat-helpers';
-import type { ChatMessage, AssistantChatMessage, UserChatMessage } from '@/types';
+import { describe, it, expect } from "vitest";
+import { extractCurrentMealPlan } from "@/lib/utils/chat-helpers";
+import type { ChatMessage, AssistantChatMessage, UserChatMessage } from "@/types";
 
-describe('extractCurrentMealPlan', () => {
-  describe('valid meal plan in last assistant message', () => {
-    it('should extract meal plan from last assistant message', () => {
+describe("extractCurrentMealPlan", () => {
+  describe("valid meal plan in last assistant message", () => {
+    it("should extract meal plan from last assistant message", () => {
       const messageHistory: ChatMessage[] = [
-        { role: 'user', content: 'Create a meal plan' },
+        { role: "user", content: "Create a meal plan" },
         {
-          role: 'assistant',
+          role: "assistant",
           content: `
             <daily_summary>
               <kcal>2000</kcal>
@@ -48,17 +48,17 @@ describe('extractCurrentMealPlan', () => {
 
       expect(result).not.toBeNull();
       expect(result?.meals).toHaveLength(2);
-      expect(result?.meals[0].name).toBe('Breakfast');
-      expect(result?.meals[1].name).toBe('Lunch');
+      expect(result?.meals[0].name).toBe("Breakfast");
+      expect(result?.meals[1].name).toBe("Lunch");
       expect(result?.dailySummary.kcal).toBe(2000);
       expect(result?.dailySummary.proteins).toBe(150);
     });
 
-    it('should use the last assistant message when multiple exist', () => {
+    it("should use the last assistant message when multiple exist", () => {
       const messageHistory: ChatMessage[] = [
-        { role: 'user', content: 'Create initial plan' },
+        { role: "user", content: "Create initial plan" },
         {
-          role: 'assistant',
+          role: "assistant",
           content: `
             <meals>
               <meal>
@@ -75,9 +75,9 @@ describe('extractCurrentMealPlan', () => {
             </meals>
           `,
         },
-        { role: 'user', content: 'Update the plan' },
+        { role: "user", content: "Update the plan" },
         {
-          role: 'assistant',
+          role: "assistant",
           content: `
             <meals>
               <meal>
@@ -99,13 +99,13 @@ describe('extractCurrentMealPlan', () => {
       const result = extractCurrentMealPlan(messageHistory);
 
       expect(result).not.toBeNull();
-      expect(result?.meals[0].name).toBe('New Meal');
-      expect(result?.meals[0].ingredients).toBe('New ingredients');
+      expect(result?.meals[0].name).toBe("New Meal");
+      expect(result?.meals[0].ingredients).toBe("New ingredients");
     });
   });
 
-  describe('no assistant messages', () => {
-    it('should return null when message history is empty', () => {
+  describe("no assistant messages", () => {
+    it("should return null when message history is empty", () => {
       const messageHistory: ChatMessage[] = [];
 
       const result = extractCurrentMealPlan(messageHistory);
@@ -113,10 +113,10 @@ describe('extractCurrentMealPlan', () => {
       expect(result).toBeNull();
     });
 
-    it('should return null when only user messages exist', () => {
+    it("should return null when only user messages exist", () => {
       const messageHistory: ChatMessage[] = [
-        { role: 'user', content: 'First message' },
-        { role: 'user', content: 'Second message' },
+        { role: "user", content: "First message" },
+        { role: "user", content: "Second message" },
       ];
 
       const result = extractCurrentMealPlan(messageHistory);
@@ -125,13 +125,13 @@ describe('extractCurrentMealPlan', () => {
     });
   });
 
-  describe('failed parsing', () => {
-    it('should return null when meal plan is malformed', () => {
+  describe("failed parsing", () => {
+    it("should return null when meal plan is malformed", () => {
       const messageHistory: ChatMessage[] = [
         {
-          role: 'assistant',
+          role: "assistant",
           // Meal with empty name will fail validation
-          content: '<meals><meal><name></name><preparation>Some prep</preparation></meal></meals>',
+          content: "<meals><meal><name></name><preparation>Some prep</preparation></meal></meals>",
         },
       ];
 
@@ -141,11 +141,11 @@ describe('extractCurrentMealPlan', () => {
       expect(result).toBeNull();
     });
 
-    it('should return null when meal plan structure is incomplete', () => {
+    it("should return null when meal plan structure is incomplete", () => {
       const messageHistory: ChatMessage[] = [
         {
-          role: 'assistant',
-          content: 'Just some text without any meal plan structure',
+          role: "assistant",
+          content: "Just some text without any meal plan structure",
         },
       ];
 
@@ -154,12 +154,12 @@ describe('extractCurrentMealPlan', () => {
       expect(result).toBeNull();
     });
 
-    it('should return null when meal plan has empty name and preparation equals full content', () => {
+    it("should return null when meal plan has empty name and preparation equals full content", () => {
       // This is the fallback structure - should return null
-      const fullContent = 'Some message text here';
+      const fullContent = "Some message text here";
       const messageHistory: ChatMessage[] = [
         {
-          role: 'assistant',
+          role: "assistant",
           content: fullContent,
         },
       ];
@@ -170,12 +170,12 @@ describe('extractCurrentMealPlan', () => {
     });
   });
 
-  describe('edge cases', () => {
-    it('should handle message with only comments (no meal plan XML)', () => {
+  describe("edge cases", () => {
+    it("should handle message with only comments (no meal plan XML)", () => {
       const messageHistory: ChatMessage[] = [
         {
-          role: 'assistant',
-          content: '<comments>This is just a comment, no meal plan</comments>',
+          role: "assistant",
+          content: "<comments>This is just a comment, no meal plan</comments>",
         },
       ];
 
@@ -184,10 +184,10 @@ describe('extractCurrentMealPlan', () => {
       expect(result).toBeNull();
     });
 
-    it('should handle empty meal plan (fallback structure)', () => {
+    it("should handle empty meal plan (fallback structure)", () => {
       const messageHistory: ChatMessage[] = [
         {
-          role: 'assistant',
+          role: "assistant",
           content: `
             <daily_summary>
               <kcal>2000</kcal>
@@ -203,10 +203,10 @@ describe('extractCurrentMealPlan', () => {
       expect(result).toBeNull();
     });
 
-    it('should handle meal plan with empty meal name', () => {
+    it("should handle meal plan with empty meal name", () => {
       const messageHistory: ChatMessage[] = [
         {
-          role: 'assistant',
+          role: "assistant",
           content: `
             <meals>
               <meal>
@@ -230,7 +230,7 @@ describe('extractCurrentMealPlan', () => {
       expect(result).toBeNull(); // Empty name should cause it to return null
     });
 
-    it('should handle meal plan where preparation matches full message content', () => {
+    it("should handle meal plan where preparation matches full message content", () => {
       const fullContent = `
         <meals>
           <meal>
@@ -249,7 +249,7 @@ describe('extractCurrentMealPlan', () => {
 
       const messageHistory: ChatMessage[] = [
         {
-          role: 'assistant',
+          role: "assistant",
           content: fullContent,
         },
       ];
@@ -261,14 +261,14 @@ describe('extractCurrentMealPlan', () => {
     });
   });
 
-  describe('message history scenarios', () => {
-    it('should handle alternating user and assistant messages', () => {
+  describe("message history scenarios", () => {
+    it("should handle alternating user and assistant messages", () => {
       const messageHistory: ChatMessage[] = [
-        { role: 'user', content: 'Question 1' },
-        { role: 'assistant', content: 'Response 1' },
-        { role: 'user', content: 'Question 2' },
+        { role: "user", content: "Question 1" },
+        { role: "assistant", content: "Response 1" },
+        { role: "user", content: "Question 2" },
         {
-          role: 'assistant',
+          role: "assistant",
           content: `
             <meals>
               <meal>
@@ -290,14 +290,14 @@ describe('extractCurrentMealPlan', () => {
       const result = extractCurrentMealPlan(messageHistory);
 
       expect(result).not.toBeNull();
-      expect(result?.meals[0].name).toBe('Final Meal');
+      expect(result?.meals[0].name).toBe("Final Meal");
     });
 
-    it('should handle message history with multiple assistant messages without meal plans', () => {
+    it("should handle message history with multiple assistant messages without meal plans", () => {
       const messageHistory: ChatMessage[] = [
-        { role: 'assistant', content: 'First response' },
-        { role: 'assistant', content: 'Second response' },
-        { role: 'assistant', content: 'Third response' },
+        { role: "assistant", content: "First response" },
+        { role: "assistant", content: "Second response" },
+        { role: "assistant", content: "Third response" },
       ];
 
       const result = extractCurrentMealPlan(messageHistory);
@@ -306,11 +306,11 @@ describe('extractCurrentMealPlan', () => {
     });
   });
 
-  describe('complex meal plan structures', () => {
-    it('should handle meal plan with multiple meals', () => {
+  describe("complex meal plan structures", () => {
+    it("should handle meal plan with multiple meals", () => {
       const messageHistory: ChatMessage[] = [
         {
-          role: 'assistant',
+          role: "assistant",
           content: `
             <daily_summary>
               <kcal>2500</kcal>
@@ -361,10 +361,8 @@ describe('extractCurrentMealPlan', () => {
 
       expect(result).not.toBeNull();
       expect(result?.meals).toHaveLength(3);
-      expect(result?.meals.map((m) => m.name)).toEqual(['Breakfast', 'Lunch', 'Dinner']);
+      expect(result?.meals.map((m) => m.name)).toEqual(["Breakfast", "Lunch", "Dinner"]);
       expect(result?.dailySummary.kcal).toBe(2500);
     });
   });
 });
-
-

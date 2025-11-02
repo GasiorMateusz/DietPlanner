@@ -85,7 +85,7 @@ export const POST: APIRoute = async (context) => {
       sessionId,
       validation.data as SendAiMessageCommand,
       user.id,
-      supabase,
+      supabase
     );
 
     return new Response(JSON.stringify(responseDto), {
@@ -126,4 +126,3 @@ export const POST: APIRoute = async (context) => {
     );
   }
 };
-

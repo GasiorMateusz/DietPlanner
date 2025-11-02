@@ -44,11 +44,7 @@ export const GET: APIRoute = async (context) => {
     }
 
     // Fetch meal plan from database
-    const mealPlan = await MealPlanService.getMealPlanById(
-      paramValidation.data.id,
-      user.id,
-      supabase,
-    );
+    const mealPlan = await MealPlanService.getMealPlanById(paramValidation.data.id, user.id, supabase);
 
     // Generate Word document
     const docBuffer = await DocumentGeneratorService.generateDoc(mealPlan);

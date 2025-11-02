@@ -390,6 +390,7 @@ Row-Level Security policies ensure:
 ### 400 Bad Request
 
 **Triggers:**
+
 - Request body fails Zod validation (POST/PUT)
 - Query parameters fail validation (GET with filters)
 - Path parameter `id` is not a valid UUID
@@ -397,25 +398,31 @@ Row-Level Security policies ensure:
 - Business logic validation fails (e.g., empty `name` on update)
 
 **Response:**
+
 ```json
 {
   "error": "Validation failed",
-  "details": [/* Zod error array or custom validation errors */]
+  "details": [
+    /* Zod error array or custom validation errors */
+  ]
 }
 ```
 
 **Handling:**
+
 - Return validation errors from `zodError.errors` for debugging
 - In production, consider sanitizing detailed error messages
 
 ### 401 Unauthorized
 
 **Triggers:**
+
 - No `Authorization` header provided
 - Invalid or expired JWT token
 - `supabase.auth.getUser()` returns error or null user
 
 **Response:**
+
 ```json
 {
   "error": "Unauthorized",
@@ -424,17 +431,20 @@ Row-Level Security policies ensure:
 ```
 
 **Handling:**
+
 - Return immediately after authentication check
 - Do not reveal whether a resource exists if user is unauthenticated
 
 ### 404 Not Found
 
 **Triggers:**
+
 - Meal plan with provided `id` does not exist
 - Meal plan exists but belongs to another user (RLS filters it out)
 - Foreign key validation: `source_chat_session_id` does not exist (if validation is implemented)
 
 **Response:**
+
 ```json
 {
   "error": "Meal plan not found",
@@ -443,18 +453,21 @@ Row-Level Security policies ensure:
 ```
 
 **Handling:**
+
 - Check if Supabase query returns null/empty result
 - Throw custom `NotFoundError` in service, catch in route handler
 
 ### 500 Internal Server Error
 
 **Triggers:**
+
 - Database connection failure
 - Unexpected Supabase error
 - JSON parsing errors (if not caught earlier)
 - Service layer throws unexpected error
 
 **Response:**
+
 ```json
 {
   "error": "An internal error occurred",
@@ -463,6 +476,7 @@ Row-Level Security policies ensure:
 ```
 
 **Handling:**
+
 - Log full error details server-side
 - Return generic message to client (don't expose internal details)
 - Consider implementing error logging to an error tracking service
@@ -475,14 +489,17 @@ Create custom error classes for better error handling:
 export class NotFoundError extends Error {
   constructor(message: string) {
     super(message);
-    this.name = 'NotFoundError';
+    this.name = "NotFoundError";
   }
 }
 
 export class ValidationError extends Error {
-  constructor(message: string, public details: unknown) {
+  constructor(
+    message: string,
+    public details: unknown
+  ) {
     super(message);
-    this.name = 'ValidationError';
+    this.name = "ValidationError";
   }
 }
 ```
@@ -696,6 +713,7 @@ The existing `sessions.ts` endpoint has authentication temporarily disabled for 
 ### RLS Policy Testing
 
 Ensure RLS policies are properly tested:
+
 - Users cannot access other users' meal plans
 - Users cannot update/delete other users' meal plans
 - Anonymous users cannot access any meal plans
@@ -703,6 +721,7 @@ Ensure RLS policies are properly tested:
 ### Data Transformation
 
 The service layer must handle the transformation between:
+
 - **API Command/DTO** (nested structure with `startup_data` object)
 - **Database Row** (flat structure with `patient_age`, `patient_weight`, etc. as separate columns)
 
@@ -715,4 +734,3 @@ This is a key architectural decision: the API uses a more user-friendly nested s
 3. **Export Formats:** Support multiple export formats (PDF, JSON, etc.)
 4. **Versioning:** Track plan versions if editing history is needed
 5. **Soft Delete:** Implement soft delete instead of hard delete if audit trail is required
-

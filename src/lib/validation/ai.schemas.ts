@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from "zod";
 
 /**
  * Schema for validating the target macro distribution JSON blob.
@@ -35,4 +35,3 @@ export const sendAiMessageSchema = z.object({
     content: z.string().min(1, "Message content cannot be empty"),
   }),
 });
-

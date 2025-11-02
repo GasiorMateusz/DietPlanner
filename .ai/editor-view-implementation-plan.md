@@ -150,7 +150,7 @@ MealPlanEditor (Main Container)
  */
 interface MealPlanEditorState {
   /** Whether component is in Create or Edit mode */
-  mode: 'create' | 'edit';
+  mode: "create" | "edit";
   /** Loading state during initialization or save */
   isLoading: boolean;
   /** Error message if any */
@@ -202,17 +202,20 @@ The following types from `src/types.ts` are used:
 State management is handled using React's `useState` and `useEffect` hooks within the MealPlanEditor component. A custom hook is **not required** for this view, as the logic is contained and straightforward.
 
 **State Variables**:
+
 - `editorState` (useState): Complete `MealPlanEditorState` object
 - Form-level validation is handled by checking required fields before enabling save
 - No external state library needed
 
 **Initialization Flow**:
+
 1. `useEffect` on mount checks for `mealPlanId` in props/URL
 2. **Edit Mode**: If ID exists, fetch from `GET /api/meal-plans/{id}`, populate state
 3. **Create Mode**: Read `(window as any).mealPlanBridge`, populate state, clear window variable
 4. If no data available, show error state
 
 **Save Flow**:
+
 1. User clicks "Save changes"
 2. Validate: plan name filled, all meal names filled, at least 1 meal exists
 3. Build command object (Create or Update)
@@ -230,6 +233,7 @@ State management is handled using React's `useState` and `useEffect` hooks withi
 - **Error Responses**: 400 (Validation failed), 401 (Unauthorized), 500 (Internal error)
 
 **Request Body Structure**:
+
 ```json
 {
   "source_chat_session_id": "uuid-string-or-null",
@@ -285,40 +289,44 @@ State management is handled using React's `useState` and `useEffect` hooks withi
 
 ## 8. User Interactions
 
-| Interaction | Expected Outcome |
-|-------------|------------------|
-| **User types in plan name field** | Plan name state updates, save button becomes enabled if name is non-empty |
-| **User types in meal name field** | That meal's name state updates |
-| **User types in ingredients textarea** | That meal's ingredients state updates |
-| **User types in preparation textarea** | That meal's preparation state updates |
-| **User clicks "Add Meal"** | New blank meal card appears at end of list with default structure |
-| **User clicks "Remove Meal"** (on any meal card) | That meal card disappears from list (disabled if only 1 meal remains) |
-| **User clicks "Save changes"** | Form validates; if valid, POST/PUT API called; on success, redirect to dashboard; on error, show message |
-| **User clicks "Export to .doc"** (Edit Mode only) | Navigate to export endpoint, trigger file download |
-| **User clicks "Cancel"** | Navigate back to `/app/dashboard` |
-| **User arrives from AI Chat** (Create Mode) | Editor loads with AI-generated content pre-filled |
-| **User clicks "Edit / View" on dashboard** (Edit Mode) | Editor loads existing meal plan for editing |
+| Interaction                                            | Expected Outcome                                                                                         |
+| ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------- |
+| **User types in plan name field**                      | Plan name state updates, save button becomes enabled if name is non-empty                                |
+| **User types in meal name field**                      | That meal's name state updates                                                                           |
+| **User types in ingredients textarea**                 | That meal's ingredients state updates                                                                    |
+| **User types in preparation textarea**                 | That meal's preparation state updates                                                                    |
+| **User clicks "Add Meal"**                             | New blank meal card appears at end of list with default structure                                        |
+| **User clicks "Remove Meal"** (on any meal card)       | That meal card disappears from list (disabled if only 1 meal remains)                                    |
+| **User clicks "Save changes"**                         | Form validates; if valid, POST/PUT API called; on success, redirect to dashboard; on error, show message |
+| **User clicks "Export to .doc"** (Edit Mode only)      | Navigate to export endpoint, trigger file download                                                       |
+| **User clicks "Cancel"**                               | Navigate back to `/app/dashboard`                                                                        |
+| **User arrives from AI Chat** (Create Mode)            | Editor loads with AI-generated content pre-filled                                                        |
+| **User clicks "Edit / View" on dashboard** (Edit Mode) | Editor loads existing meal plan for editing                                                              |
 
 ## 9. Conditions and Validation
 
 ### Client-Side Validation
 
 **Plan Name Field**:
+
 - **Condition**: Required, non-empty string
 - **Validation**: Checked on blur and before save
 - **UI Effect**: Save button disabled when empty, shows inline error if empty on blur
 
 **Meals Array**:
+
 - **Condition**: Minimum 1 meal required
 - **Validation**: Checked before save
 - **UI Effect**: Cannot remove last remaining meal (disable remove button)
 
 **Individual Meal Fields**:
+
 - **Condition**: Meal name is required, non-empty
 - **Validation**: Checked before save
 - **UI Effect**: No inline error (validated only on save attempt)
 
 **Form Readiness**:
+
 - **Condition**: Plan name filled AND all meal names filled AND at least 1 meal exists
 - **Validation**: Computed state, checked continuously
 - **UI Effect**: Save button enabled/disabled based on readiness
@@ -337,17 +345,17 @@ State management is handled using React's `useState` and `useEffect` hooks withi
 
 ## 10. Error Handling
 
-| Error Scenario | Handling Strategy |
-|----------------|-------------------|
+| Error Scenario                             | Handling Strategy                                                                      |
+| ------------------------------------------ | -------------------------------------------------------------------------------------- |
 | **No bridge data available** (Create Mode) | Display error message: "No meal plan data available. Please start from the dashboard." |
-| **Invalid meal plan ID** (Edit Mode) | Display error: "Invalid meal plan ID." (before API call) |
-| **API returns 404 Not Found** (Edit Mode) | Display error: "Meal plan not found or you don't have access to it." |
-| **API returns 400 Validation Failed** | Display error: "Validation failed: {details}" with API error details |
-| **API returns 401 Unauthorized** | Redirect to `/login` |
-| **API returns 500 Internal Server Error** | Display error: "An internal error occurred. Please try again later." |
-| **Network error / API unreachable** | Display error: "Unable to connect to server. Please check your connection." |
-| **AI message parsing fails** (Create Mode) | Display error: "Invalid meal plan data. Please try again from the dashboard." |
-| **Session ID missing** (Create Mode) | Meal plan still saves without `source_chat_session_id`, no error |
+| **Invalid meal plan ID** (Edit Mode)       | Display error: "Invalid meal plan ID." (before API call)                               |
+| **API returns 404 Not Found** (Edit Mode)  | Display error: "Meal plan not found or you don't have access to it."                   |
+| **API returns 400 Validation Failed**      | Display error: "Validation failed: {details}" with API error details                   |
+| **API returns 401 Unauthorized**           | Redirect to `/login`                                                                   |
+| **API returns 500 Internal Server Error**  | Display error: "An internal error occurred. Please try again later."                   |
+| **Network error / API unreachable**        | Display error: "Unable to connect to server. Please check your connection."            |
+| **AI message parsing fails** (Create Mode) | Display error: "Invalid meal plan data. Please try again from the dashboard."          |
+| **Session ID missing** (Create Mode)       | Meal plan still saves without `source_chat_session_id`, no error                       |
 
 **Error Display**: Use Alert component from `@/components/ui/alert` with destructive styling
 
@@ -375,4 +383,3 @@ State management is handled using React's `useState` and `useEffect` hooks withi
 18. **Integration testing**: Verify complete flow from AI Chat → Editor → Dashboard
 19. **Code cleanup**: Remove console.logs, ensure proper TypeScript types, add JSDoc comments
 20. **Final review**: Ensure compliance with PRD requirements, user stories, and API contract
-
