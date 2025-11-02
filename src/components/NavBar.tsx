@@ -17,21 +17,37 @@ export function NavBar({ userEmail: initialUserEmail, className }: NavBarProps) 
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   // Check auth state on mount and when it changes
+  // Use getUser() to verify the session is authentic
   useEffect(() => {
     const checkSession = async () => {
       const {
         data: { session },
       } = await supabase.auth.getSession();
-      setUserEmail(session?.user?.email);
+
+      if (session?.access_token) {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser(session.access_token);
+        setUserEmail(user?.email);
+      } else {
+        setUserEmail(undefined);
+      }
     };
 
     checkSession();
 
-    // Listen for auth changes
+    // Listen for auth changes - onAuthStateChange provides verified session data
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUserEmail(session?.user?.email);
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (session?.access_token) {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser(session.access_token);
+        setUserEmail(user?.email);
+      } else {
+        setUserEmail(undefined);
+      }
     });
 
     return () => subscription.unsubscribe();

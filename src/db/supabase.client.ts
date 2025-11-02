@@ -1,7 +1,8 @@
 import { createBrowserClient } from '@supabase/ssr';
 import type { Database } from '../db/database.types.ts';
 
-// TEMPORARY: Use fallback values for local development when env vars are not set
+// Fallback values for local development when env vars are not set
+// In production, SUPABASE_URL and SUPABASE_KEY must be set as environment variables
 const supabaseUrl =
   import.meta.env.SUPABASE_URL || 'http://127.0.0.1:54321';
 const supabaseAnonKey =

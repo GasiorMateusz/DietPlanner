@@ -72,10 +72,58 @@ export default function DashboardView() {
   };
 
   /**
-   * Handles export link click - opens export endpoint.
+   * Handles export link click - downloads the meal plan as a .doc file.
    */
-  const handleExport = (id: string) => {
-    window.open(`/api/meal-plans/${id}/export`, '_blank');
+  const handleExport = async (id: string) => {
+    try {
+      const token = await getAuthToken();
+      if (!token) {
+        window.location.href = "/auth/login";
+        return;
+      }
+
+      const response = await fetch(`/api/meal-plans/${id}/export`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.status === 401) {
+        window.location.href = "/auth/login";
+        return;
+      }
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({
+          error: "Failed to export meal plan",
+        }));
+        throw new Error(errorData.error || "Failed to export meal plan");
+      }
+
+      // Get the filename from Content-Disposition header or use a default
+      const contentDisposition = response.headers.get("Content-Disposition");
+      let filename = "meal-plan.doc";
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename="(.+)"/);
+        if (filenameMatch) {
+          filename = filenameMatch[1];
+        }
+      }
+
+      // Create blob and download
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error("Error exporting meal plan:", error);
+      alert(error instanceof Error ? error.message : "Failed to export meal plan");
+    }
   };
 
   /**
@@ -97,26 +145,24 @@ export default function DashboardView() {
     setDeleteError(null);
 
     try {
-      // TEMPORARY: Authentication disabled - API no longer requires auth
-      // const token = await getAuthToken();
-      // if (!token) {
-      //   window.location.href = "/login";
-      //   return;
-      // }
+      const token = await getAuthToken();
+      if (!token) {
+        window.location.href = "/auth/login";
+        return;
+      }
 
       const response = await fetch(`/api/meal-plans/${id}`, {
         method: "DELETE",
         headers: {
-          // TEMPORARY: No auth header needed
-          // Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
         },
       });
 
-      // TEMPORARY: No auth check needed
-      // if (response.status === 401) {
-      //   window.location.href = "/login";
-      //   return;
-      // }
+      if (response.status === 401) {
+        window.location.href = "/auth/login";
+        return;
+      }
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({

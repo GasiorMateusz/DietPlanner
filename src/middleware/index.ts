@@ -5,6 +5,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
   const supabase = createSupabaseServerClient(context.cookies);
   context.locals.supabase = supabase;
 
+  // Get session for token management
   const {
     data: { session },
   } = await supabase.auth.getSession();
@@ -28,15 +29,33 @@ export const onRequest = defineMiddleware(async (context, next) => {
   const pathname = context.url.pathname;
 
   // Protect /app/* routes - require authentication
+  // Use getUser() to verify the session is authentic (not just from storage)
   if (pathname.startsWith("/app/")) {
-    if (!session) {
+    if (!accessToken) {
+      return context.redirect("/auth/login", 307);
+    }
+
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser(accessToken);
+
+    if (error || !user) {
       return context.redirect("/auth/login", 307);
     }
   }
 
   // Redirect authenticated users away from auth pages
-  if (pathname.startsWith("/auth/") && session) {
-    return context.redirect("/app/dashboard", 307);
+  // Verify session is authentic before redirecting
+  if (pathname.startsWith("/auth/") && accessToken) {
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser(accessToken);
+
+    if (!error && user) {
+      return context.redirect("/app/dashboard", 307);
+    }
   }
 
   return next();

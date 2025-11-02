@@ -11,12 +11,19 @@ const { title = "Diet Planner" } = Astro.props;
 
 // Authentication check is handled in middleware for /app/* routes
 // This layout assumes the user is authenticated if they reached here
+// Use getUser() to verify user data is authentic
 const supabase = createSupabaseServerClient(Astro.cookies);
 const {
   data: { session },
 } = await supabase.auth.getSession();
 
-const userEmail = session?.user?.email;
+let userEmail: string | undefined;
+if (session?.access_token) {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser(session.access_token);
+  userEmail = user?.email;
+}
 ---
 
 <!doctype html>

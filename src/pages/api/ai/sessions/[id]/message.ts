@@ -12,11 +12,10 @@ export const prerender = false;
  * POST /api/ai/sessions/{id}/message
  *
  * Sends a follow-up message to an existing AI chat session.
+ * Requires authentication via Authorization header.
  * Appends the user's message to the session history, calls OpenRouter.ai,
  * updates the database with the new message history and incremented prompt count,
  * and returns the AI's response.
- *
- * TEMPORARILY DISABLED: Authentication is disabled for testing purposes.
  * Validates the request body against SendAiMessageCommand schema.
  * Verifies session exists and belongs to the user.
  *
@@ -40,6 +39,38 @@ export const POST: APIRoute = async (context) => {
         JSON.stringify({
           error: "Validation failed",
           details: [{ path: ["id"], message: "Session ID is required" }],
+        }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    // Parse request body
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch (error) {
+      return new Response(
+        JSON.stringify({
+          error: "Invalid JSON in request body",
+          details: error instanceof Error ? error.message : "Unknown error",
+        }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    // Validate request body
+    const validation = sendAiMessageSchema.safeParse(body);
+    if (!validation.success) {
+      return new Response(
+        JSON.stringify({
+          error: "Validation failed",
+          details: validation.error.errors,
         }),
         {
           status: 400,

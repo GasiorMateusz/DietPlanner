@@ -11,8 +11,7 @@ export const prerender = false;
  * POST /api/ai/sessions
  *
  * Creates a new AI chat session with an initial meal plan generation request.
- *
- * TEMPORARILY DISABLED: Authentication is disabled for testing purposes.
+ * Requires authentication via Authorization header.
  * Validates the request body against CreateAiSessionCommand schema.
  * Calls OpenRouter AI service to generate the initial response.
  * Saves the session to the database for telemetry.
