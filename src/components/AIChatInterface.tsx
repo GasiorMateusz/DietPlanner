@@ -4,11 +4,16 @@ import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
 import { DailySummaryStaticDisplay } from "./DailySummaryStaticDisplay";
 import { MealCardReadOnly } from "./MealCardReadOnly";
-import { parseXmlMealPlan, removeXmlTags, extractComments } from "../lib/utils/meal-plan-parser";
+import { MessageItem } from "./MessageItem";
+import {
+  extractCurrentMealPlan,
+  validateChatMessage,
+  createStateBridge,
+  getChatErrorMessage,
+} from "../lib/utils/chat-helpers";
 import { getAuthToken } from "@/lib/auth/get-auth-token";
 import type {
   ChatMessage,
-  AssistantChatMessage,
   UserChatMessage,
   SendAiMessageCommand,
   SendAiMessageResponseDto,
@@ -26,15 +31,6 @@ interface ChatState {
   isLoading: boolean;
   error: string | null;
   promptCount: number;
-}
-
-/**
- * State bridge interface for passing data to editor view.
- */
-interface StateBridge {
-  sessionId: string;
-  lastAssistantMessage: string;
-  startupData?: MealPlanStartupData;
 }
 
 /**
@@ -130,8 +126,8 @@ export default function AIChatInterface() {
         window.location.href = "/auth/login";
         throw new Error("Unauthorized");
       }
-      const errorData = await response.json().catch(() => ({ error: "An internal error occurred" }));
-      throw new Error(errorData.error || "Failed to create AI session");
+      const errorMessage = await getChatErrorMessage(response, "Failed to create AI session");
+      throw new Error(errorMessage);
     }
 
     return response.json();
@@ -160,17 +156,8 @@ export default function AIChatInterface() {
         window.location.href = "/auth/login";
         throw new Error("Unauthorized");
       }
-      if (response.status === 404) {
-        throw new Error("Session not found. Please start a new meal plan from the dashboard.");
-      }
-      if (response.status === 502) {
-        throw new Error("AI service is temporarily unavailable. Please try again in a moment.");
-      }
-      if (response.status === 500) {
-        throw new Error("An internal error occurred. Please try again later.");
-      }
-      const errorData = await response.json().catch(() => ({ error: "An internal error occurred" }));
-      throw new Error(errorData.error || "Failed to send message");
+      const errorMessage = await getChatErrorMessage(response, "Failed to send message");
+      throw new Error(errorMessage);
     }
 
     return response.json();
@@ -183,18 +170,16 @@ export default function AIChatInterface() {
     e.preventDefault();
 
     // Validate input
-    const trimmedMessage = inputValue.trim();
-    if (!trimmedMessage) {
-      return;
-    }
-
-    if (trimmedMessage.length > MAX_MESSAGE_LENGTH) {
+    const validation = validateChatMessage(inputValue, MAX_MESSAGE_LENGTH);
+    if (!validation.valid) {
       setChatState((prev) => ({
         ...prev,
-        error: "Message too long. Please shorten your message.",
+        error: validation.error || "Invalid message",
       }));
       return;
     }
+
+    const trimmedMessage = inputValue.trim();
 
     if (!sessionId) {
       setChatState((prev) => ({
@@ -258,12 +243,10 @@ export default function AIChatInterface() {
       return;
     }
 
-    // Get last assistant message
-    const lastAssistantMessage = chatState.messageHistory
-      .filter((msg): msg is AssistantChatMessage => msg.role === "assistant")
-      .pop();
+    // Create state bridge for navigation
+    const bridge = createStateBridge(sessionId, chatState.messageHistory, startupData);
 
-    if (!lastAssistantMessage) {
+    if (!bridge) {
       setChatState((prev) => ({
         ...prev,
         error: "No meal plan available to accept.",
@@ -272,12 +255,6 @@ export default function AIChatInterface() {
     }
 
     // Store in state bridge using sessionStorage (persists across navigation)
-    const bridge: StateBridge = {
-      sessionId,
-      lastAssistantMessage: lastAssistantMessage.content,
-      startupData: startupData || undefined,
-    };
-
     sessionStorage.setItem("mealPlanBridge", JSON.stringify(bridge));
 
     // Navigate to editor
@@ -299,29 +276,7 @@ export default function AIChatInterface() {
    * Parses XML tags and returns structured meal plan data.
    */
   const currentMealPlan = useMemo(() => {
-    const lastAssistantMessage = chatState.messageHistory
-      .filter((msg): msg is AssistantChatMessage => msg.role === "assistant")
-      .pop();
-
-    if (!lastAssistantMessage) {
-      return null;
-    }
-
-    try {
-      const parsed = parseXmlMealPlan(lastAssistantMessage.content);
-      // Only return if we actually found meals (not the fallback empty structure)
-      if (
-        parsed.meals.length > 0 &&
-        parsed.meals[0].name !== "" &&
-        parsed.meals[0].preparation !== lastAssistantMessage.content
-      ) {
-        return parsed;
-      }
-    } catch (error) {
-      console.error("Failed to parse meal plan:", error);
-    }
-
-    return null;
+    return extractCurrentMealPlan(chatState.messageHistory);
   }, [chatState.messageHistory]);
 
   // Render empty state if no messages yet
@@ -420,34 +375,3 @@ export default function AIChatInterface() {
   );
 }
 
-/**
- * Individual message bubble component.
- * Renders either a user or assistant message with appropriate styling.
- * For assistant messages, removes XML tags to show clean text (preserves comments).
- */
-function MessageItem({ message }: { message: ChatMessage }) {
-  if (message.role === "user") {
-    return (
-      <div className="flex justify-end">
-        <div className="max-w-[80%] rounded-lg bg-primary text-primary-foreground px-4 py-2">
-          <p className="whitespace-pre-wrap break-words">{message.content}</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Extract comments and clean the message
-  const comments = extractComments(message.content);
-  const cleanedContent = removeXmlTags(message.content);
-
-  // Display comments if available, otherwise show cleaned content or fallback message
-  const displayText = comments || cleanedContent || "Meal plan updated above.";
-
-  return (
-    <div className="flex justify-start">
-      <div className="max-w-[80%] rounded-lg bg-muted px-4 py-2">
-        <p className="whitespace-pre-wrap break-words">{displayText}</p>
-      </div>
-    </div>
-  );
-}
