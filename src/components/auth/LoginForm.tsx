@@ -1,5 +1,4 @@
 import React from "react";
-import { navigate } from "astro:transitions/client";
 import { z } from "zod";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -59,7 +58,8 @@ export default function LoginForm({ className }: Props) {
       return;
     }
 
-    navigate("/app/dashboard");
+    // Use full page reload to ensure cookies are synced and middleware can detect session
+    window.location.href = "/app/dashboard";
   }
 
   return (

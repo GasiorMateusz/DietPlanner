@@ -25,16 +25,19 @@ export const onRequest = defineMiddleware(async (context, next) => {
     });
   }
 
-  // TEMPORARY: Authentication disabled for /app/* routes (redirect disabled)
-  // if (context.url.pathname.startsWith('/app/')) {
-  //   const {
-  //     data: { session },
-  //   } = await supabaseClient.auth.getSession();
-  //
-  //   if (!session) {
-  //     return context.redirect('/auth/login', 307);
-  //   }
-  // }
+  const pathname = context.url.pathname;
+
+  // Protect /app/* routes - require authentication
+  if (pathname.startsWith("/app/")) {
+    if (!session) {
+      return context.redirect("/auth/login", 307);
+    }
+  }
+
+  // Redirect authenticated users away from auth pages
+  if (pathname.startsWith("/auth/") && session) {
+    return context.redirect("/app/dashboard", 307);
+  }
 
   return next();
 });
