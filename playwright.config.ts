@@ -11,6 +11,12 @@ const envTest = dotenv.config({ path: envTestPath });
  */
 export default defineConfig({
   testDir: "./src/test/e2e",
+  /* Maximum time one test can run for (default: 30s) */
+  timeout: 120 * 1000, // 2 minutes for e2e tests with AI operations
+  /* Maximum time to wait for an action (default: 5s) */
+  expect: {
+    timeout: 10 * 1000, // 10 seconds for assertions
+  },
   /* Run tests in files in parallel */
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */

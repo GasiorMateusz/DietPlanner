@@ -29,7 +29,9 @@ export class MealPlanListPage {
    * Waits for a meal plan to be visible in the list.
    */
   async waitForMealPlanVisible(mealPlanName: string, timeout = 10000): Promise<void> {
-    await this.page.getByText(mealPlanName, { exact: false }).waitFor({ state: "visible", timeout });
+    // Use the scoped list item locator to avoid strict mode violations
+    // when multiple meal plans with the same name exist
+    await this.getMealPlanListItem(mealPlanName).waitFor({ state: "visible", timeout });
   }
 
   /**
