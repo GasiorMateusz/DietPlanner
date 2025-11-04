@@ -13,6 +13,11 @@ export class StartupFormDialog {
   readonly patientHeightInput: Locator;
   readonly activityLevelSelect: Locator;
   readonly targetKcalInput: Locator;
+  readonly proteinPercInput: Locator;
+  readonly fatPercInput: Locator;
+  readonly carbsPercInput: Locator;
+  readonly mealNamesInput: Locator;
+  readonly exclusionsGuidelinesTextarea: Locator;
   readonly cancelButton: Locator;
   readonly generateButton: Locator;
 
@@ -25,6 +30,11 @@ export class StartupFormDialog {
     this.patientHeightInput = page.getByTestId("startup-form-patient-height");
     this.activityLevelSelect = page.getByTestId("startup-form-activity-level");
     this.targetKcalInput = page.getByTestId("startup-form-target-kcal");
+    this.proteinPercInput = page.locator("#p_perc");
+    this.fatPercInput = page.locator("#f_perc");
+    this.carbsPercInput = page.locator("#c_perc");
+    this.mealNamesInput = page.locator("#meal_names");
+    this.exclusionsGuidelinesTextarea = page.locator("#exclusions_guidelines");
     this.cancelButton = page.getByTestId("startup-form-cancel-button");
     this.generateButton = page.getByTestId("startup-form-generate-button");
   }
@@ -72,6 +82,56 @@ export class StartupFormDialog {
   }
 
   /**
+   * Fills the protein percentage field.
+   */
+  async fillProteinPerc(percentage: number): Promise<void> {
+    await this.proteinPercInput.fill(percentage.toString());
+  }
+
+  /**
+   * Fills the fat percentage field.
+   */
+  async fillFatPerc(percentage: number): Promise<void> {
+    await this.fatPercInput.fill(percentage.toString());
+  }
+
+  /**
+   * Fills the carbs percentage field.
+   */
+  async fillCarbsPerc(percentage: number): Promise<void> {
+    await this.carbsPercInput.fill(percentage.toString());
+  }
+
+  /**
+   * Fills the macro distribution fields.
+   */
+  async fillMacroDistribution(data: { protein?: number; fat?: number; carbs?: number }): Promise<void> {
+    if (data.protein !== undefined) {
+      await this.fillProteinPerc(data.protein);
+    }
+    if (data.fat !== undefined) {
+      await this.fillFatPerc(data.fat);
+    }
+    if (data.carbs !== undefined) {
+      await this.fillCarbsPerc(data.carbs);
+    }
+  }
+
+  /**
+   * Fills the meal names field.
+   */
+  async fillMealNames(names: string): Promise<void> {
+    await this.mealNamesInput.fill(names);
+  }
+
+  /**
+   * Fills the exclusions/guidelines field.
+   */
+  async fillExclusionsGuidelines(text: string): Promise<void> {
+    await this.exclusionsGuidelinesTextarea.fill(text);
+  }
+
+  /**
    * Fills the form with standard test data.
    */
   async fillForm(data: {
@@ -80,6 +140,9 @@ export class StartupFormDialog {
     height?: number;
     activityLevel?: "sedentary" | "light" | "moderate" | "high";
     targetKcal?: number;
+    macroDistribution?: { protein?: number; fat?: number; carbs?: number };
+    mealNames?: string;
+    exclusionsGuidelines?: string;
   }): Promise<void> {
     if (data.age !== undefined) {
       await this.fillPatientAge(data.age);
@@ -95,6 +158,15 @@ export class StartupFormDialog {
     }
     if (data.targetKcal !== undefined) {
       await this.fillTargetKcal(data.targetKcal);
+    }
+    if (data.macroDistribution !== undefined) {
+      await this.fillMacroDistribution(data.macroDistribution);
+    }
+    if (data.mealNames !== undefined) {
+      await this.fillMealNames(data.mealNames);
+    }
+    if (data.exclusionsGuidelines !== undefined) {
+      await this.fillExclusionsGuidelines(data.exclusionsGuidelines);
     }
   }
 

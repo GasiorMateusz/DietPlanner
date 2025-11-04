@@ -96,6 +96,13 @@ test.describe("Meal Plan Creation and Editing Flow", () => {
       height: 180,
       activityLevel: "moderate",
       targetKcal: 2000,
+      macroDistribution: {
+        protein: 30,
+        fat: 25,
+        carbs: 45,
+      },
+      mealNames: "Breakfast, Lunch, Dinner, Snack",
+      exclusionsGuidelines: "No nuts, gluten-free preferred",
     });
 
     // Step 3: Submit form and navigate to conversation
