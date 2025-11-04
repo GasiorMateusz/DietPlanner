@@ -7,21 +7,15 @@ import { MealCardReadOnly } from "./MealCardReadOnly";
 import { MessageItem } from "./MessageItem";
 import {
   extractCurrentMealPlan,
-  validateChatMessage,
   createStateBridge,
-  getChatErrorMessage,
 } from "../lib/utils/chat-helpers";
-import { getAuthToken } from "@/lib/auth/get-auth-token";
+import { aiChatApi } from "@/lib/api/ai-chat.client";
+import { useAIChatForm } from "./hooks/useAIChatForm";
 import type {
   ChatMessage,
   UserChatMessage,
-  SendAiMessageCommand,
-  SendAiMessageResponseDto,
-  CreateAiSessionResponseDto,
   MealPlanStartupData,
 } from "../types";
-
-const MAX_MESSAGE_LENGTH = 5000;
 
 /**
  * State structure for managing chat state.
@@ -45,10 +39,59 @@ export default function AIChatInterface() {
     error: null,
     promptCount: 0,
   });
-  const [inputValue, setInputValue] = useState<string>("");
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [startupData, setStartupData] = useState<MealPlanStartupData | null>(null);
   const messageEndRef = useRef<HTMLDivElement>(null);
+
+  const { form, handleSubmit, maxLength } = useAIChatForm(async (message) => {
+    if (!sessionId) {
+      setChatState((prev) => ({
+        ...prev,
+        error: "No active session. Please refresh the page.",
+      }));
+      return;
+    }
+
+    // Clear error
+    setChatState((prev) => ({ ...prev, error: null }));
+
+    // Create user message
+    const userMessage: UserChatMessage = {
+      role: "user",
+      content: message,
+    };
+
+    // Optimistically add user message
+    setChatState((prev) => ({
+      ...prev,
+      messageHistory: [...prev.messageHistory, userMessage],
+      isLoading: true,
+    }));
+
+    try {
+      // Send message to API
+      const response = await aiChatApi.sendMessage(sessionId, { message: userMessage });
+
+      // Add assistant response
+      setChatState((prev) => ({
+        ...prev,
+        messageHistory: [...prev.messageHistory, response.message],
+        promptCount: response.prompt_count,
+        isLoading: false,
+      }));
+    } catch (error) {
+      console.error("Error sending message:", error);
+      // Remove optimistic user message
+      setChatState((prev) => ({
+        ...prev,
+        messageHistory: prev.messageHistory.slice(0, -1),
+        isLoading: false,
+        error: error instanceof Error ? error.message : "Failed to send message. Please try again.",
+      }));
+      // Restore input value
+      form.setValue("message", message);
+    }
+  });
 
   /**
    * Initialize chat session from startup data stored in sessionStorage.
@@ -69,8 +112,8 @@ export default function AIChatInterface() {
         const data: MealPlanStartupData = JSON.parse(storedData);
         setStartupData(data);
 
-        // Create initial AI session
-        const response = await createAiSession(data);
+        // Create initial AI session using API client
+        const response = await aiChatApi.createSession(data);
         setSessionId(response.session_id);
 
         // Initialize message history with first assistant message
@@ -86,7 +129,7 @@ export default function AIChatInterface() {
         console.error("Failed to initialize chat:", error);
         setChatState((prev) => ({
           ...prev,
-          error: "Failed to initialize AI chat session. Please try again.",
+          error: error instanceof Error ? error.message : "Failed to initialize AI chat session. Please try again.",
         }));
       }
     };
@@ -103,133 +146,6 @@ export default function AIChatInterface() {
     }
   }, [chatState.messageHistory]);
 
-  /**
-   * Creates a new AI chat session.
-   */
-  const createAiSession = async (data: MealPlanStartupData): Promise<CreateAiSessionResponseDto> => {
-    const token = await getAuthToken();
-    if (!token) {
-      window.location.href = "/auth/login";
-      throw new Error("Unauthorized");
-    }
-    const response = await fetch("/api/ai/sessions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(data),
-    });
-
-    if (!response.ok) {
-      if (response.status === 401) {
-        window.location.href = "/auth/login";
-        throw new Error("Unauthorized");
-      }
-      const errorMessage = await getChatErrorMessage(response, "Failed to create AI session");
-      throw new Error(errorMessage);
-    }
-
-    return response.json();
-  };
-
-  /**
-   * Sends a follow-up message to the AI.
-   */
-  const sendMessage = async (sessionId: string, message: UserChatMessage): Promise<SendAiMessageResponseDto> => {
-    const token = await getAuthToken();
-    if (!token) {
-      window.location.href = "/auth/login";
-      throw new Error("Unauthorized");
-    }
-    const response = await fetch(`/api/ai/sessions/${sessionId}/message`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ message } satisfies SendAiMessageCommand),
-    });
-
-    if (!response.ok) {
-      if (response.status === 401) {
-        window.location.href = "/auth/login";
-        throw new Error("Unauthorized");
-      }
-      const errorMessage = await getChatErrorMessage(response, "Failed to send message");
-      throw new Error(errorMessage);
-    }
-
-    return response.json();
-  };
-
-  /**
-   * Handles form submission to send a message.
-   */
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
-    // Validate input
-    const validation = validateChatMessage(inputValue, MAX_MESSAGE_LENGTH);
-    if (!validation.valid) {
-      setChatState((prev) => ({
-        ...prev,
-        error: validation.error || "Invalid message",
-      }));
-      return;
-    }
-
-    const trimmedMessage = inputValue.trim();
-
-    if (!sessionId) {
-      setChatState((prev) => ({
-        ...prev,
-        error: "No active session. Please refresh the page.",
-      }));
-      return;
-    }
-
-    // Clear error
-    setChatState((prev) => ({ ...prev, error: null }));
-
-    // Create user message
-    const userMessage: UserChatMessage = {
-      role: "user",
-      content: trimmedMessage,
-    };
-
-    // Optimistically add user message
-    setChatState((prev) => ({
-      ...prev,
-      messageHistory: [...prev.messageHistory, userMessage],
-      isLoading: true,
-    }));
-    setInputValue("");
-
-    try {
-      // Send message to API
-      const response = await sendMessage(sessionId, userMessage);
-
-      // Add assistant response
-      setChatState((prev) => ({
-        ...prev,
-        messageHistory: [...prev.messageHistory, response.message],
-        promptCount: response.prompt_count,
-        isLoading: false,
-      }));
-    } catch (error) {
-      console.error("Error sending message:", error);
-      // Remove optimistic user message
-      setChatState((prev) => ({
-        ...prev,
-        messageHistory: prev.messageHistory.slice(0, -1),
-        isLoading: false,
-        error: error instanceof Error ? error.message : "Failed to send message. Please try again.",
-      }));
-      // Restore input value
-      setInputValue(trimmedMessage);
-    }
-  };
 
   /**
    * Handles Accept button click - navigates to editor with final plan.
@@ -347,26 +263,28 @@ export default function AIChatInterface() {
       <form onSubmit={handleSubmit} className="space-y-4" data-testid="ai-chat-message-form">
         <div className="space-y-2">
           <Textarea
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
+            {...form.register("message")}
             onKeyDown={handleKeyDown}
             placeholder="Type your message here... (Ctrl/Cmd+Enter to send)"
             disabled={chatState.isLoading || !sessionId}
             className="min-h-[100px] resize-none"
-            maxLength={MAX_MESSAGE_LENGTH}
+            maxLength={maxLength}
             data-testid="ai-chat-message-input"
           />
+          {form.formState.errors.message && (
+            <p className="text-sm text-destructive">{form.formState.errors.message.message}</p>
+          )}
           <div className="flex justify-between items-center text-sm text-muted-foreground">
             <span>Press Ctrl/Cmd+Enter to send</span>
             <span>
-              {inputValue.length} / {MAX_MESSAGE_LENGTH}
+              {form.watch("message").length} / {maxLength}
             </span>
           </div>
         </div>
         <div className="flex gap-2">
           <Button
             type="submit"
-            disabled={!inputValue.trim() || chatState.isLoading || !sessionId}
+            disabled={!form.watch("message").trim() || chatState.isLoading || !sessionId || !form.formState.isValid}
             className="flex-1"
             data-testid="ai-chat-send-button"
           >
