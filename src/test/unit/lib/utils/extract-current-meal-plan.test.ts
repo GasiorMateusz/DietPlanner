@@ -105,23 +105,15 @@ describe("extractCurrentMealPlan", () => {
   });
 
   describe("no assistant messages", () => {
-    it("should return null when message history is empty", () => {
-      const messageHistory: ChatMessage[] = [];
-
-      const result = extractCurrentMealPlan(messageHistory);
-
-      expect(result).toBeNull();
-    });
-
-    it("should return null when only user messages exist", () => {
-      const messageHistory: ChatMessage[] = [
+    it("should return null when message history is empty or only user messages exist", () => {
+      const emptyHistory: ChatMessage[] = [];
+      const onlyUserMessages: ChatMessage[] = [
         { role: "user", content: "First message" },
         { role: "user", content: "Second message" },
       ];
 
-      const result = extractCurrentMealPlan(messageHistory);
-
-      expect(result).toBeNull();
+      expect(extractCurrentMealPlan(emptyHistory)).toBeNull();
+      expect(extractCurrentMealPlan(onlyUserMessages)).toBeNull();
     });
   });
 

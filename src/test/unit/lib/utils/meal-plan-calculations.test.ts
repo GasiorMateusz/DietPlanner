@@ -114,83 +114,21 @@ describe("calculateDailySummaryFromTargets", () => {
   });
 
   describe("missing data handling", () => {
-    it("should return zeros when targetKcal is null", () => {
-      const result = calculateDailySummaryFromTargets(null, {
-        p_perc: 30,
-        f_perc: 25,
-        c_perc: 45,
-      });
+    it("should return zeros when targetKcal is null, undefined, or zero", () => {
+      const macroDistribution = { p_perc: 30, f_perc: 25, c_perc: 45 };
+      const zeroResult = { kcal: 0, proteins: 0, fats: 0, carbs: 0 };
 
-      expect(result).toEqual({
-        kcal: 0,
-        proteins: 0,
-        fats: 0,
-        carbs: 0,
-      });
+      expect(calculateDailySummaryFromTargets(null, macroDistribution)).toEqual(zeroResult);
+      expect(calculateDailySummaryFromTargets(undefined, macroDistribution)).toEqual(zeroResult);
+      expect(calculateDailySummaryFromTargets(0, macroDistribution)).toEqual(zeroResult);
     });
 
-    it("should return zeros when targetKcal is undefined", () => {
-      const result = calculateDailySummaryFromTargets(undefined, {
-        p_perc: 30,
-        f_perc: 25,
-        c_perc: 45,
-      });
+    it("should return zeros when macroDistribution is null or undefined", () => {
+      const zeroResult = { kcal: 0, proteins: 0, fats: 0, carbs: 0 };
 
-      expect(result).toEqual({
-        kcal: 0,
-        proteins: 0,
-        fats: 0,
-        carbs: 0,
-      });
-    });
-
-    it("should return zeros when macroDistribution is null", () => {
-      const result = calculateDailySummaryFromTargets(2000, null);
-
-      expect(result).toEqual({
-        kcal: 0,
-        proteins: 0,
-        fats: 0,
-        carbs: 0,
-      });
-    });
-
-    it("should return zeros when macroDistribution is undefined", () => {
-      const result = calculateDailySummaryFromTargets(2000, undefined);
-
-      expect(result).toEqual({
-        kcal: 0,
-        proteins: 0,
-        fats: 0,
-        carbs: 0,
-      });
-    });
-
-    it("should return zeros when both are null", () => {
-      const result = calculateDailySummaryFromTargets(null, null);
-
-      expect(result).toEqual({
-        kcal: 0,
-        proteins: 0,
-        fats: 0,
-        carbs: 0,
-      });
-    });
-
-    it("should return zeros when targetKcal is zero", () => {
-      const result = calculateDailySummaryFromTargets(0, {
-        p_perc: 30,
-        f_perc: 25,
-        c_perc: 45,
-      });
-
-      // Zero targetKcal should be treated as falsy and return zeros
-      expect(result).toEqual({
-        kcal: 0,
-        proteins: 0,
-        fats: 0,
-        carbs: 0,
-      });
+      expect(calculateDailySummaryFromTargets(2000, null)).toEqual(zeroResult);
+      expect(calculateDailySummaryFromTargets(2000, undefined)).toEqual(zeroResult);
+      expect(calculateDailySummaryFromTargets(null, null)).toEqual(zeroResult);
     });
   });
 
@@ -306,71 +244,18 @@ describe("resolveDailySummary", () => {
       expect(result.carbs).toBe(225); // (2000 * 45) / 100 / 4
     });
 
-    it("should return zeros when startup data is missing", () => {
+    it("should return zeros when startup data is null, undefined, or missing required fields", () => {
       const parsedSummary: MealPlanContentDailySummary = {
         kcal: 0,
         proteins: 0,
         fats: 0,
         carbs: 0,
       };
-
-      const result = resolveDailySummary(parsedSummary, null);
-
-      expect(result).toEqual({
-        kcal: 0,
-        proteins: 0,
-        fats: 0,
-        carbs: 0,
-      });
-    });
-
-    it("should return zeros when startup data is undefined", () => {
-      const parsedSummary: MealPlanContentDailySummary = {
-        kcal: 0,
-        proteins: 0,
-        fats: 0,
-        carbs: 0,
-      };
-
-      const result = resolveDailySummary(parsedSummary, undefined);
-
-      expect(result).toEqual({
-        kcal: 0,
-        proteins: 0,
-        fats: 0,
-        carbs: 0,
-      });
-    });
-
-    it("should calculate when startup data has target_kcal but no macro distribution", () => {
-      const parsedSummary: MealPlanContentDailySummary = {
-        kcal: 0,
-        proteins: 0,
-        fats: 0,
-        carbs: 0,
-      };
+      const zeroResult = { kcal: 0, proteins: 0, fats: 0, carbs: 0 };
 
       const startupDataWithoutMacros: MealPlanStartupData = {
         ...mockStartupData,
         target_macro_distribution: null,
-      };
-
-      const result = resolveDailySummary(parsedSummary, startupDataWithoutMacros);
-
-      expect(result).toEqual({
-        kcal: 0,
-        proteins: 0,
-        fats: 0,
-        carbs: 0,
-      });
-    });
-
-    it("should calculate when startup data has macro distribution but no target_kcal", () => {
-      const parsedSummary: MealPlanContentDailySummary = {
-        kcal: 0,
-        proteins: 0,
-        fats: 0,
-        carbs: 0,
       };
 
       const startupDataWithoutKcal: MealPlanStartupData = {
@@ -378,14 +263,10 @@ describe("resolveDailySummary", () => {
         target_kcal: null,
       };
 
-      const result = resolveDailySummary(parsedSummary, startupDataWithoutKcal);
-
-      expect(result).toEqual({
-        kcal: 0,
-        proteins: 0,
-        fats: 0,
-        carbs: 0,
-      });
+      expect(resolveDailySummary(parsedSummary, null)).toEqual(zeroResult);
+      expect(resolveDailySummary(parsedSummary, undefined)).toEqual(zeroResult);
+      expect(resolveDailySummary(parsedSummary, startupDataWithoutMacros)).toEqual(zeroResult);
+      expect(resolveDailySummary(parsedSummary, startupDataWithoutKcal)).toEqual(zeroResult);
     });
   });
 

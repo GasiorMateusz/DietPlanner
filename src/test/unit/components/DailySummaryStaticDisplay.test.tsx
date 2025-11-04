@@ -12,71 +12,37 @@ describe("DailySummaryStaticDisplay", () => {
     ...overrides,
   });
 
-  describe("rendering all nutritional values", () => {
-    it("should render all four nutritional values", () => {
+  describe("rendering", () => {
+    it("should render all nutritional values, labels, and heading correctly", () => {
       const summary = createMockSummary();
 
       render(<DailySummaryStaticDisplay summary={summary} />);
 
+      // Check heading
+      expect(screen.getByRole("heading", { level: 2, name: "Daily Summary" })).toBeInTheDocument();
+
+      // Check labels
+      expect(screen.getByText("Total Kcal")).toBeInTheDocument();
+      expect(screen.getByText("Proteins")).toBeInTheDocument();
+      expect(screen.getByText("Fats")).toBeInTheDocument();
+      expect(screen.getByText("Carbs")).toBeInTheDocument();
+
+      // Check values with correct formatting
       expect(screen.getByText("2000")).toBeInTheDocument();
       expect(screen.getByText("150g")).toBeInTheDocument();
       expect(screen.getByText("65g")).toBeInTheDocument();
       expect(screen.getByText("250g")).toBeInTheDocument();
     });
 
-    it("should render correct labels", () => {
-      const summary = createMockSummary();
-
-      render(<DailySummaryStaticDisplay summary={summary} />);
-
-      expect(screen.getByText("Total Kcal")).toBeInTheDocument();
-      expect(screen.getByText("Proteins")).toBeInTheDocument();
-      expect(screen.getByText("Fats")).toBeInTheDocument();
-      expect(screen.getByText("Carbs")).toBeInTheDocument();
-    });
-
-    it('should render "Daily Summary" heading', () => {
-      const summary = createMockSummary();
-
-      render(<DailySummaryStaticDisplay summary={summary} />);
-
-      const heading = screen.getByRole("heading", { level: 2, name: "Daily Summary" });
-      expect(heading).toBeInTheDocument();
-    });
-  });
-
-  describe("value formatting", () => {
-    it("should display kcal without unit", () => {
-      const summary = createMockSummary({ kcal: 2000 });
+    it("should format values correctly (kcal without unit, macros with 'g')", () => {
+      const summary = createMockSummary({ kcal: 2000, proteins: 150, fats: 65, carbs: 250 });
 
       render(<DailySummaryStaticDisplay summary={summary} />);
 
       expect(screen.getByText("2000")).toBeInTheDocument();
-      // Should not have "g" suffix for kcal
       expect(screen.queryByText("2000g")).not.toBeInTheDocument();
-    });
-
-    it('should display proteins with "g" unit', () => {
-      const summary = createMockSummary({ proteins: 150 });
-
-      render(<DailySummaryStaticDisplay summary={summary} />);
-
       expect(screen.getByText("150g")).toBeInTheDocument();
-    });
-
-    it('should display fats with "g" unit', () => {
-      const summary = createMockSummary({ fats: 65 });
-
-      render(<DailySummaryStaticDisplay summary={summary} />);
-
       expect(screen.getByText("65g")).toBeInTheDocument();
-    });
-
-    it('should display carbs with "g" unit', () => {
-      const summary = createMockSummary({ carbs: 250 });
-
-      render(<DailySummaryStaticDisplay summary={summary} />);
-
       expect(screen.getByText("250g")).toBeInTheDocument();
     });
   });
@@ -93,9 +59,7 @@ describe("DailySummaryStaticDisplay", () => {
       render(<DailySummaryStaticDisplay summary={summary} />);
 
       expect(screen.getByText("0")).toBeInTheDocument();
-      // Should appear 3 times (proteins, fats, carbs)
-      const zeroGValues = screen.getAllByText("0g");
-      expect(zeroGValues).toHaveLength(3);
+      expect(screen.getAllByText("0g")).toHaveLength(3);
     });
 
     it("should handle mixed zero and non-zero values", () => {
@@ -110,22 +74,14 @@ describe("DailySummaryStaticDisplay", () => {
 
       expect(screen.getByText("2000")).toBeInTheDocument();
       expect(screen.getByText("65g")).toBeInTheDocument();
-      const zeroGValues = screen.getAllByText("0g");
-      expect(zeroGValues).toHaveLength(2); // proteins and carbs
+      expect(screen.getAllByText("0g")).toHaveLength(2);
     });
   });
 
-  describe("large numbers", () => {
-    it("should display large calorie values", () => {
-      const summary = createMockSummary({ kcal: 5000 });
-
-      render(<DailySummaryStaticDisplay summary={summary} />);
-
-      expect(screen.getByText("5000")).toBeInTheDocument();
-    });
-
-    it("should display large macro values", () => {
+  describe("edge cases", () => {
+    it("should handle large numbers", () => {
       const summary = createMockSummary({
+        kcal: 5000,
         proteins: 300,
         fats: 150,
         carbs: 500,
@@ -133,14 +89,13 @@ describe("DailySummaryStaticDisplay", () => {
 
       render(<DailySummaryStaticDisplay summary={summary} />);
 
+      expect(screen.getByText("5000")).toBeInTheDocument();
       expect(screen.getByText("300g")).toBeInTheDocument();
       expect(screen.getByText("150g")).toBeInTheDocument();
       expect(screen.getByText("500g")).toBeInTheDocument();
     });
-  });
 
-  describe("decimal values", () => {
-    it("should display decimal values as-is (formatting handled by number rendering)", () => {
+    it("should handle decimal values", () => {
       const summary = createMockSummary({
         kcal: 1999.5,
         proteins: 149.8,
@@ -150,63 +105,12 @@ describe("DailySummaryStaticDisplay", () => {
 
       render(<DailySummaryStaticDisplay summary={summary} />);
 
-      // React will render numbers directly, so decimals may appear
-      // Exact rendering depends on React's number formatting
       expect(screen.getByText("1999.5")).toBeInTheDocument();
       expect(screen.getByText("149.8g")).toBeInTheDocument();
       expect(screen.getByText("64.9g")).toBeInTheDocument();
       expect(screen.getByText("249.3g")).toBeInTheDocument();
     });
-  });
 
-  describe("component structure", () => {
-    it("should have proper container structure", () => {
-      const summary = createMockSummary();
-
-      const { container } = render(<DailySummaryStaticDisplay summary={summary} />);
-
-      // Check for main container with border and padding classes
-      const mainDiv = container.firstChild as HTMLElement;
-      expect(mainDiv).toBeInTheDocument();
-      expect(mainDiv.tagName).toBe("DIV");
-    });
-
-    it("should have responsive grid layout", () => {
-      const summary = createMockSummary();
-
-      const { container } = render(<DailySummaryStaticDisplay summary={summary} />);
-
-      // Check for grid structure (implementation detail, but useful for regression)
-      const gridContainer = container.querySelector(".grid");
-      expect(gridContainer).toBeInTheDocument();
-    });
-  });
-
-  describe("accessibility", () => {
-    it("should have proper heading hierarchy", () => {
-      const summary = createMockSummary();
-
-      render(<DailySummaryStaticDisplay summary={summary} />);
-
-      const heading = screen.getByRole("heading", { level: 2 });
-      expect(heading).toBeInTheDocument();
-      expect(heading).toHaveTextContent("Daily Summary");
-    });
-
-    it("should have semantic structure for screen readers", () => {
-      const summary = createMockSummary();
-
-      const { container } = render(<DailySummaryStaticDisplay summary={summary} />);
-
-      // Should have descriptive text for each value
-      expect(screen.getByText("Total Kcal")).toBeInTheDocument();
-      expect(screen.getByText("Proteins")).toBeInTheDocument();
-      expect(screen.getByText("Fats")).toBeInTheDocument();
-      expect(screen.getByText("Carbs")).toBeInTheDocument();
-    });
-  });
-
-  describe("edge cases", () => {
     it("should handle very small values", () => {
       const summary = createMockSummary({
         kcal: 1,
@@ -221,7 +125,7 @@ describe("DailySummaryStaticDisplay", () => {
       expect(screen.getAllByText("1g")).toHaveLength(3);
     });
 
-    it("should handle negative values (edge case - should not happen in practice)", () => {
+    it("should handle negative values", () => {
       const summary = createMockSummary({
         kcal: -100,
         proteins: -50,
@@ -235,6 +139,29 @@ describe("DailySummaryStaticDisplay", () => {
       expect(screen.getByText("-50g")).toBeInTheDocument();
       expect(screen.getByText("-25g")).toBeInTheDocument();
       expect(screen.getByText("-75g")).toBeInTheDocument();
+    });
+  });
+
+  describe("accessibility", () => {
+    it("should have proper heading hierarchy", () => {
+      const summary = createMockSummary();
+
+      render(<DailySummaryStaticDisplay summary={summary} />);
+
+      const heading = screen.getByRole("heading", { level: 2 });
+      expect(heading).toBeInTheDocument();
+      expect(heading).toHaveTextContent("Daily Summary");
+    });
+
+    it("should have proper container structure", () => {
+      const summary = createMockSummary();
+
+      const { container } = render(<DailySummaryStaticDisplay summary={summary} />);
+
+      const mainDiv = container.firstChild as HTMLElement;
+      expect(mainDiv).toBeInTheDocument();
+      expect(mainDiv.tagName).toBe("DIV");
+      expect(container.querySelector(".grid")).toBeInTheDocument();
     });
   });
 });

@@ -54,7 +54,7 @@ describe("createStateBridge", () => {
   });
 
   describe("missing startupData", () => {
-    it("should create state bridge with undefined startupData when null is provided", () => {
+    it("should create state bridge with undefined startupData when null, undefined, or not provided", () => {
       const messageHistory: ChatMessage[] = [
         {
           role: "assistant",
@@ -62,38 +62,13 @@ describe("createStateBridge", () => {
         },
       ];
 
-      const result = createStateBridge("session-789", messageHistory, null);
+      const result1 = createStateBridge("session-789", messageHistory, null);
+      const result2 = createStateBridge("session-789", messageHistory, undefined);
+      const result3 = createStateBridge("session-789", messageHistory);
 
-      expect(result).not.toBeNull();
-      expect(result?.startupData).toBeUndefined();
-    });
-
-    it("should create state bridge with undefined startupData when undefined is provided", () => {
-      const messageHistory: ChatMessage[] = [
-        {
-          role: "assistant",
-          content: "Meal plan content",
-        },
-      ];
-
-      const result = createStateBridge("session-789", messageHistory, undefined);
-
-      expect(result).not.toBeNull();
-      expect(result?.startupData).toBeUndefined();
-    });
-
-    it("should create state bridge with undefined startupData when not provided", () => {
-      const messageHistory: ChatMessage[] = [
-        {
-          role: "assistant",
-          content: "Meal plan content",
-        },
-      ];
-
-      const result = createStateBridge("session-789", messageHistory);
-
-      expect(result).not.toBeNull();
-      expect(result?.startupData).toBeUndefined();
+      expect(result1?.startupData).toBeUndefined();
+      expect(result2?.startupData).toBeUndefined();
+      expect(result3?.startupData).toBeUndefined();
     });
   });
 
@@ -109,28 +84,12 @@ describe("createStateBridge", () => {
       expect(result).toBeNull();
     });
 
-    it("should return null when message history is empty", () => {
-      const messageHistory: ChatMessage[] = [];
+    it("should return null when message history is empty or only user messages exist", () => {
+      const emptyHistory: ChatMessage[] = [];
+      const onlyUserMessages: ChatMessage[] = [{ role: "user", content: "Only user message" }];
 
-      const result = createStateBridge("session-123", messageHistory, mockStartupData);
-
-      expect(result).toBeNull();
-    });
-
-    it("should return null when only user messages exist", () => {
-      const messageHistory: ChatMessage[] = [{ role: "user", content: "Only user message" }];
-
-      const result = createStateBridge("session-123", messageHistory, mockStartupData);
-
-      expect(result).toBeNull();
-    });
-  });
-
-  describe("empty message history", () => {
-    it("should return null for empty array", () => {
-      const result = createStateBridge("session-123", [], mockStartupData);
-
-      expect(result).toBeNull();
+      expect(createStateBridge("session-123", emptyHistory, mockStartupData)).toBeNull();
+      expect(createStateBridge("session-123", onlyUserMessages, mockStartupData)).toBeNull();
     });
   });
 

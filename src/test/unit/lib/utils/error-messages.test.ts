@@ -45,109 +45,67 @@ describe("getChatErrorMessage", () => {
       expect(result).toBe("Custom error message from server");
     });
 
-    it("should use default message if error field is missing in JSON", async () => {
-      const errorBody = { message: "Some other field" };
-      const response = new Response(JSON.stringify(errorBody), {
+    it("should use default message if error field is missing, empty, or null in JSON", async () => {
+      const defaultMsg = "Default error message";
+
+      const response1 = new Response(JSON.stringify({ message: "Some other field" }), {
         status: 400,
         headers: { "Content-Type": "application/json" },
       });
 
-      const result = await getChatErrorMessage(response, "Default error message");
-
-      expect(result).toBe("Default error message");
-    });
-
-    it("should use default message if error field is empty string", async () => {
-      const errorBody = { error: "" };
-      const response = new Response(JSON.stringify(errorBody), {
+      const response2 = new Response(JSON.stringify({ error: "" }), {
         status: 400,
         headers: { "Content-Type": "application/json" },
       });
 
-      const result = await getChatErrorMessage(response, "Default error message");
-
-      expect(result).toBe("Default error message");
-    });
-
-    it("should use default message if error field is null", async () => {
-      const errorBody = { error: null };
-      const response = new Response(JSON.stringify(errorBody), {
+      const response3 = new Response(JSON.stringify({ error: null }), {
         status: 400,
         headers: { "Content-Type": "application/json" },
       });
 
-      const result = await getChatErrorMessage(response, "Default error message");
-
-      expect(result).toBe("Default error message");
+      expect(await getChatErrorMessage(response1, defaultMsg)).toBe(defaultMsg);
+      expect(await getChatErrorMessage(response2, defaultMsg)).toBe(defaultMsg);
+      expect(await getChatErrorMessage(response3, defaultMsg)).toBe(defaultMsg);
     });
   });
 
   describe("malformed JSON handling", () => {
-    it("should return default message when JSON is malformed", async () => {
-      const response = new Response("{ invalid json }", {
+    it("should return default message when JSON is malformed, empty, or not JSON", async () => {
+      const defaultMsg = "Default error message";
+
+      const response1 = new Response("{ invalid json }", {
         status: 400,
         headers: { "Content-Type": "application/json" },
       });
 
-      const result = await getChatErrorMessage(response, "Default error message");
+      const response2 = new Response("", { status: 400 });
 
-      expect(result).toBe("Default error message");
-    });
-
-    it("should return default message when response body is empty", async () => {
-      const response = new Response("", { status: 400 });
-
-      const result = await getChatErrorMessage(response, "Default error message");
-
-      expect(result).toBe("Default error message");
-    });
-
-    it("should return default message when response body is not JSON", async () => {
-      const response = new Response("Plain text error", {
+      const response3 = new Response("Plain text error", {
         status: 400,
         headers: { "Content-Type": "text/plain" },
       });
 
-      const result = await getChatErrorMessage(response, "Default error message");
-
-      expect(result).toBe("Default error message");
+      expect(await getChatErrorMessage(response1, defaultMsg)).toBe(defaultMsg);
+      expect(await getChatErrorMessage(response2, defaultMsg)).toBe(defaultMsg);
+      expect(await getChatErrorMessage(response3, defaultMsg)).toBe(defaultMsg);
     });
   });
 
   describe("other status codes", () => {
-    it("should return default message for 400 Bad Request", async () => {
-      const response = new Response(null, { status: 400 });
-      const result = await getChatErrorMessage(response, "Bad request error");
+    it("should return default message for non-specific status codes", async () => {
+      const testCases = [
+        { status: 400, defaultMsg: "Bad request error" },
+        { status: 403, defaultMsg: "Forbidden error" },
+        { status: 429, defaultMsg: "Rate limit error" },
+        { status: 503, defaultMsg: "Service unavailable" },
+        { status: 200, defaultMsg: "Unexpected error" },
+      ];
 
-      expect(result).toBe("Bad request error");
-    });
-
-    it("should return default message for 403 Forbidden", async () => {
-      const response = new Response(null, { status: 403 });
-      const result = await getChatErrorMessage(response, "Forbidden error");
-
-      expect(result).toBe("Forbidden error");
-    });
-
-    it("should return default message for 429 Too Many Requests", async () => {
-      const response = new Response(null, { status: 429 });
-      const result = await getChatErrorMessage(response, "Rate limit error");
-
-      expect(result).toBe("Rate limit error");
-    });
-
-    it("should return default message for 503 Service Unavailable", async () => {
-      const response = new Response(null, { status: 503 });
-      const result = await getChatErrorMessage(response, "Service unavailable");
-
-      expect(result).toBe("Service unavailable");
-    });
-
-    it("should return default message for 200 OK (should not happen but handle gracefully)", async () => {
-      const response = new Response(null, { status: 200 });
-      const result = await getChatErrorMessage(response, "Unexpected error");
-
-      expect(result).toBe("Unexpected error");
+      for (const { status, defaultMsg } of testCases) {
+        const response = new Response(null, { status });
+        const result = await getChatErrorMessage(response, defaultMsg);
+        expect(result).toBe(defaultMsg);
+      }
     });
   });
 

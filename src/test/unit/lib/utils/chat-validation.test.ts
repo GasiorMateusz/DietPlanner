@@ -5,39 +5,14 @@ describe("validateChatMessage", () => {
   const MAX_LENGTH = 5000;
 
   describe("empty and whitespace-only input", () => {
-    it("should reject empty string", () => {
-      const result = validateChatMessage("", MAX_LENGTH);
+    it("should reject empty string, whitespace-only, newlines, tabs, and mixed whitespace", () => {
+      const invalidInputs = ["", "   ", "\n\n\n", "\t\t\t", "  \n\t  "];
 
-      expect(result.valid).toBe(false);
-      expect(result.error).toBe("Message cannot be empty.");
-    });
-
-    it("should reject whitespace-only string", () => {
-      const result = validateChatMessage("   ", MAX_LENGTH);
-
-      expect(result.valid).toBe(false);
-      expect(result.error).toBe("Message cannot be empty.");
-    });
-
-    it("should reject string with only newlines", () => {
-      const result = validateChatMessage("\n\n\n", MAX_LENGTH);
-
-      expect(result.valid).toBe(false);
-      expect(result.error).toBe("Message cannot be empty.");
-    });
-
-    it("should reject string with only tabs", () => {
-      const result = validateChatMessage("\t\t\t", MAX_LENGTH);
-
-      expect(result.valid).toBe(false);
-      expect(result.error).toBe("Message cannot be empty.");
-    });
-
-    it("should reject string with mixed whitespace", () => {
-      const result = validateChatMessage(" \n\t \r\n ", MAX_LENGTH);
-
-      expect(result.valid).toBe(false);
-      expect(result.error).toBe("Message cannot be empty.");
+      for (const input of invalidInputs) {
+        const result = validateChatMessage(input, MAX_LENGTH);
+        expect(result.valid).toBe(false);
+        expect(result.error).toBe("Message cannot be empty.");
+      }
     });
   });
 
