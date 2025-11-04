@@ -13,10 +13,8 @@ const AllTheProviders = ({ children }: { children: React.ReactNode }) => {
 const customRender = (ui: React.ReactElement, options?: Omit<RenderOptions, "wrapper">) =>
   render(ui, { wrapper: AllTheProviders, ...options });
 
-// Re-export everything
 export * from "@testing-library/react";
 export { customRender as render };
 
-// Export commonly used testing utilities
 export { vi };
 export { default as userEvent } from "@testing-library/user-event";

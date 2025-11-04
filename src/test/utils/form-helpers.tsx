@@ -36,7 +36,6 @@ export async function waitForFormValidation(
   timeout = 1000
 ): Promise<void> {
   callback();
-  // Wait a bit for validation to complete
   await new Promise((resolve) => setTimeout(resolve, 100));
 }
 

@@ -17,11 +17,8 @@ export function MessageItem({ message }: { message: ChatMessage }) {
     );
   }
 
-  // Extract comments and clean the message
   const comments = extractComments(message.content);
   const cleanedContent = removeXmlTags(message.content);
-
-  // Display comments if available, otherwise show cleaned content or fallback message
   const displayText = comments || cleanedContent || "Meal plan updated above.";
 
   return (

@@ -191,11 +191,9 @@ export default function DashboardView() {
    * Handles startup form submission - navigates to create page.
    */
   const handleStartupFormSubmit = (data: MealPlanStartupData) => {
-    // Store startup data in sessionStorage to pass to create page
-    // The create page will read this and use it to initiate the AI session
+    // Store startup data in sessionStorage (read by AIChatInterface to initiate AI session)
     sessionStorage.setItem("mealPlanStartupData", JSON.stringify(data));
     setIsStartupDialogOpen(false);
-    // Navigate to create page
     window.location.href = "/app/create";
   };
 

@@ -76,34 +76,37 @@ export function useMealPlanEditor({ mealPlanId }: UseMealPlanEditorProps): UseMe
   /**
    * Loads meal plan from API (Edit Mode).
    */
-  const loadMealPlanFromApi = useCallback(async (id: string) => {
-    try {
-      const data = await mealPlansApi.getById(id);
+  const loadMealPlanFromApi = useCallback(
+    async (id: string) => {
+      try {
+        const data = await mealPlansApi.getById(id);
 
-      // Extract startup data from flat fields
-      const extractedStartupData: MealPlanStartupData = {
-        patient_age: data.patient_age,
-        patient_weight: data.patient_weight,
-        patient_height: data.patient_height,
-        activity_level: data.activity_level,
-        target_kcal: data.target_kcal,
-        target_macro_distribution: data.target_macro_distribution,
-        meal_names: data.meal_names,
-        exclusions_guidelines: data.exclusions_guidelines,
-      };
+        // Extract startup data from flat fields
+        const extractedStartupData: MealPlanStartupData = {
+          patient_age: data.patient_age,
+          patient_weight: data.patient_weight,
+          patient_height: data.patient_height,
+          activity_level: data.activity_level,
+          target_kcal: data.target_kcal,
+          target_macro_distribution: data.target_macro_distribution,
+          meal_names: data.meal_names,
+          exclusions_guidelines: data.exclusions_guidelines,
+        };
 
-      setStartupData(extractedStartupData);
-      setDailySummary(data.plan_content.daily_summary);
+        setStartupData(extractedStartupData);
+        setDailySummary(data.plan_content.daily_summary);
 
-      // Reset form with loaded data
-      form.reset({
-        planName: data.name,
-        meals: data.plan_content.meals,
-      });
-    } catch (err) {
-      throw err;
-    }
-  }, [form]);
+        // Reset form with loaded data
+        form.reset({
+          planName: data.name,
+          meals: data.plan_content.meals,
+        });
+      } catch (err) {
+        throw err;
+      }
+    },
+    [form]
+  );
 
   /**
    * Loads meal plan from sessionStorage bridge (Create Mode).
@@ -236,10 +239,8 @@ export function useMealPlanEditor({ mealPlanId }: UseMealPlanEditorProps): UseMe
     try {
       const blob = await mealPlansApi.export(mealPlanId);
 
-      // Extract filename from Content-Disposition header or use default
       const filename = `meal-plan-${mealPlanId}.doc`;
 
-      // Create blob and download
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -269,4 +270,3 @@ export function useMealPlanEditor({ mealPlanId }: UseMealPlanEditorProps): UseMe
     handleExport,
   };
 }
-

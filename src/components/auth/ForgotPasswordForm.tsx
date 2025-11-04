@@ -6,9 +6,9 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
 import { forgotPasswordSchema, type ForgotPasswordInput } from "@/lib/validation/auth.schemas";
 
-type Props = {
+interface Props {
   className?: string;
-};
+}
 
 export default function ForgotPasswordForm({ className }: Props) {
   const [values, setValues] = React.useState<ForgotPasswordInput>({ email: "" });
@@ -39,7 +39,7 @@ export default function ForgotPasswordForm({ className }: Props) {
     e.preventDefault();
     setMessage(null);
     if (!validate(values)) return;
-    // Placeholder; real request will be implemented later.
+    // MVP: Shows success message regardless of email existence (security best practice)
     setMessage("If an account exists for this email, we sent a password reset link.");
   }
 

@@ -52,16 +52,13 @@ export default function AIChatInterface() {
       return;
     }
 
-    // Clear error
     setChatState((prev) => ({ ...prev, error: null }));
 
-    // Create user message
     const userMessage: UserChatMessage = {
       role: "user",
       content: message,
     };
 
-    // Optimistically add user message
     setChatState((prev) => ({
       ...prev,
       messageHistory: [...prev.messageHistory, userMessage],
@@ -69,10 +66,8 @@ export default function AIChatInterface() {
     }));
 
     try {
-      // Send message to API
       const response = await aiChatApi.sendMessage(sessionId, { message: userMessage });
 
-      // Add assistant response
       setChatState((prev) => ({
         ...prev,
         messageHistory: [...prev.messageHistory, response.message],
@@ -81,14 +76,12 @@ export default function AIChatInterface() {
       }));
     } catch (error) {
       console.error("Error sending message:", error);
-      // Remove optimistic user message
       setChatState((prev) => ({
         ...prev,
         messageHistory: prev.messageHistory.slice(0, -1),
         isLoading: false,
         error: error instanceof Error ? error.message : "Failed to send message. Please try again.",
       }));
-      // Restore input value
       form.setValue("message", message);
     }
   });
@@ -99,7 +92,6 @@ export default function AIChatInterface() {
   useEffect(() => {
     const initializeChat = async () => {
       try {
-        // Read startup data from sessionStorage
         const storedData = sessionStorage.getItem("mealPlanStartupData");
         if (!storedData) {
           setChatState((prev) => ({
@@ -112,18 +104,15 @@ export default function AIChatInterface() {
         const data: MealPlanStartupData = JSON.parse(storedData);
         setStartupData(data);
 
-        // Create initial AI session using API client
         const response = await aiChatApi.createSession(data);
         setSessionId(response.session_id);
 
-        // Initialize message history with first assistant message
         setChatState((prev) => ({
           ...prev,
           messageHistory: [response.message],
           promptCount: response.prompt_count,
         }));
 
-        // Clear sessionStorage after successful initialization
         sessionStorage.removeItem("mealPlanStartupData");
       } catch (error) {
         console.error("Failed to initialize chat:", error);
@@ -159,7 +148,6 @@ export default function AIChatInterface() {
       return;
     }
 
-    // Create state bridge for navigation
     const bridge = createStateBridge(sessionId, chatState.messageHistory, startupData);
 
     if (!bridge) {
@@ -170,10 +158,8 @@ export default function AIChatInterface() {
       return;
     }
 
-    // Store in state bridge using sessionStorage (persists across navigation)
     sessionStorage.setItem("mealPlanBridge", JSON.stringify(bridge));
 
-    // Navigate to editor
     window.location.href = "/app/editor";
   };
 
@@ -195,7 +181,6 @@ export default function AIChatInterface() {
     return extractCurrentMealPlan(chatState.messageHistory);
   }, [chatState.messageHistory]);
 
-  // Render empty state if no messages yet
   if (chatState.messageHistory.length === 0 && !chatState.error) {
     return (
       <div className="container mx-auto p-4 sm:p-8 max-w-4xl">
