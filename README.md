@@ -36,6 +36,7 @@ The project uses the following technologies:
 
 - **Astro 5**: For fast, performant static site generation with minimal JavaScript.
 - **React 19**: For interactive components (e.g., chat, editor).
+- **React Hook Form**: For efficient form state management and validation.
 - **TypeScript 5**: For static type checking.
 - **Tailwind 4**: For utility-first CSS styling.
 - **Shadcn/ui**: For the base library of accessible React components.

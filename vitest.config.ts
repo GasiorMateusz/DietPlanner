@@ -9,7 +9,12 @@ export default defineConfig({
     environment: "jsdom",
     setupFiles: ["./src/test/setup.ts"],
     include: ["**/*.{test,spec}.{js,ts,jsx,tsx}"],
-    exclude: ["node_modules", "dist", ".astro"],
+    exclude: [
+      "node_modules",
+      "dist",
+      ".astro",
+      "**/meal-plan-form.validation.test.ts", // Removed - validation now handled by Zod + RHF
+    ],
     coverage: {
       provider: "v8",
       reporter: ["text", "json", "html"],
