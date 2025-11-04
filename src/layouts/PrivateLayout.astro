@@ -14,16 +14,10 @@ const { title = "Diet Planner" } = Astro.props;
 // Use getUser() to verify user data is authentic
 const supabase = createSupabaseServerClient(Astro.cookies);
 const {
-  data: { session },
-} = await supabase.auth.getSession();
+  data: { user },
+} = await supabase.auth.getUser();
 
-let userEmail: string | undefined;
-if (session?.access_token) {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser(session.access_token);
-  userEmail = user?.email;
-}
+const userEmail = user?.email;
 ---
 
 <!doctype html>

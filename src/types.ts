@@ -1,9 +1,4 @@
-import type {
-  Database,
-  Tables,
-  TablesInsert,
-  TablesUpdate,
-} from './database.types';
+import type { Database, Tables, TablesInsert, TablesUpdate } from "./database.types";
 
 // =================================================================
 //   1. JSON BLOB DEFINITIONS
@@ -57,7 +52,7 @@ export type MealPlanContent = {
  * Defines the message structure for a user prompt.
  */
 export type UserChatMessage = {
-  role: 'user';
+  role: "user";
   content: string;
 };
 
@@ -65,7 +60,7 @@ export type UserChatMessage = {
  * Defines the message structure for an assistant response.
  */
 export type AssistantChatMessage = {
-  role: 'assistant';
+  role: "assistant";
   content: string;
 };
 
@@ -86,10 +81,7 @@ export type ChatMessage = UserChatMessage | AssistantChatMessage;
  * Overrides `plan_content` and `target_macro_distribution` from `Json`
  * to their specific types.
  */
-export type TypedMealPlanRow = Omit<
-  Tables<'meal_plans'>,
-  'plan_content' | 'target_macro_distribution'
-> & {
+export type TypedMealPlanRow = Omit<Tables<"meal_plans">, "plan_content" | "target_macro_distribution"> & {
   plan_content: MealPlanContent;
   target_macro_distribution: TargetMacroDistribution | null;
 };
@@ -97,10 +89,7 @@ export type TypedMealPlanRow = Omit<
 /**
  * Strongly-typed version of the `meal_plans` table Insert.
  */
-export type TypedMealPlanInsert = Omit<
-  TablesInsert<'meal_plans'>,
-  'plan_content' | 'target_macro_distribution'
-> & {
+export type TypedMealPlanInsert = Omit<TablesInsert<"meal_plans">, "plan_content" | "target_macro_distribution"> & {
   plan_content: MealPlanContent;
   target_macro_distribution?: TargetMacroDistribution | null;
 };
@@ -108,10 +97,7 @@ export type TypedMealPlanInsert = Omit<
 /**
  * Strongly-typed version of the `meal_plans` table Update.
  */
-export type TypedMealPlanUpdate = Omit<
-  TablesUpdate<'meal_plans'>,
-  'plan_content' | 'target_macro_distribution'
-> & {
+export type TypedMealPlanUpdate = Omit<TablesUpdate<"meal_plans">, "plan_content" | "target_macro_distribution"> & {
   plan_content?: MealPlanContent;
   target_macro_distribution?: TargetMacroDistribution | null;
 };
@@ -120,10 +106,7 @@ export type TypedMealPlanUpdate = Omit<
  * Strongly-typed version of the `ai_chat_sessions` table Row.
  * Overrides `message_history` from `Json` to `ChatMessage[]`.
  */
-export type TypedAiChatSessionRow = Omit<
-  Tables<'ai_chat_sessions'>,
-  'message_history'
-> & {
+export type TypedAiChatSessionRow = Omit<Tables<"ai_chat_sessions">, "message_history"> & {
   message_history: ChatMessage[] | null;
 };
 
@@ -138,14 +121,14 @@ export type TypedAiChatSessionRow = Omit<
  */
 export type MealPlanStartupData = Pick<
   TypedMealPlanRow,
-  | 'patient_age'
-  | 'patient_weight'
-  | 'patient_height'
-  | 'activity_level'
-  | 'target_kcal'
-  | 'target_macro_distribution'
-  | 'meal_names'
-  | 'exclusions_guidelines'
+  | "patient_age"
+  | "patient_weight"
+  | "patient_height"
+  | "activity_level"
+  | "target_kcal"
+  | "target_macro_distribution"
+  | "meal_names"
+  | "exclusions_guidelines"
 >;
 
 // =================================================================
@@ -158,10 +141,7 @@ export type MealPlanStartupData = Pick<
  * **DTO**: Represents a single meal plan item in the list.
  * @Endpoint `GET /api/meal-plans` (Array Item)
  */
-export type MealPlanListItemDto = Pick<
-  TypedMealPlanRow,
-  'id' | 'name' | 'created_at' | 'updated_at'
-> & {
+export type MealPlanListItemDto = Pick<TypedMealPlanRow, "id" | "name" | "created_at" | "updated_at"> & {
   /**
    * The grouped startup data used to generate the plan.
    */
@@ -183,10 +163,7 @@ export type GetMealPlansResponseDto = MealPlanListItemDto[];
  * This nested structure is flattened by the backend into a `meal_plans` row.
  * @Endpoint `POST /api/meal-plans`
  */
-export type CreateMealPlanCommand = Pick<
-  TypedMealPlanInsert,
-  'source_chat_session_id' | 'name'
-> & {
+export type CreateMealPlanCommand = Pick<TypedMealPlanInsert, "source_chat_session_id" | "name"> & {
   /**
    * The full JSON content of the meal plan.
    */
@@ -238,9 +215,9 @@ export type CreateAiSessionCommand = MealPlanStartupData;
  * @Endpoint `POST /api/ai/sessions`
  */
 export type CreateAiSessionResponseDto = {
-  session_id: Tables<'ai_chat_sessions'>['id'];
+  session_id: Tables<"ai_chat_sessions">["id"];
   message: AssistantChatMessage;
-  prompt_count: Tables<'ai_chat_sessions'>['final_prompt_count'];
+  prompt_count: Tables<"ai_chat_sessions">["final_prompt_count"];
 };
 
 /**
@@ -257,7 +234,7 @@ export type SendAiMessageCommand = {
  * @Endpoint `POST /api/ai/sessions/{id}/message`
  */
 export type SendAiMessageResponseDto = {
-  session_id: Tables<'ai_chat_sessions'>['id'];
+  session_id: Tables<"ai_chat_sessions">["id"];
   message: AssistantChatMessage;
-  prompt_count: Tables<'ai_chat_sessions'>['final_prompt_count'];
+  prompt_count: Tables<"ai_chat_sessions">["final_prompt_count"];
 };

@@ -5,6 +5,7 @@
 This endpoint handles follow-up messages in an existing AI chat session. It appends the user's message to the session history, calls OpenRouter.ai for an AI response, updates the database with the new message history and incremented prompt count, and returns the AI's response. This enables conversational refinement of meal plans during the creation process.
 
 **Key Behaviors:**
+
 - Maintains conversation context by retrieving and extending existing message history
 - Increments prompt count for each interaction (telemetry)
 - Reuses the system prompt from session creation for consistency
@@ -17,9 +18,11 @@ This endpoint handles follow-up messages in an existing AI chat session. It appe
 **URL Structure:** `/api/ai/sessions/{id}/message`
 
 **Path Parameters:**
+
 - `id` (required): UUID of the existing AI chat session
 
 **Request Body Structure:**
+
 ```json
 {
   "message": {
@@ -34,21 +37,25 @@ This endpoint handles follow-up messages in an existing AI chat session. It appe
 ## 3. Used Types
 
 ### Input Types (from `src/types.ts`):
+
 - `SendAiMessageCommand` - Request payload type
 - `ChatMessage` - Union type for messages in history
 - `UserChatMessage` - Type for the incoming user message
 - `AssistantChatMessage` - Type for the AI response
 
 ### Output Types (from `src/types.ts`):
+
 - `SendAiMessageResponseDto` - Response payload type
 - `Tables<'ai_chat_sessions'>` - Database table types
 
 ### Database Types (from `src/db/database.types.ts`):
+
 - `Database` - Supabase database schema
 
 ## 4. Response Details
 
 **Success Response (200 OK):**
+
 ```json
 {
   "session_id": "chat-session-uuid",
@@ -61,6 +68,7 @@ This endpoint handles follow-up messages in an existing AI chat session. It appe
 ```
 
 **Error Responses:**
+
 - `400 Bad Request`: Invalid request body or message structure
 - `401 Unauthorized`: User not authenticated (test user not found in testing mode)
 - `404 Not Found`: AI chat session not found or not owned by user
@@ -104,26 +112,31 @@ This endpoint handles follow-up messages in an existing AI chat session. It appe
 ## 6. Security Considerations
 
 ### Authentication
+
 - **Production:** Verify Supabase JWT token via `supabase.auth.getUser()`
 - **Testing:** Use hardcoded test user ID (same pattern as sessions.ts)
 - **Enforcement:** Return 401 if authentication fails
 
 ### Authorization
+
 - **RLS Policy:** Row-level security prevents users from accessing other users' sessions
 - **Session Ownership:** Implicitly verified through RLS when querying database
 - **Data Privacy:** Chat sessions are telemetry-only and cannot be read by users via API
 
 ### Input Validation
+
 - **Zod Schema:** Validate request body structure strictly
 - **Content Sanitization:** OpenRouter API handles message content safely
 - **UUID Validation:** Astro route params automatically validate UUID format
 
 ### External API Security
+
 - **API Key:** Stored in environment variable, never exposed to client
 - **Timeout:** 30-second timeout prevents hanging requests
 - **Error Masking:** Do not expose internal OpenRouter error details to client
 
 ### Database Security
+
 - **Parameterized Queries:** Supabase client handles SQL injection prevention
 - **RLS Policies:** Enforced at database level for defense in depth
 - **Immutability:** Chat sessions are write-once (no UPDATE/DELETE access for users)
@@ -131,46 +144,54 @@ This endpoint handles follow-up messages in an existing AI chat session. It appe
 ## 7. Error Handling
 
 ### Validation Errors (400 Bad Request)
+
 **Scenario:** Malformed request body or invalid message structure  
 **Handling:** Return validation errors from Zod schema  
 **Example:**
+
 ```json
 {
   "error": "Validation failed",
-  "details": [
-    { "path": ["message", "content"], "message": "Required" }
-  ]
+  "details": [{ "path": ["message", "content"], "message": "Required" }]
 }
 ```
 
 ### Authentication Errors (401 Unauthorized)
+
 **Scenario:** No authenticated user or invalid session token  
 **Handling:** Return generic error message to avoid information leakage  
 **Example:**
+
 ```json
 { "error": "Unauthorized" }
 ```
 
 ### Not Found Errors (404 Not Found)
+
 **Scenario:** Session doesn't exist or user doesn't own it  
 **Handling:** Return generic not found message  
 **Example:**
+
 ```json
 { "error": "Chat session not found" }
 ```
 
 ### OpenRouter Errors (502 Bad Gateway)
+
 **Scenario:** OpenRouter API failure, timeout, or invalid response  
 **Handling:** Catch `OpenRouterError` exception, log details, return generic error  
 **Example:**
+
 ```json
 { "error": "AI service unavailable" }
 ```
 
 ### Database Errors (500 Internal Server Error)
+
 **Scenario:** Database connection failure or query error  
 **Handling:** Log full error details, return generic error to client  
 **Example:**
+
 ```json
 {
   "error": "An internal error occurred",
@@ -179,9 +200,11 @@ This endpoint handles follow-up messages in an existing AI chat session. It appe
 ```
 
 ### JSON Parse Errors (400 Bad Request)
+
 **Scenario:** Invalid JSON in request body  
 **Handling:** Catch parsing exception and return clear error  
 **Example:**
+
 ```json
 {
   "error": "Invalid JSON in request body",
@@ -192,44 +215,52 @@ This endpoint handles follow-up messages in an existing AI chat session. It appe
 ## 8. Performance Considerations
 
 ### Database Queries
+
 - **Single Query:** Retrieve session data with one SELECT
 - **Single Update:** Update session with one UPDATE
 - **Indexes:** Foreign key index on `user_id` ensures fast lookups
 - **RLS Overhead:** Minimal performance impact due to simple WHERE clause
 
 ### External API Calls
+
 - **Timeout:** 30-second timeout prevents indefinite blocking
 - **Retry:** Not implemented in MVP (consider for production)
 - **Caching:** Not applicable for conversational AI
 
 ### Message History
+
 - **Size Limiting:** No explicit limit in MVP (monitor in production)
 - **Serialization:** JSONB storage optimized for large arrays
 - **Memory:** Full history sent to OpenRouter each time (no context window truncation)
 
 ### Concurrency
+
 - **Race Conditions:** No locking mechanism (last write wins for history updates)
 - **Acceptable Risk:** Low probability of concurrent edits to same session
 
 ## 9. Implementation Steps
 
 ### Step 1: Create Validation Schema
+
 **File:** `src/lib/validation/ai.schemas.ts`
 
 Add Zod schema for `SendAiMessageCommand`:
+
 ```typescript
 export const sendAiMessageSchema = z.object({
   message: z.object({
-    role: z.literal('user'),
+    role: z.literal("user"),
     content: z.string().min(1),
   }),
 });
 ```
 
 ### Step 2: Extend Session Service
+
 **File:** `src/lib/ai/session.service.ts`
 
 Add `sendMessage` static method:
+
 - Parameters: `sessionId`, `command`, `userId`, `supabase`
 - Returns: `SendAiMessageResponseDto`
 - Logic:
@@ -246,14 +277,17 @@ Add `sendMessage` static method:
 
 **Helper Function:**
 Create `convertHistoryForOpenRouter()` to:
+
 - Detect `[SYSTEM]` prefix in first user message
 - Convert it to system role for OpenRouter
 - Return array of `OpenRouterMessage[]`
 
 ### Step 3: Create API Route Handler
+
 **File:** `src/pages/api/ai/sessions/[id]/message.ts`
 
 Implement POST handler:
+
 - Extract session ID from URL params
 - Parse and validate request body with `sendAiMessageSchema`
 - Authenticate (test user for development)
@@ -266,29 +300,35 @@ Implement POST handler:
 - Return `SendAiMessageResponseDto` with 200
 
 ### Step 4: Create Custom Error Class
+
 **File:** `src/lib/errors.ts` (if not exists) or extend existing
 
 Add:
+
 ```typescript
 export class NotFoundError extends Error {
   constructor(message: string) {
     super(message);
-    this.name = 'NotFoundError';
+    this.name = "NotFoundError";
   }
 }
 ```
 
 ### Step 5: Update Type Exports
+
 **File:** `src/types.ts`
 
 Ensure types are properly exported:
+
 - `SendAiMessageCommand`
 - `SendAiMessageResponseDto`
 
 ### Step 6: Testing
+
 **Files:** `testing/seesions-TESTING.md` (update existing doc)
 
 Add test cases:
+
 - Valid follow-up message
 - Invalid message structure
 - Non-existent session ID
@@ -298,14 +338,17 @@ Add test cases:
 - Database failure simulation
 
 ### Step 7: Documentation
+
 **File:** `.ai/api-plan.md`
 
 Verify documentation matches implementation:
+
 - Request/response examples
 - Error codes
 - Path parameter details
 
 ### Step 8: Code Review Checklist
+
 - [ ] Error handling follows existing patterns
 - [ ] Validation schema is comprehensive
 - [ ] Service method is pure (no side effects except DB/API)

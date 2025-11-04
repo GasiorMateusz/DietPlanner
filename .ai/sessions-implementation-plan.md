@@ -82,7 +82,7 @@ This endpoint initiates a new AI-powered meal plan generation session. It accept
        id: newSessionId,
        user_id: userId,
        message_history: message_history,
-       final_prompt_count: 1 // This is the first prompt
+       final_prompt_count: 1, // This is the first prompt
      };
      ```
    - Inserts the record: `await supabase.from('ai_chat_sessions').insert(newSessionRecord)`. This respects the RLS policy (INSERT allowed, SELECT denied)
@@ -92,7 +92,7 @@ This endpoint initiates a new AI-powered meal plan generation session. It accept
      const responseDto: CreateAiSessionResponseDto = {
        session_id: newSessionId,
        message: assistantResponse,
-       prompt_count: 1
+       prompt_count: 1,
      };
      ```
    - Returns this DTO to the route handler
@@ -100,35 +100,44 @@ This endpoint initiates a new AI-powered meal plan generation session. It accept
 ## 6. Security Considerations
 
 ### Authentication
+
 The route handler must retrieve the `user_id` from the authenticated Supabase session (`context.locals.supabase.auth`). If no user is found, a 401 Unauthorized must be returned immediately.
 
 ### Authorization (RLS)
+
 The database operation is governed by the RLS policy on `ai_chat_sessions`. The INSERT will only succeed if the `user_id` in the new record matches `auth.uid()`, which is handled by the service logic. No SELECT is possible, so the service must generate its own UUID and return it, as it cannot read the row after inserting.
 
 ### Input Validation
+
 A Zod schema (`createAiSessionSchema`) must be created and used to validate all fields in the `CreateAiSessionCommand` body. This prevents malformed data from being processed or sent to the AI model.
 
 ### API Key Management
+
 The `OPENROUTER_API_KEY` must be stored as a secure environment variable on the server and accessed only by the `OpenRouterService`. It must never be exposed to the client.
 
 ### Prompt Injection
+
 The user-provided fields (`meal_names`, `exclusions_guidelines`) are directly used in the prompt. The system prompt must be written defensively (e.g., "You are a helpful dietitian assistant. Your only task is to generate a meal plan based on the following data...").
 
 ## 7. Error Handling
 
 ### 400 Bad Request
+
 - **Trigger:** The request body fails Zod validation
 - **Action:** Return a 400 response with a JSON body detailing the validation errors (from `zodError.errors`)
 
 ### 401 Unauthorized
+
 - **Trigger:** No valid Supabase session (JWT) is found
 - **Action:** Return a 401 response with `{"error": "Unauthorized"}`
 
 ### 502 Bad Gateway
+
 - **Trigger:** The `OpenRouterService` fails to get a successful response from OpenRouter.ai (e.g., API key error, 5xx from OpenRouter, network timeout)
 - **Action:** Log the specific error from OpenRouter. Return a 502 response with `{"error": "AI service unavailable"}`
 
 ### 500 Internal Server Error
+
 - **Trigger:** The `supabase.from('ai_chat_sessions').insert()` query fails for an unexpected reason (e.g., DB connection loss, RLS policy failure not caught)
 - **Action:** Log the Supabase database error. Return a 500 response with `{"error": "An internal error occurred"}`
 

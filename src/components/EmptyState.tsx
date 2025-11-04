@@ -28,12 +28,10 @@ export function EmptyState({ onCreateClick }: EmptyStateProps) {
             />
           </svg>
         </div>
-        <h2 className="text-xl font-semibold text-foreground mb-2">
-          You don&apos;t have any meal plans yet
-        </h2>
+        <h2 className="text-xl font-semibold text-foreground mb-2">You don&apos;t have any meal plans yet</h2>
         <p className="text-muted-foreground mb-6">
-          Create your first meal plan to get started. You can generate personalized
-          meal plans based on patient data and dietary requirements.
+          Create your first meal plan to get started. You can generate personalized meal plans based on patient data and
+          dietary requirements.
         </p>
         {onCreateClick && (
           <Button onClick={onCreateClick} className="w-full sm:w-auto">

@@ -1,12 +1,8 @@
 import { z } from "zod";
 
-const PASSWORD_POLICY_MESSAGE =
-  "Password must be at least 8 characters and include letters and numbers.";
+const PASSWORD_POLICY_MESSAGE = "Password must be at least 8 characters and include letters and numbers.";
 
-export const emailSchema = z
-  .string()
-  .min(1, "Email is required.")
-  .email("Please enter a valid email address.");
+export const emailSchema = z.string().min(1, "Email is required.").email("Please enter a valid email address.");
 
 export const passwordSchema = z
   .string()
@@ -50,5 +46,3 @@ export type LoginInput = z.infer<typeof loginSchema>;
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
 export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
-
-

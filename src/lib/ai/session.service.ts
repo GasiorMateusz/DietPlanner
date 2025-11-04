@@ -283,28 +283,22 @@ export class AiSessionService {
       throw new NotFoundError("Chat session not found");
     }
 
-    // Extract existing message history
     const existingHistory: ChatMessage[] = (session.message_history as ChatMessage[]) || [];
 
-    // Append user message to history
     const updatedHistory: ChatMessage[] = [...existingHistory, command.message];
 
     // Convert history for OpenRouter (handles [SYSTEM] prefix conversion)
     const messagesForOpenRouter = convertHistoryForOpenRouter(updatedHistory);
 
-    // Call OpenRouter API
     const assistantResponse = await OpenRouterService.getChatCompletion(
       import.meta.env.OPENROUTER_API_KEY,
       messagesForOpenRouter
     );
 
-    // Append assistant response to history
     const finalHistory: ChatMessage[] = [...updatedHistory, assistantResponse];
 
-    // Increment prompt count
     const newPromptCount = (session.final_prompt_count || 0) + 1;
 
-    // Update database record
     const { error: updateError } = await supabase
       .from("ai_chat_sessions")
       .update({
@@ -319,7 +313,6 @@ export class AiSessionService {
       throw new Error(`Database operation failed: ${updateError.message}`);
     }
 
-    // Build and return response DTO
     const responseDto: SendAiMessageResponseDto = {
       session_id: sessionId,
       message: assistantResponse,

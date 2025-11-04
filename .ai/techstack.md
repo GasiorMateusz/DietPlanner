@@ -33,3 +33,21 @@ CI/CD and Hosting
 Github Actions for creating CI/CD pipelines.
 
 DigitalOcean for hosting the application via a Docker image.
+
+Testing - Comprehensive testing strategy for quality assurance
+
+Unit and Integration Testing
+
+Vitest serves as the primary test runner for unit and integration tests, providing fast execution and excellent TypeScript support.
+
+React Testing Library provides component testing utilities that encourage testing React components from a user's perspective.
+
+@testing-library/jest-dom extends Jest/Vitest matchers with DOM-specific assertions for better component testing.
+
+MSW (Mock Service Worker) enables API mocking for unit tests and integration testing, particularly useful for mocking external services like the OpenRouter API.
+
+Supertest provides HTTP assertions for testing API endpoints, allowing easy validation of request/response handling.
+
+End-to-End (E2E) Testing
+
+Playwright is the recommended framework for end-to-end testing, offering cross-browser support (Chromium, Firefox, WebKit), built-in test runner and reporting, and screenshot/video capture capabilities for debugging and documentation.

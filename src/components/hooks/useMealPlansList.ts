@@ -29,11 +29,7 @@ export function useMealPlansList(): UseMealPlansListReturn {
   const [currentOrder, setCurrentOrder] = useState<SortOrder>("desc");
 
   const fetchMealPlans = useCallback(
-    async (
-      search?: string,
-      sort: SortField = currentSort,
-      order: SortOrder = currentOrder
-    ) => {
+    async (search?: string, sort: SortField = currentSort, order: SortOrder = currentOrder) => {
       setIsLoading(true);
       setError(null);
 
@@ -76,10 +72,7 @@ export function useMealPlansList(): UseMealPlansListReturn {
         setCurrentSort(sort);
         setCurrentOrder(order);
       } catch (err) {
-        const errorMessage =
-          err instanceof Error
-            ? err.message
-            : "An error occurred. Please try again.";
+        const errorMessage = err instanceof Error ? err.message : "An error occurred. Please try again.";
         setError(errorMessage);
         console.error("Error fetching meal plans:", err);
       } finally {

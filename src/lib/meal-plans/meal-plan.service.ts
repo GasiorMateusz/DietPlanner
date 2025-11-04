@@ -1,6 +1,6 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
-import type { Database } from '../../db/database.types.ts';
-import { DatabaseError, NotFoundError } from '../errors.ts';
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "../../db/database.types.ts";
+import { DatabaseError, NotFoundError } from "../errors.ts";
 import type {
   CreateMealPlanCommand,
   GetMealPlansResponseDto,
@@ -9,15 +9,15 @@ import type {
   TypedMealPlanRow,
   TypedMealPlanUpdate,
   UpdateMealPlanCommand,
-} from '../../types.ts';
+} from "../../types.ts";
 
 /**
  * Filters for listing meal plans.
  */
 export type ListFilters = {
   search?: string;
-  sort?: 'created_at' | 'updated_at' | 'name';
-  order?: 'asc' | 'desc';
+  sort?: "created_at" | "updated_at" | "name";
+  order?: "asc" | "desc";
 };
 
 /**
@@ -38,18 +38,18 @@ export class MealPlanService {
     filters: ListFilters,
     supabase: SupabaseClient<Database>
   ): Promise<GetMealPlansResponseDto> {
-    const { search, sort = 'updated_at', order = 'desc' } = filters;
+    const { search, sort = "updated_at", order = "desc" } = filters;
 
     // Build query
-    let query = supabase.from('meal_plans').select('*').eq('user_id', userId);
+    let query = supabase.from("meal_plans").select("*").eq("user_id", userId);
 
     // Apply search filter (case-insensitive partial match)
     if (search) {
-      query = query.ilike('name', `%${search}%`);
+      query = query.ilike("name", `%${search}%`);
     }
 
     // Apply sorting
-    query = query.order(sort, { ascending: order === 'asc' });
+    query = query.order(sort, { ascending: order === "asc" });
 
     // Execute query
     const { data, error } = await query;
@@ -125,18 +125,14 @@ export class MealPlanService {
     };
 
     // Insert into database
-    const { data, error } = await supabase
-      .from('meal_plans')
-      .insert(insertPayload)
-      .select()
-      .single();
+    const { data, error } = await supabase.from("meal_plans").insert(insertPayload).select().single();
 
     if (error) {
       throw new DatabaseError(`Failed to create meal plan: ${error.message}`, error);
     }
 
     if (!data) {
-      throw new DatabaseError('Failed to create meal plan: No data returned');
+      throw new DatabaseError("Failed to create meal plan: No data returned");
     }
 
     return data as unknown as TypedMealPlanRow;
@@ -158,15 +154,15 @@ export class MealPlanService {
     supabase: SupabaseClient<Database>
   ): Promise<TypedMealPlanRow> {
     const { data, error } = await supabase
-      .from('meal_plans')
-      .select('*')
-      .eq('id', id)
-      .eq('user_id', userId) // Explicit user filter for defense-in-depth
+      .from("meal_plans")
+      .select("*")
+      .eq("id", id)
+      .eq("user_id", userId) // Explicit user filter for defense-in-depth
       .single();
 
     if (error) {
       // Check if error is due to no rows found
-      if (error.code === 'PGRST116') {
+      if (error.code === "PGRST116") {
         throw new NotFoundError(`Meal plan not found with ID: ${id}`);
       }
       throw new DatabaseError(`Failed to get meal plan: ${error.message}`, error);
@@ -235,16 +231,16 @@ export class MealPlanService {
 
     // Update in database
     const { data, error } = await supabase
-      .from('meal_plans')
+      .from("meal_plans")
       .update(updatePayload)
-      .eq('id', id)
-      .eq('user_id', userId) // Explicit user filter for defense-in-depth
+      .eq("id", id)
+      .eq("user_id", userId) // Explicit user filter for defense-in-depth
       .select()
       .single();
 
     if (error) {
       // Check if error is due to no rows found
-      if (error.code === 'PGRST116') {
+      if (error.code === "PGRST116") {
         throw new NotFoundError(`Meal plan not found with ID: ${id}`);
       }
       throw new DatabaseError(`Failed to update meal plan: ${error.message}`, error);
@@ -265,24 +261,15 @@ export class MealPlanService {
    * @throws {NotFoundError} If the meal plan doesn't exist or doesn't belong to the user
    * @throws {DatabaseError} If the database delete fails
    */
-  static async deleteMealPlan(
-    id: string,
-    userId: string,
-    supabase: SupabaseClient<Database>
-  ): Promise<void> {
+  static async deleteMealPlan(id: string, userId: string, supabase: SupabaseClient<Database>): Promise<void> {
     // Verify plan exists and belongs to user (for better error messages)
     await this.getMealPlanById(id, userId, supabase);
 
     // Delete from database
-    const { error } = await supabase
-      .from('meal_plans')
-      .delete()
-      .eq('id', id)
-      .eq('user_id', userId); // Explicit user filter for defense-in-depth
+    const { error } = await supabase.from("meal_plans").delete().eq("id", id).eq("user_id", userId); // Explicit user filter for defense-in-depth
 
     if (error) {
       throw new DatabaseError(`Failed to delete meal plan: ${error.message}`, error);
     }
   }
 }
-

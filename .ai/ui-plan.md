@@ -19,6 +19,7 @@ The structure is split into two primary layouts, as defined in the planning sess
 ### Public Views (Public Layout)
 
 #### View: Login
+
 - **Path**: `/login`
 - **Main Purpose**: Authenticate a registered user (dietitian). (US-002)
 - **Key Information**:
@@ -34,6 +35,7 @@ The structure is split into two primary layouts, as defined in the planning sess
   - Security: Form submission handled by Supabase SDK.
 
 #### View: Register
+
 - **Path**: `/register`
 - **Main Purpose**: Create a new user account. (US-001)
 - **Key Information**:
@@ -51,6 +53,7 @@ The structure is split into two primary layouts, as defined in the planning sess
   - Security: Checkbox is mandatory for form submission.
 
 #### View: Forgot Password
+
 - **Path**: `/forgot-password`
 - **Main Purpose**: Initiate the password reset flow. (US-003)
 - **Key Information**:
@@ -63,6 +66,7 @@ The structure is split into two primary layouts, as defined in the planning sess
   - UX: A success message ("If an account exists, a reset link has been sent.") is shown to avoid user enumeration.
 
 #### View: Reset Password
+
 - **Path**: `/reset-password` (Note: This page is typically accessed via a unique link sent to the user's email).
 - **Main Purpose**: Allow a user to set a new password. (US-003)
 - **Key Information**:
@@ -77,6 +81,7 @@ The structure is split into two primary layouts, as defined in the planning sess
 ### Private Views (Private Layout)
 
 #### View: Dashboard
+
 - **Path**: `/app/dashboard`
 - **Main Purpose**: Display, manage, and initiate the creation of meal plans. (US-005)
 - **Key Information**:
@@ -98,6 +103,7 @@ The structure is split into two primary layouts, as defined in the planning sess
   - Error: Display an error state if `GET /api/meal-plans` fails.
 
 #### View: AI Chat Interface
+
 - **Path**: `/app/create`
 - **Main Purpose**: Iteratively generate the initial meal plan with AI. (US-009)
 - **Key Information**:
@@ -115,6 +121,7 @@ The structure is split into two primary layouts, as defined in the planning sess
   - Error: If the AI call fails (e.g., 502), an inline error message must be shown, allowing the user to retry.
 
 #### View: Meal Plan Editor
+
 - **Path**: `/app/editor/{id?}` (e.g., `/app/editor` for new, `/app/editor/uuid-1234` for existing)
 - **Main Purpose**: Manually edit, finalize, and save a meal plan. (US-011)
 - **Key Information**:
@@ -168,16 +175,19 @@ The structure is split into two primary layouts, as defined in the planning sess
 ## 4. Layout and Navigation Structure
 
 ### Public Layout (Astro)
+
 - **Pages**: `/login`, `/register`, `/forgot-password`, `/reset-password`.
 - **Navigation**: No persistent navigation. Users navigate via explicit links (e.g., "Need an account?").
 
 ### Private Layout (Astro)
+
 - **Pages**: `/app/dashboard`, `/app/create`, `/app/editor/{id?}`.
 - **Navigation**: Contains a persistent header.
   - Logo/App Name: Links to `/app/dashboard`.
   - "My Account" Button: Triggers the MyAccountPanel (`<Sheet>`).
 
 ### Key Navigational Components
+
 - **MyAccountPanel** (`<Sheet>`): A side panel for "Change Password" and "Delete Account" (US-004).
 - **GlobalRedirect**: A conceptual component or hook that listens to API responses. If a 401 Unauthorized is detected, it forces a redirect to `/login`.
 
@@ -186,21 +196,26 @@ The structure is split into two primary layouts, as defined in the planning sess
 This is a list of key reusable or architecturally significant components.
 
 ### StartupForm (`<Dialog>`)
+
 - **Description**: A shadcn/ui Dialog containing the structured form for starting AI generation (PRD 3.3.1).
 - **Logic**: Uses zod for client-side validation. On submit, calls `POST /api/ai/sessions`. Handles loading and error states internally.
 
 ### DeleteConfirmation (`<Dialog>`)
+
 - **Description**: A shadcn/ui Dialog to confirm deleting a meal plan (US-007).
 - **Logic**: Receives a mealPlanId prop. On confirm, calls `DELETE /api/meal-plans/{id}` and triggers a refetch of the Dashboard data.
 
 ### MyAccountPanel (`<Sheet>`)
+
 - **Description**: A shadcn/ui Sheet (side panel) for account management (US-004).
 - **Logic**: Contains forms for changing password (using Supabase SDK) and deleting the account (`DELETE /api/users/me`).
 
 ### AIChatInterface (React Component)
+
 - **Description**: The main component for the `/app/create` view.
 - **Logic**: Manages all chat-related state locally (session_id, messageHistory, isLoading). Handles `POST .../message` calls and displays inline errors on 502.
 
 ### MealPlanEditor (React Component)
+
 - **Description**: The main component for the `/app/editor/{id?}` view.
 - **Logic**: Implements the mealPlanId prop logic to switch between Create (POST) and Edit (PUT) modes. Uses zod to manage form state and validation, especially for the "Save" button's disabled state.

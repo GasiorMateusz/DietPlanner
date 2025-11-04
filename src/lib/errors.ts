@@ -5,7 +5,7 @@
 export class NotFoundError extends Error {
   constructor(message: string) {
     super(message);
-    this.name = 'NotFoundError';
+    this.name = "NotFoundError";
   }
 }
 
@@ -14,9 +14,12 @@ export class NotFoundError extends Error {
  * Used when request body or parameters fail validation.
  */
 export class ValidationError extends Error {
-  constructor(message: string, public details: unknown) {
+  constructor(
+    message: string,
+    public details: unknown
+  ) {
     super(message);
-    this.name = 'ValidationError';
+    this.name = "ValidationError";
   }
 }
 
@@ -25,9 +28,12 @@ export class ValidationError extends Error {
  * Used when Supabase operations fail unexpectedly.
  */
 export class DatabaseError extends Error {
-  constructor(message: string, public originalError?: unknown) {
+  constructor(
+    message: string,
+    public originalError?: unknown
+  ) {
     super(message);
-    this.name = 'DatabaseError';
+    this.name = "DatabaseError";
   }
 }
 
@@ -41,4 +47,3 @@ export class UnauthorizedError extends Error {
     this.name = "UnauthorizedError";
   }
 }
-

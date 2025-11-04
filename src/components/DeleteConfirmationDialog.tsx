@@ -1,11 +1,4 @@
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "./ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "./ui/dialog";
 import { Button } from "./ui/button";
 
 interface DeleteConfirmationDialogProps {
@@ -43,8 +36,8 @@ export function DeleteConfirmationDialog({
           <DialogDescription>
             {mealPlanName ? (
               <>
-                Are you sure you want to delete <strong>&quot;{mealPlanName}&quot;</strong>?
-                This action cannot be undone.
+                Are you sure you want to delete <strong>&quot;{mealPlanName}&quot;</strong>? This action cannot be
+                undone.
               </>
             ) : (
               "Are you sure you want to delete this meal plan? This action cannot be undone."
@@ -52,20 +45,10 @@ export function DeleteConfirmationDialog({
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onClose}
-            disabled={isDeleting}
-          >
+          <Button type="button" variant="outline" onClick={onClose} disabled={isDeleting}>
             Cancel
           </Button>
-          <Button
-            type="button"
-            variant="destructive"
-            onClick={handleConfirm}
-            disabled={!mealPlanId || isDeleting}
-          >
+          <Button type="button" variant="destructive" onClick={handleConfirm} disabled={!mealPlanId || isDeleting}>
             {isDeleting ? "Deleting..." : "Delete"}
           </Button>
         </DialogFooter>

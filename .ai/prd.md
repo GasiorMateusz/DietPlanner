@@ -5,6 +5,7 @@ Diet Planner (MVP)
 Diet Planner is a web application in MVP (Minimum Viable Product) version, designed to streamline the work of dietitians. The main goal of the application is to automate and accelerate the process of creating personalized, 1-day meal plans for patients. The application uses integration with an AI language model (via OpenRouter), which generates initial versions of nutritional plans based on detailed guidelines entered by the dietitian.
 
 The key workflow is based on a three-step process:
+
 1. The dietitian fills out a structured form, defining patient parameters, caloric goals, macronutrients, and exclusions.
 2. AI generates a 1-day meal plan in a conversational interface, allowing for iterative corrections.
 3. After acceptance, the generated content is transferred to an editor, where the dietitian can make final, manual modifications, save the meal plan, and export it to a .doc file ready for printing.
@@ -14,6 +15,7 @@ The application is intended exclusively for dietitians and requires account crea
 ## 2. User Problem
 
 Dietitians spend a significant amount of time manually creating individual nutritional plans for their patients. This process is complex and requires consideration of many variables, such as:
+
 - Individual caloric requirements (resulting from age, weight, height, and physical activity level)
 - Nutritional goals (e.g., weight reduction, muscle mass building)
 - Macronutrient distribution (proteins, fats, carbohydrates)
@@ -98,6 +100,7 @@ Diet Planner aims to solve this problem by offering a tool that, based on AI, dr
 ## 4. Product Boundaries
 
 The following functionalities are deliberately NOT included in the MVP version:
+
 - Use of external recipe databases or URL links for creating meal plans
 - Multimedia support (e.g., adding photos to recipes)
 - Social features, such as sharing recipes with other users
@@ -119,6 +122,7 @@ The following functionalities are deliberately NOT included in the MVP version:
 **Title: New account registration**
 **Description:** As a new user, I want to be able to create an account in the application by providing my email and password, so I can start creating meal plans.
 **Acceptance Criteria:**
+
 - Registration form contains fields: "Email address", "Password", "Repeat password", and checkbox "I accept the terms..."
 - Client-side validation checks if passwords are identical and if email has correct format
 - Checking the checkbox is required to submit the form
@@ -129,6 +133,7 @@ The following functionalities are deliberately NOT included in the MVP version:
 **Title: Application login**
 **Description:** As a registered dietitian, I want to be able to log into my account to access my saved meal plans.
 **Acceptance Criteria:**
+
 - Login page contains "Email address", "Password" fields and "Login" button
 - After providing correct credentials and clicking "Login", I am redirected to Dashboard
 - In case of providing incorrect data, error message "Invalid email or password" is displayed
@@ -138,6 +143,7 @@ The following functionalities are deliberately NOT included in the MVP version:
 **Title: Password reset**
 **Description:** As a user who forgot their password, I want to have the ability to reset it to regain account access.
 **Acceptance Criteria:**
+
 - After clicking "Forgot password", I am taken to a page where I can enter my email address
 - After providing email and confirming it, a password reset link is sent to my mailbox
 - Link is unique and has limited validity time
@@ -147,6 +153,7 @@ The following functionalities are deliberately NOT included in the MVP version:
 **Title: Account management**
 **Description:** As a logged-in user, I want to have access to "My Account" panel where I can change password or delete my account.
 **Acceptance Criteria:**
+
 - "My Account" section is available in the application
 - This section contains a password change form ("Old password", "New password", "Repeat new password")
 - There is also a "Delete account" button
@@ -159,6 +166,7 @@ The following functionalities are deliberately NOT included in the MVP version:
 **Title: Viewing saved meal plans**
 **Description:** As a dietitian, after logging in I want to see a list of all my saved meal plans so I can quickly return to them.
 **Acceptance Criteria:**
+
 - Dashboard displays all saved meal plans in list form
 - If I have no saved meal plans, I see an informative message, e.g., "You don't have any meal plans yet. Create your first plan!"
 - Each list item contains meal plan name and action buttons ("Edit/View", "Export", "Delete")
@@ -167,6 +175,7 @@ The following functionalities are deliberately NOT included in the MVP version:
 **Title: Meal plan search**
 **Description:** As a dietitian with many meal plans, I want to be able to quickly find a specific plan by its name.
 **Acceptance Criteria:**
+
 - Dashboard contains a "Search..." text field
 - As I type text in the field, the meal plan list is filtered in real-time
 - Filtering is case-insensitive
@@ -175,6 +184,7 @@ The following functionalities are deliberately NOT included in the MVP version:
 **Title: Meal plan deletion**
 **Description:** As a dietitian, I want to be able to delete a meal plan I no longer need.
 **Acceptance Criteria:**
+
 - Each meal plan on the list has a "Delete" button
 - Clicking the "Delete" button displays a modal window asking "Are you sure you want to delete this meal plan?"
 - After confirmation in the modal window, the meal plan is permanently deleted from the database and disappears from the Dashboard list
@@ -185,6 +195,7 @@ The following functionalities are deliberately NOT included in the MVP version:
 **Title: Initiating new meal plan creation (Happy Path)**
 **Description:** As a dietitian, I want to start creating a new meal plan by filling out a form with basic data and guidelines.
 **Acceptance Criteria:**
+
 - Clicking "Create new meal plan" on Dashboard opens the startup form
 - I can fill all form fields (age, weight, kcal, macro, meal names, exclusions)
 - After filling the form and clicking "Generate", I am taken to the AI chat interface, and the system sends the first query to AI
@@ -194,6 +205,7 @@ The following functionalities are deliberately NOT included in the MVP version:
 **Title: Iterative meal plan improvement in AI chat**
 **Description:** As a dietitian, I want to be able to introduce corrections to the generated meal plan through conversation with AI before accepting it.
 **Acceptance Criteria:**
+
 - Below the generated plan in chat, there is a field for entering a message
 - I can enter a corrective command, e.g., "Change lunch to vegetarian"
 - After sending the message, AI generates and displays a new, updated version of the entire meal plan
@@ -203,6 +215,7 @@ The following functionalities are deliberately NOT included in the MVP version:
 **Title: Acceptance and transition to editor**
 **Description:** As a dietitian, when I am satisfied with the meal plan version in chat, I want to accept it and move to the editor for finalization.
 **Acceptance Criteria:**
+
 - "Accept and edit manually" button is visible in the chat interface
 - After clicking the button, I am taken to the Meal Plan Editor view
 - All fields in the editor (meal names, ingredients, instructions, macro) are automatically filled with content from the last meal plan version from chat
@@ -211,6 +224,7 @@ The following functionalities are deliberately NOT included in the MVP version:
 **Title: Manual editing and meal plan saving**
 **Description:** As a dietitian, in the editor view I want to be able to manually modify each meal plan element and save it under a chosen name.
 **Acceptance Criteria:**
+
 - All text fields in the editor are editable
 - I can change meal name, ingredient list content, and preparation instructions
 - I must fill the "Meal Plan Name" field for the "Save changes" button to become active
@@ -221,6 +235,7 @@ The following functionalities are deliberately NOT included in the MVP version:
 **Title: Ready meal plan export**
 **Description:** As a dietitian, I want to be able to export a saved meal plan to a .doc file to provide it to a patient in print form.
 **Acceptance Criteria:**
+
 - "Export to .doc" button is available on Dashboard and in Editor view
 - After clicking the button, the browser starts downloading a .doc file
 - Downloaded file has a readable structure containing diet assumptions summary and complete meal plan
@@ -238,4 +253,3 @@ The following functionalities are deliberately NOT included in the MVP version:
 
 - **User retention:** Percentage of users who return to the application in subsequent weeks after registration
 - **Usage frequency:** Average number of meal plans created by an active user per month
-

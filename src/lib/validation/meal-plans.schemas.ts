@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from "zod";
 
 /**
  * Schema for validating the target macro distribution JSON blob.
@@ -23,8 +23,8 @@ const mealPlanContentDailySummarySchema = z.object({
 /**
  * Schema for validating a single meal within plan_content.meals array.
  */
-const mealPlanMealSchema = z.object({
-  name: z.string().min(1),
+export const mealPlanMealSchema = z.object({
+  name: z.string().min(1, "Meal name is required"),
   ingredients: z.string(),
   preparation: z.string(),
   summary: z.object({
@@ -50,10 +50,7 @@ export const mealPlanStartupDataSchema = z.object({
   patient_age: z.number().int().positive().max(150).nullable().optional(),
   patient_weight: z.number().positive().max(1000).nullable().optional(),
   patient_height: z.number().positive().max(300).nullable().optional(),
-  activity_level: z
-    .enum(['sedentary', 'light', 'moderate', 'high'])
-    .nullable()
-    .optional(),
+  activity_level: z.enum(["sedentary", "light", "moderate", "high"]).nullable().optional(),
   target_kcal: z.number().int().positive().max(10000).nullable().optional(),
   target_macro_distribution: targetMacroDistributionSchema.nullable().optional(),
   meal_names: z.string().max(500).nullable().optional(),
@@ -81,10 +78,7 @@ export const updateMealPlanSchema = z.object({
   patient_age: z.number().int().positive().max(150).nullable().optional(),
   patient_weight: z.number().positive().max(1000).nullable().optional(),
   patient_height: z.number().positive().max(300).nullable().optional(),
-  activity_level: z
-    .enum(['sedentary', 'light', 'moderate', 'high'])
-    .nullable()
-    .optional(),
+  activity_level: z.enum(["sedentary", "light", "moderate", "high"]).nullable().optional(),
   target_kcal: z.number().int().positive().max(10000).nullable().optional(),
   target_macro_distribution: targetMacroDistributionSchema.nullable().optional(),
   meal_names: z.string().max(500).nullable().optional(),
@@ -96,8 +90,8 @@ export const updateMealPlanSchema = z.object({
  */
 export const listMealPlansQuerySchema = z.object({
   search: z.string().max(100).optional(),
-  sort: z.enum(['created_at', 'updated_at', 'name']).optional().default('updated_at'),
-  order: z.enum(['asc', 'desc']).optional().default('desc'),
+  sort: z.enum(["created_at", "updated_at", "name"]).optional().default("updated_at"),
+  order: z.enum(["asc", "desc"]).optional().default("desc"),
 });
 
 /**
@@ -112,4 +106,3 @@ export const mealPlanIdParamSchema = z.object({
  * Alias for consistency across endpoints.
  */
 export const mealPlanIdPathParamSchema = mealPlanIdParamSchema;
-

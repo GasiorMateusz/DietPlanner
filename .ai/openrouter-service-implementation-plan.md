@@ -60,6 +60,7 @@ const response = await OpenRouterService.getChatCompletion(messages);
 Sends a chat completion request to OpenRouter API and returns the assistant's response.
 
 **Signature:**
+
 ```typescript
 static async getChatCompletion(
   messages: ChatMessage[] | OpenRouterMessage[],
@@ -73,6 +74,7 @@ async getChatCompletion(
 ```
 
 **Parameters:**
+
 - `messages`: Array of chat messages. Can include:
   - `{ role: "system", content: string }`
   - `{ role: "user", content: string }`
@@ -92,16 +94,17 @@ async getChatCompletion(
 **Throws:** `OpenRouterError` on API failures
 
 **Example:**
+
 ```typescript
 const messages = [
   { role: "system", content: "You are a helpful assistant." },
-  { role: "user", content: "What is the capital of France?" }
+  { role: "user", content: "What is the capital of France?" },
 ];
 
 const response = await OpenRouterService.getChatCompletion(messages, {
   model: "anthropic/claude-3.5-sonnet",
   temperature: 0.7,
-  max_tokens: 150
+  max_tokens: 150,
 });
 ```
 
@@ -110,6 +113,7 @@ const response = await OpenRouterService.getChatCompletion(messages, {
 Lower-level method that returns the full API response including metadata.
 
 **Signature:**
+
 ```typescript
 async sendChatCompletion(
   messages: OpenRouterMessage[],
@@ -122,6 +126,7 @@ async sendChatCompletion(
 ### 3.3 Type Definitions
 
 **OpenRouterMessage:**
+
 ```typescript
 type OpenRouterMessage =
   | { role: "system"; content: string }
@@ -130,6 +135,7 @@ type OpenRouterMessage =
 ```
 
 **ResponseFormat:**
+
 ```typescript
 type ResponseFormat =
   | { type: "json_object" }
@@ -144,6 +150,7 @@ type ResponseFormat =
 ```
 
 **ChatCompletionOptions:**
+
 ```typescript
 type ChatCompletionOptions = {
   model?: string;
@@ -184,6 +191,7 @@ Maximum retry attempts for failed requests.
 Converts messages to OpenRouter API format. Handles both `ChatMessage[]` (user/assistant only) and `OpenRouterMessage[]` (includes system role).
 
 **Implementation Notes:**
+
 - Validates message structure
 - Preserves system messages as-is
 - Converts user and assistant messages
@@ -194,6 +202,7 @@ Converts messages to OpenRouter API format. Handles both `ChatMessage[]` (user/a
 Constructs the request body for the API call.
 
 **Implementation Notes:**
+
 - Merges default options with provided options
 - Validates parameter ranges (e.g., temperature 0-2)
 - Formats response_format correctly for JSON schema
@@ -203,6 +212,7 @@ Constructs the request body for the API call.
 Constructs HTTP headers for the API request.
 
 **Returns:**
+
 - `Authorization: Bearer {apiKey}`
 - `Content-Type: application/json`
 - Additional headers from `defaultHeaders` config
@@ -212,6 +222,7 @@ Constructs HTTP headers for the API request.
 Makes the actual HTTP request with retry logic and timeout handling.
 
 **Implementation Notes:**
+
 - Implements exponential backoff for retries
 - Handles timeout with AbortController
 - Retries on network errors and 5xx status codes
@@ -222,6 +233,7 @@ Makes the actual HTTP request with retry logic and timeout handling.
 Parses and validates the API response.
 
 **Implementation Notes:**
+
 - Validates response structure
 - Extracts assistant message from choices array
 - Handles both regular and streaming responses
@@ -232,6 +244,7 @@ Parses and validates the API response.
 Centralized error handling and conversion to `OpenRouterError`.
 
 **Error Scenarios:**
+
 1. Network errors → 503 status
 2. Timeout errors → 504 status
 3. Invalid API key → 401 status
@@ -294,17 +307,20 @@ The service implements comprehensive error handling for various failure scenario
 ### 5.2 Retry Strategy
 
 **Retry Conditions:**
+
 - Network errors (connection failures)
 - 5xx server errors (500, 502, 503, 504)
 - 429 rate limit errors
 
 **Retry Logic:**
+
 - Exponential backoff: `delay = baseDelay * Math.pow(2, retryCount)`
 - Base delay: 1000ms (1 second)
 - Maximum retries: Configurable (default: 3)
 - Jitter: Random 0-100ms added to prevent thundering herd
 
 **No Retry:**
+
 - 4xx client errors (except 429)
 - Invalid API key (401)
 - Invalid parameters (400)
@@ -391,6 +407,7 @@ export class OpenRouterError extends Error {
 Create TypeScript types for all service interfaces:
 
 1. **OpenRouterMessage Types**
+
    ```typescript
    type OpenRouterMessage =
      | { role: "system"; content: string }
@@ -399,6 +416,7 @@ Create TypeScript types for all service interfaces:
    ```
 
 2. **Response Format Types**
+
    ```typescript
    type JSONSchema = {
      type: "object" | "array" | "string" | "number" | "boolean";
@@ -421,6 +439,7 @@ Create TypeScript types for all service interfaces:
    ```
 
 3. **Options and Request Types**
+
    ```typescript
    type ChatCompletionOptions = {
      model?: string;
@@ -449,6 +468,7 @@ Create TypeScript types for all service interfaces:
 ### Step 2: Implement Constructor and Configuration
 
 1. **Create Service Class**
+
    ```typescript
    export class OpenRouterService {
      private apiKey: string;
@@ -478,6 +498,7 @@ Create TypeScript types for all service interfaces:
 ### Step 3: Implement Message Formatting
 
 1. **Message Conversion Method**
+
    ```typescript
    private formatMessagesForOpenRouter(
      messages: (ChatMessage | OpenRouterMessage)[]
@@ -498,6 +519,7 @@ Create TypeScript types for all service interfaces:
 ### Step 4: Implement Request Body Building
 
 1. **Build Request Body Method**
+
    ```typescript
    private buildRequestBody(
      messages: OpenRouterMessage[],
@@ -550,6 +572,7 @@ Create TypeScript types for all service interfaces:
 ### Step 5: Implement HTTP Request Handling
 
 1. **Request Method with Retry Logic**
+
    ```typescript
    private async makeRequest(
      body: OpenRouterRequestBody,
@@ -578,6 +601,7 @@ Create TypeScript types for all service interfaces:
 ### Step 6: Implement Response Parsing
 
 1. **Parse Response Method**
+
    ```typescript
    private parseResponse(response: Response): OpenRouterApiResponse {
      // Parse JSON
@@ -597,6 +621,7 @@ Create TypeScript types for all service interfaces:
 ### Step 7: Implement Error Handling
 
 1. **Error Handler Method**
+
    ```typescript
    private handleError(error: unknown, response?: Response): never {
      // Identify error type
@@ -615,6 +640,7 @@ Create TypeScript types for all service interfaces:
 ### Step 8: Implement Public Methods
 
 1. **Static getChatCompletion**
+
    ```typescript
    static async getChatCompletion(
      messages: (ChatMessage | OpenRouterMessage)[],
@@ -630,6 +656,7 @@ Create TypeScript types for all service interfaces:
    ```
 
 2. **Instance getChatCompletion**
+
    ```typescript
    async getChatCompletion(
      messages: (ChatMessage | OpenRouterMessage)[],
@@ -660,12 +687,12 @@ Create TypeScript types for all service interfaces:
      const messages = [
        {
          role: "system",
-         content: "You are a helpful dietitian assistant..."
+         content: "You are a helpful dietitian assistant...",
        },
        {
          role: "user",
-         content: "Create a meal plan for me..."
-       }
+         content: "Create a meal plan for me...",
+       },
      ];
      ```
 
@@ -686,6 +713,7 @@ Create TypeScript types for all service interfaces:
 ### Step 11: Implement JSON Schema Response Format
 
 1. **JSON Schema Structure**
+
    ```typescript
    const responseFormat: ResponseFormat = {
      type: "json_schema",
@@ -701,9 +729,9 @@ Create TypeScript types for all service interfaces:
                kcal: { type: "number" },
                proteins: { type: "number" },
                fats: { type: "number" },
-               carbs: { type: "number" }
+               carbs: { type: "number" },
              },
-             required: ["kcal", "proteins", "fats", "carbs"]
+             required: ["kcal", "proteins", "fats", "carbs"],
            },
            meals: {
              type: "array",
@@ -719,27 +747,28 @@ Create TypeScript types for all service interfaces:
                      kcal: { type: "number" },
                      protein: { type: "number" },
                      fat: { type: "number" },
-                     carb: { type: "number" }
+                     carb: { type: "number" },
                    },
-                   required: ["kcal", "protein", "fat", "carb"]
-                 }
+                   required: ["kcal", "protein", "fat", "carb"],
+                 },
                },
-               required: ["name", "ingredients", "preparation", "summary"]
-             }
-           }
+               required: ["name", "ingredients", "preparation", "summary"],
+             },
+           },
          },
-         required: ["daily_summary", "meals"]
-       }
-     }
+         required: ["daily_summary", "meals"],
+       },
+     },
    };
    ```
 
 2. **Usage Example**
+
    ```typescript
    const response = await OpenRouterService.getChatCompletion(messages, {
      model: "anthropic/claude-3.5-sonnet",
      response_format: responseFormat,
-     temperature: 0.7
+     temperature: 0.7,
    });
 
    // Response content will be valid JSON matching the schema
@@ -801,9 +830,11 @@ Create TypeScript types for all service interfaces:
        json_schema: {
          name: "meal_plan_response",
          strict: true,
-         schema: { /* schema definition */ }
-       }
-     }
+         schema: {
+           /* schema definition */
+         },
+       },
+     },
    };
    ```
 
@@ -848,9 +879,7 @@ Create TypeScript types for all service interfaces:
 ```typescript
 import { OpenRouterService } from "./lib/ai/openrouter.service.ts";
 
-const messages = [
-  { role: "user", content: "What is the capital of France?" }
-];
+const messages = [{ role: "user", content: "What is the capital of France?" }];
 
 const response = await OpenRouterService.getChatCompletion(messages);
 console.log(response.content); // "The capital of France is Paris."
@@ -862,17 +891,17 @@ console.log(response.content); // "The capital of France is Paris."
 const messages = [
   {
     role: "system",
-    content: "You are a helpful dietitian assistant. Generate meal plans based on user requirements."
+    content: "You are a helpful dietitian assistant. Generate meal plans based on user requirements.",
   },
   {
     role: "user",
-    content: "Create a 2000 kcal meal plan for a 30-year-old active male."
-  }
+    content: "Create a 2000 kcal meal plan for a 30-year-old active male.",
+  },
 ];
 
 const response = await OpenRouterService.getChatCompletion(messages, {
   model: "anthropic/claude-3.5-sonnet",
-  temperature: 0.7
+  temperature: 0.7,
 });
 ```
 
@@ -883,9 +912,9 @@ const jsonSchema: JSONSchema = {
   type: "object",
   properties: {
     answer: { type: "string" },
-    confidence: { type: "number", minimum: 0, maximum: 1 }
+    confidence: { type: "number", minimum: 0, maximum: 1 },
   },
-  required: ["answer", "confidence"]
+  required: ["answer", "confidence"],
 };
 
 const responseFormat: ResponseFormat = {
@@ -893,17 +922,15 @@ const responseFormat: ResponseFormat = {
   json_schema: {
     name: "qa_response",
     strict: true,
-    schema: jsonSchema
-  }
+    schema: jsonSchema,
+  },
 };
 
-const messages = [
-  { role: "user", content: "What is 2+2? Respond in JSON format." }
-];
+const messages = [{ role: "user", content: "What is 2+2? Respond in JSON format." }];
 
 const response = await OpenRouterService.getChatCompletion(messages, {
   response_format: responseFormat,
-  temperature: 0.3 // Lower temperature for more structured output
+  temperature: 0.3, // Lower temperature for more structured output
 });
 
 const parsed = JSON.parse(response.content);
@@ -917,12 +944,12 @@ console.log(parsed.confidence); // 0.99
 const messages = [
   {
     role: "system",
-    content: "You are a nutrition expert."
+    content: "You are a nutrition expert.",
   },
   {
     role: "user",
-    content: "Explain the benefits of a Mediterranean diet."
-  }
+    content: "Explain the benefits of a Mediterranean diet.",
+  },
 ];
 
 const response = await OpenRouterService.getChatCompletion(messages, {
@@ -931,7 +958,7 @@ const response = await OpenRouterService.getChatCompletion(messages, {
   max_tokens: 500,
   top_p: 0.95,
   frequency_penalty: 0.3,
-  presence_penalty: 0.2
+  presence_penalty: 0.2,
 });
 ```
 
@@ -942,7 +969,7 @@ import { OpenRouterService, OpenRouterError } from "./lib/ai/openrouter.service.
 
 try {
   const response = await OpenRouterService.getChatCompletion(messages, {
-    model: "invalid-model-name"
+    model: "invalid-model-name",
   });
 } catch (error) {
   if (error instanceof OpenRouterError) {
@@ -975,12 +1002,12 @@ const service = new OpenRouterService({
   maxRetries: 5,
   defaultHeaders: {
     "HTTP-Referer": "https://myapp.com",
-    "X-Title": "Diet Planner App"
-  }
+    "X-Title": "Diet Planner App",
+  },
 });
 
 const response = await service.getChatCompletion(messages, {
-  temperature: 0.9
+  temperature: 0.9,
 });
 ```
 
@@ -992,15 +1019,12 @@ The existing `AiSessionService` can be updated to use the enhanced OpenRouter se
 
 ```typescript
 // In session.service.ts
-const assistantResponse = await OpenRouterService.getChatCompletion(
-  messagesForOpenRouter,
-  {
-    model: "anthropic/claude-3.5-sonnet",
-    temperature: 0.7,
-    max_tokens: 2000,
-    // Add response_format if structured output needed
-  }
-);
+const assistantResponse = await OpenRouterService.getChatCompletion(messagesForOpenRouter, {
+  model: "anthropic/claude-3.5-sonnet",
+  temperature: 0.7,
+  max_tokens: 2000,
+  // Add response_format if structured output needed
+});
 ```
 
 ### Migration Path
@@ -1023,4 +1047,3 @@ This implementation plan provides a comprehensive guide for building a robust Op
 - Type-safe TypeScript implementation
 
 The service follows the existing codebase patterns while extending functionality to meet the full requirements of the OpenRouter API.
-

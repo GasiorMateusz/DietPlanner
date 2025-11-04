@@ -3,6 +3,7 @@
 ## Required Extensions and Custom Types
 
 ### Extensions
+
 ```sql
 -- Enable trigram search extension (for US-006)
 -- Enables fast partial search in plan names.
@@ -10,6 +11,7 @@ CREATE EXTENSION IF NOT EXISTS "pg_trgm";
 ```
 
 ### Custom Types
+
 ```sql
 -- Custom ENUM type for activity level (PRD 3.3.1, Decision 6)
 -- Ensures data consistency for activity level input.
@@ -24,6 +26,7 @@ CREATE TYPE "public"."activity_level_enum" AS ENUM (
 ## Table Definitions
 
 ### AI Chat Sessions Table
+
 ```sql
 -- Table for storing AI telemetry data (PRD 3.5, Decision 2)
 -- Stores conversation history for analytical purposes, not accessible to users.
@@ -40,6 +43,7 @@ CREATE TABLE "public"."ai_chat_sessions" (
 ```
 
 ### Meal Plans Table
+
 ```sql
 -- Table storing saved meal plans (PRD 3.2, Decision 1)
 -- Main working table for dietitians.
@@ -72,16 +76,19 @@ CREATE TABLE "public"."meal_plans" (
 ## Table Relationships
 
 ### auth.users (1) -> (N) public.meal_plans (One-to-Many)
+
 - **Description**: One user (dietitian) can have multiple meal plans.
 - **Implementation**: Foreign key `user_id` in `meal_plans` table.
 - **Delete Behavior**: `ON DELETE CASCADE` (Decision 4) – deleting a user removes all their meal plans (according to US-004).
 
 ### auth.users (1) -> (N) public.ai_chat_sessions (One-to-Many)
+
 - **Description**: One user can have multiple AI chat sessions.
 - **Implementation**: Foreign key `user_id` in `ai_chat_sessions` table.
 - **Delete Behavior**: `ON DELETE CASCADE` (Decision 4) – deleting a user removes all their telemetry data.
 
 ### public.ai_chat_sessions (1) -> (N) public.meal_plans (One-to-Many)
+
 - **Description**: One AI chat session can be the source for multiple meal plans (although in MVP logic this will usually be a 1:1 relationship, the schema allows for 1:N).
 - **Implementation**: Foreign key `source_chat_session_id` in `meal_plans` table.
 - **Delete Behavior**: `ON DELETE SET NULL` (Decision 3) – deleting a chat session (e.g., for administrative purposes or anonymization) doesn't delete the meal plan; the plan simply loses reference to its source.
@@ -102,6 +109,7 @@ CREATE INDEX "idx_meal_plans_name_trgm" ON "public"."meal_plans" USING gin ("nam
 ## Row-Level Security (RLS) Policies
 
 ### Enable RLS
+
 ```sql
 -- Enable RLS on both tables
 ALTER TABLE "public"."meal_plans" ENABLE ROW LEVEL SECURITY;
@@ -109,6 +117,7 @@ ALTER TABLE "public"."ai_chat_sessions" ENABLE ROW LEVEL SECURITY;
 ```
 
 ### Meal Plans Policies
+
 ```sql
 -- Policies for 'meal_plans' table (Decision 5)
 -- User has full access (CRUD) only to their own resources.
@@ -119,6 +128,7 @@ WITH CHECK (auth.uid() = user_id);
 ```
 
 ### AI Chat Sessions Policies
+
 ```sql
 -- Policies for 'ai_chat_sessions' table (Decision 5, PRD 3.5)
 -- User can only create new sessions (telemetry recording).
@@ -135,6 +145,7 @@ USING (false);
 ## Additional Features
 
 ### Automatic updated_at Trigger
+
 **Purpose**: Automatic `updated_at` update (Decision 9 / US-011)
 
 For the `updated_at` column in the `meal_plans` table to be automatically updated with every change (which is needed for Dashboard sorting, US-011), a trigger function is required.

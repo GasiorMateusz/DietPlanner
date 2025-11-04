@@ -1,68 +1,76 @@
 import React from "react";
-import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
 import { registerSchema, type RegisterInput } from "@/lib/validation/auth.schemas";
+import { supabaseClient as supabase } from "@/db/supabase.client";
 
-type Props = {
+interface Props {
   className?: string;
-};
+}
 
 export default function RegisterForm({ className }: Props) {
-  const [values, setValues] = React.useState<RegisterInput>({
-    email: "",
-    password: "",
-    confirmPassword: "",
-    termsAccepted: false,
-  });
-  const [errors, setErrors] = React.useState<Partial<Record<keyof RegisterInput, string>>>({});
-  const [formError, setFormError] = React.useState<string | null>(null);
-  const [success, setSuccess] = React.useState<string | null>(null);
   const emailId = React.useId();
   const passwordId = React.useId();
   const confirmId = React.useId();
   const termsId = React.useId();
+  const [success, setSuccess] = React.useState<string | null>(null);
 
-  function handleChange<K extends keyof RegisterInput>(key: K) {
-    return (e: React.ChangeEvent<HTMLInputElement>) => {
-      const value = key === "termsAccepted" ? (e.target as HTMLInputElement).checked : e.target.value;
-      setValues((v) => ({ ...v, [key]: value as any }));
-    };
-  }
+  const form = useForm<RegisterInput>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+      confirmPassword: "",
+      termsAccepted: false,
+    },
+    mode: "onBlur",
+  });
 
-  function validate(input: RegisterInput) {
-    const parsed = registerSchema.safeParse(input);
-    if (!parsed.success) {
-      const fieldErrors: Partial<Record<keyof RegisterInput, string>> = {};
-      for (const issue of parsed.error.issues) {
-        const pathKey = issue.path[0] as keyof RegisterInput | undefined;
-        if (pathKey && !fieldErrors[pathKey]) fieldErrors[pathKey] = issue.message;
-      }
-      setErrors(fieldErrors);
-      return false;
-    }
-    setErrors({});
-    return true;
-  }
-
-  async function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setFormError(null);
+  const onSubmit = form.handleSubmit(async (data) => {
     setSuccess(null);
-    if (!validate(values)) return;
-    // Backend integration will be implemented later. For now, show a placeholder.
-    setSuccess("Form is valid. Implement registration logic next.");
-  }
+    form.clearErrors("root");
+
+    const { data: signUpData, error } = await supabase.auth.signUp({
+      email: data.email,
+      password: data.password,
+    });
+
+    if (error) {
+      // Handle specific error cases
+      if (error.message.includes("already registered") || error.message.includes("already exists")) {
+        form.setError("root", { message: "An account with this email already exists." });
+      } else if (error.message.includes("Password") || error.message.includes("password")) {
+        form.setError("root", { message: "Password does not meet security requirements." });
+      } else {
+        form.setError("root", { message: "Unable to register right now. Please try again later." });
+      }
+      return;
+    }
+
+    // Check if email confirmation is required
+    // If session is null, user needs to confirm email
+    // If session exists, user is automatically logged in
+    if (!signUpData.session) {
+      // Email confirmation required
+      setSuccess("Account created! Please check your email to confirm your account before signing in.");
+    } else {
+      // Email confirmation disabled - user is automatically logged in
+      // Use full page reload to ensure cookies are synced and middleware can detect session
+      window.location.href = "/app/dashboard";
+    }
+  });
 
   return (
     <form onSubmit={onSubmit} className={cn("space-y-4", className)} noValidate>
-      {formError ? (
+      {form.formState.errors.root ? (
         <Alert className="border-destructive/30 text-destructive">
           <AlertTitle>Unable to register</AlertTitle>
-          <AlertDescription>{formError}</AlertDescription>
+          <AlertDescription>{form.formState.errors.root.message}</AlertDescription>
         </Alert>
       ) : null}
       {success ? (
@@ -80,15 +88,13 @@ export default function RegisterForm({ className }: Props) {
           inputMode="email"
           autoComplete="email"
           placeholder="you@example.com"
-          value={values.email}
-          onChange={handleChange("email")}
-          aria-invalid={Boolean(errors.email) || undefined}
-          aria-describedby={errors.email ? `${emailId}-error` : undefined}
-          required
+          {...form.register("email")}
+          aria-invalid={Boolean(form.formState.errors.email) || undefined}
+          aria-describedby={form.formState.errors.email ? `${emailId}-error` : undefined}
         />
-        {errors.email ? (
+        {form.formState.errors.email ? (
           <p id={`${emailId}-error`} className="text-sm text-destructive">
-            {errors.email}
+            {form.formState.errors.email.message}
           </p>
         ) : null}
       </div>
@@ -99,15 +105,13 @@ export default function RegisterForm({ className }: Props) {
           id={passwordId}
           type="password"
           autoComplete="new-password"
-          value={values.password}
-          onChange={handleChange("password")}
-          aria-invalid={Boolean(errors.password) || undefined}
-          aria-describedby={errors.password ? `${passwordId}-error` : undefined}
-          required
+          {...form.register("password")}
+          aria-invalid={Boolean(form.formState.errors.password) || undefined}
+          aria-describedby={form.formState.errors.password ? `${passwordId}-error` : undefined}
         />
-        {errors.password ? (
+        {form.formState.errors.password ? (
           <p id={`${passwordId}-error`} className="text-sm text-destructive">
-            {errors.password}
+            {form.formState.errors.password.message}
           </p>
         ) : (
           <p className="text-sm text-muted-foreground">At least 8 characters with letters and numbers.</p>
@@ -120,15 +124,13 @@ export default function RegisterForm({ className }: Props) {
           id={confirmId}
           type="password"
           autoComplete="new-password"
-          value={values.confirmPassword}
-          onChange={handleChange("confirmPassword")}
-          aria-invalid={Boolean(errors.confirmPassword) || undefined}
-          aria-describedby={errors.confirmPassword ? `${confirmId}-error` : undefined}
-          required
+          {...form.register("confirmPassword")}
+          aria-invalid={Boolean(form.formState.errors.confirmPassword) || undefined}
+          aria-describedby={form.formState.errors.confirmPassword ? `${confirmId}-error` : undefined}
         />
-        {errors.confirmPassword ? (
+        {form.formState.errors.confirmPassword ? (
           <p id={`${confirmId}-error`} className="text-sm text-destructive">
-            {errors.confirmPassword}
+            {form.formState.errors.confirmPassword.message}
           </p>
         ) : null}
       </div>
@@ -138,26 +140,24 @@ export default function RegisterForm({ className }: Props) {
           id={termsId}
           type="checkbox"
           className="mt-1 h-4 w-4 rounded border-input"
-          checked={values.termsAccepted}
-          onChange={handleChange("termsAccepted")}
-          aria-invalid={Boolean(errors.termsAccepted) || undefined}
-          aria-describedby={errors.termsAccepted ? `${termsId}-error` : undefined}
-          required
+          {...form.register("termsAccepted")}
+          aria-invalid={Boolean(form.formState.errors.termsAccepted) || undefined}
+          aria-describedby={form.formState.errors.termsAccepted ? `${termsId}-error` : undefined}
         />
         <div>
           <Label htmlFor={termsId} className="cursor-pointer">
             I agree to the Terms and Privacy Policy
           </Label>
-          {errors.termsAccepted ? (
+          {form.formState.errors.termsAccepted ? (
             <p id={`${termsId}-error`} className="text-sm text-destructive">
-              {errors.termsAccepted}
+              {form.formState.errors.termsAccepted.message}
             </p>
           ) : null}
         </div>
       </div>
 
-      <Button type="submit" className="w-full">
-        Create account
+      <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
+        {form.formState.isSubmitting ? "Creating account..." : "Create account"}
       </Button>
 
       <div className="text-center text-sm">
@@ -169,5 +169,3 @@ export default function RegisterForm({ className }: Props) {
     </form>
   );
 }
-
-

@@ -179,8 +179,7 @@ export default function DashboardView() {
       });
       await refetch();
     } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "An error occurred. Please try again.";
+      const errorMessage = err instanceof Error ? err.message : "An error occurred. Please try again.";
       setDeleteError(errorMessage);
       console.error("Error deleting meal plan:", err);
     } finally {
@@ -192,17 +191,17 @@ export default function DashboardView() {
    * Handles startup form submission - navigates to create page.
    */
   const handleStartupFormSubmit = (data: MealPlanStartupData) => {
-    // Store startup data in sessionStorage to pass to create page
-    // The create page will read this and use it to initiate the AI session
+    // Store startup data in sessionStorage (read by AIChatInterface to initiate AI session)
     sessionStorage.setItem("mealPlanStartupData", JSON.stringify(data));
     setIsStartupDialogOpen(false);
-    // Navigate to create page
     window.location.href = "/app/create";
   };
 
   return (
     <div className="container mx-auto p-4 sm:p-8">
-      <h1 className="text-3xl font-bold mb-6">Meal Plans Dashboard</h1>
+      <h1 className="text-3xl font-bold mb-6" data-testid="dashboard-heading">
+        Meal Plans Dashboard
+      </h1>
 
       <DashboardHeader
         onCreateClick={handleCreateClick}
@@ -211,11 +210,7 @@ export default function DashboardView() {
       />
 
       {/* Delete error message */}
-      {deleteError && (
-        <div className="bg-destructive/10 text-destructive p-4 rounded-md mb-4">
-          {deleteError}
-        </div>
-      )}
+      {deleteError && <div className="bg-destructive/10 text-destructive p-4 rounded-md mb-4">{deleteError}</div>}
 
       {/* Meal Plans List */}
       <MealPlanList

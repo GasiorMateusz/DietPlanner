@@ -28,7 +28,6 @@ export function MealPlanList({
   onDelete,
   onCreateClick,
 }: MealPlanListProps) {
-  // Loading state
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -43,7 +42,6 @@ export function MealPlanList({
     );
   }
 
-  // Error state
   if (error) {
     return (
       <Alert className="border-destructive/50 text-destructive [&>svg]:text-destructive">
@@ -52,12 +50,10 @@ export function MealPlanList({
     );
   }
 
-  // Empty state
   if (mealPlans.length === 0) {
     return <EmptyState onCreateClick={onCreateClick} />;
   }
 
-  // List of meal plans
   return (
     <ul className="space-y-4" role="list">
       {mealPlans.map((mealPlan) => (

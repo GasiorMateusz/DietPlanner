@@ -1,8 +1,27 @@
 ---
-import Welcome from "../components/Welcome.astro";
-import Layout from "../layouts/Layout.astro";
+import LandingLayout from "../layouts/LandingLayout.astro";
+import LoginForm from "../components/auth/LoginForm";
+import { createSupabaseServerClient } from "@/db/supabase.server";
+
+// Redirect to dashboard if already logged in
+const supabase = createSupabaseServerClient(Astro.cookies);
+const {
+  data: { user },
+} = await supabase.auth.getUser();
+
+if (user) {
+  return Astro.redirect("/app/dashboard");
+}
 ---
 
-<Layout>
-  <Welcome />
-</Layout>
+<LandingLayout>
+  <div class="container mx-auto px-4 py-12 max-w-md">
+    <div class="text-center mb-8">
+      <h1 class="text-3xl font-bold mb-2">Diet Planner</h1>
+      <p class="text-muted-foreground">AI-Powered Meal Planning for Dietitians</p>
+    </div>
+    <div class="bg-card border rounded-lg p-6 shadow-sm">
+      <LoginForm client:load />
+    </div>
+  </div>
+</LandingLayout>
