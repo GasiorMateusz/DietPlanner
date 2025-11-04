@@ -8,7 +8,7 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_KEY;
 if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error(
     "PUBLIC_SUPABASE_URL and PUBLIC_SUPABASE_KEY must be set as environment variables. " +
-    "These are required for the Supabase client to function."
+      "These are required for the Supabase client to function."
   );
 }
 
