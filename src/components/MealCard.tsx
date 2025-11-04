@@ -1,16 +1,14 @@
+import { Controller, type Control } from "react-hook-form";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Textarea } from "./ui/textarea";
 import { Button } from "./ui/button";
-import type { MealPlanMeal } from "../types";
+import type { MealPlanFormData } from "../lib/validation/meal-plan-form.schema";
 
 interface MealCardProps {
-  meal: MealPlanMeal;
   mealIndex: number;
+  control: Control<MealPlanFormData>;
   isRemoveable: boolean;
-  onNameChange: (index: number, value: string) => void;
-  onIngredientsChange: (index: number, value: string) => void;
-  onPreparationChange: (index: number, value: string) => void;
   onRemove: (index: number) => void;
 }
 
@@ -20,12 +18,9 @@ interface MealCardProps {
  * plus a read-only summary display.
  */
 export function MealCard({
-  meal,
   mealIndex,
+  control,
   isRemoveable,
-  onNameChange,
-  onIngredientsChange,
-  onPreparationChange,
   onRemove,
 }: MealCardProps) {
   return (
@@ -43,59 +38,85 @@ export function MealCard({
         <Label htmlFor={`meal-name-${mealIndex}`}>
           Meal Name <span className="text-destructive">*</span>
         </Label>
-        <Input
-          id={`meal-name-${mealIndex}`}
-          value={meal.name}
-          onChange={(e) => onNameChange(mealIndex, e.target.value)}
-          placeholder="e.g., Breakfast, Lunch, Dinner"
-          required
-          data-testid={`meal-card-name-input-${mealIndex}`}
+        <Controller
+          name={`meals.${mealIndex}.name`}
+          control={control}
+          render={({ field, fieldState }) => (
+            <>
+              <Input
+                id={`meal-name-${mealIndex}`}
+                {...field}
+                placeholder="e.g., Breakfast, Lunch, Dinner"
+                aria-invalid={fieldState.invalid}
+                data-testid={`meal-card-name-input-${mealIndex}`}
+              />
+              {fieldState.error && (
+                <p className="text-sm text-destructive">{fieldState.error.message}</p>
+              )}
+            </>
+          )}
         />
       </div>
 
       <div className="space-y-2">
         <Label htmlFor={`meal-ingredients-${mealIndex}`}>Ingredients</Label>
-        <Textarea
-          id={`meal-ingredients-${mealIndex}`}
-          value={meal.ingredients}
-          onChange={(e) => onIngredientsChange(mealIndex, e.target.value)}
-          placeholder="List all ingredients with quantities..."
-          rows={4}
+        <Controller
+          name={`meals.${mealIndex}.ingredients`}
+          control={control}
+          render={({ field }) => (
+            <Textarea
+              id={`meal-ingredients-${mealIndex}`}
+              {...field}
+              placeholder="List all ingredients with quantities..."
+              rows={4}
+            />
+          )}
         />
       </div>
 
       <div className="space-y-2">
         <Label htmlFor={`meal-preparation-${mealIndex}`}>Preparation</Label>
-        <Textarea
-          id={`meal-preparation-${mealIndex}`}
-          value={meal.preparation}
-          onChange={(e) => onPreparationChange(mealIndex, e.target.value)}
-          placeholder="Step-by-step preparation instructions..."
-          rows={4}
+        <Controller
+          name={`meals.${mealIndex}.preparation`}
+          control={control}
+          render={({ field }) => (
+            <Textarea
+              id={`meal-preparation-${mealIndex}`}
+              {...field}
+              placeholder="Step-by-step preparation instructions..."
+              rows={4}
+            />
+          )}
         />
       </div>
 
       {/* Read-only meal summary */}
       <div className="border-t pt-4 mt-4">
         <div className="text-sm font-medium mb-2">Meal Summary</div>
-        <div className="grid grid-cols-4 gap-4 text-sm">
-          <div>
-            <div className="text-muted-foreground">Kcal</div>
-            <div className="font-semibold">{meal.summary.kcal}</div>
-          </div>
-          <div>
-            <div className="text-muted-foreground">Proteins</div>
-            <div className="font-semibold">{meal.summary.p}g</div>
-          </div>
-          <div>
-            <div className="text-muted-foreground">Fats</div>
-            <div className="font-semibold">{meal.summary.f}g</div>
-          </div>
-          <div>
-            <div className="text-muted-foreground">Carbs</div>
-            <div className="font-semibold">{meal.summary.c}g</div>
-          </div>
-        </div>
+        <Controller
+          name={`meals.${mealIndex}.summary`}
+          control={control}
+          render={({ field }) => (
+            <div className="grid grid-cols-4 gap-4 text-sm">
+              <div>
+                <div className="text-muted-foreground">Kcal</div>
+                <div className="font-semibold">{field.value.kcal}</div>
+              </div>
+              <div>
+                <div className="text-muted-foreground">Proteins</div>
+                <div className="font-semibold">{field.value.p}g</div>
+              </div>
+              <div>
+                <div className="text-muted-foreground">Fats</div>
+                <div className="font-semibold">{field.value.f}g</div>
+              </div>
+              <div>
+                <div className="text-muted-foreground">Carbs</div>
+                <div className="font-semibold">{field.value.c}g</div>
+              </div>
+            </div>
+          )}
+        />
       </div>
     </div>
   );

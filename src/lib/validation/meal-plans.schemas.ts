@@ -23,8 +23,8 @@ const mealPlanContentDailySummarySchema = z.object({
 /**
  * Schema for validating a single meal within plan_content.meals array.
  */
-const mealPlanMealSchema = z.object({
-  name: z.string().min(1),
+export const mealPlanMealSchema = z.object({
+  name: z.string().min(1, "Meal name is required"),
   ingredients: z.string(),
   preparation: z.string(),
   summary: z.object({

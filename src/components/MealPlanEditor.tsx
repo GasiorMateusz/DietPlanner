@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { Controller } from "react-hook-form";
 import { Alert, AlertDescription } from "./ui/alert";
 import { Skeleton } from "./ui/skeleton";
 import { Input } from "./ui/input";
@@ -6,57 +6,7 @@ import { Label } from "./ui/label";
 import { Button } from "./ui/button";
 import { DailySummaryStaticDisplay } from "./DailySummaryStaticDisplay";
 import { MealCard } from "./MealCard";
-import { parseXmlMealPlan } from "../lib/utils/meal-plan-parser";
-import { resolveDailySummary } from "../lib/utils/meal-plan-calculations";
-import { validateMealPlanForm, isMealPlanFormReady } from "../lib/validation/meal-plan-form.validation";
-import { getAuthToken } from "../lib/auth/get-auth-token";
-import type {
-  MealPlanMeal,
-  MealPlanContentDailySummary,
-  MealPlanStartupData,
-  GetMealPlanByIdResponseDto,
-  CreateMealPlanCommand,
-  UpdateMealPlanCommand,
-  MealPlanContent,
-} from "../types";
-
-/**
- * Internal state structure for the MealPlanEditor component.
- * Represents the form state before submission to API.
- */
-interface MealPlanEditorState {
-  /** Whether component is in Create or Edit mode */
-  mode: "create" | "edit";
-  /** Loading state during initialization or save */
-  isLoading: boolean;
-  /** Error message if any */
-  error: string | null;
-  /** Meal plan name (required for save) */
-  planName: string;
-  /** Array of meal objects (minimum 1 required) */
-  meals: MealPlanMeal[];
-  /** Daily nutritional summary (read-only, from AI/initial data) */
-  dailySummary: MealPlanContentDailySummary;
-  /** Optional session ID from AI chat (Create Mode only) */
-  sessionId?: string | null;
-  /** Optional startup data for display */
-  startupData?: MealPlanStartupData | null;
-  /** Optional meal plan ID (Edit Mode only) */
-  mealPlanId?: string;
-}
-
-/**
- * State bridge structure for passing data from AI Chat to Editor.
- * Stored in window object temporarily.
- */
-interface StateBridge {
-  /** Session ID from AI chat */
-  sessionId: string;
-  /** Last assistant message content (meal plan text) */
-  lastAssistantMessage: string;
-  /** Optional startup data */
-  startupData?: MealPlanStartupData;
-}
+import { useMealPlanEditor } from "./hooks/useMealPlanEditor";
 
 interface MealPlanEditorProps {
   /** Optional meal plan ID for Edit Mode */
@@ -68,346 +18,20 @@ interface MealPlanEditorProps {
  * Supports both Create Mode (from AI chat) and Edit Mode (existing meal plan).
  */
 export default function MealPlanEditor({ mealPlanId }: MealPlanEditorProps) {
-  const [editorState, setEditorState] = useState<MealPlanEditorState>({
-    mode: mealPlanId ? "edit" : "create",
-    isLoading: true,
-    error: null,
-    planName: "",
-    meals: [],
-    dailySummary: {
-      kcal: 0,
-      proteins: 0,
-      fats: 0,
-      carbs: 0,
-    },
-    mealPlanId,
-  });
-
-  /**
-   * Initialize editor: Load data from window bridge (Create Mode) or API (Edit Mode).
-   */
-  useEffect(() => {
-    const initializeEditor = async () => {
-      try {
-        setEditorState((prev) => ({ ...prev, isLoading: true, error: null }));
-
-        if (mealPlanId) {
-          // Edit Mode: Fetch existing meal plan from API
-          await loadMealPlanFromApi(mealPlanId);
-        } else {
-          // Create Mode: Read from window bridge
-          await loadMealPlanFromBridge();
-        }
-      } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : "Failed to initialize editor. Please try again.";
-        setEditorState((prev) => ({
-          ...prev,
-          isLoading: false,
-          error: errorMessage,
-        }));
-      }
-    };
-
-    initializeEditor();
-  }, [mealPlanId]);
-
-  /**
-   * Loads meal plan data from API (Edit Mode).
-   */
-  const loadMealPlanFromApi = async (id: string) => {
-    const token = await getAuthToken();
-    if (!token) {
-      window.location.href = "/auth/login";
-      return;
-    }
-
-    const response = await fetch(`/api/meal-plans/${id}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-    });
-
-    if (!response.ok) {
-      if (response.status === 401) {
-        window.location.href = "/auth/login";
-        throw new Error("Unauthorized");
-      }
-      if (response.status === 404) {
-        throw new Error("Meal plan not found or you don't have access to it.");
-      }
-      const errorData = await response.json().catch(() => ({
-        error: "Failed to load meal plan",
-      }));
-      throw new Error(errorData.error || "Failed to load meal plan");
-    }
-
-    const data: GetMealPlanByIdResponseDto = await response.json();
-
-    // Extract startup data from flat fields
-    const startupData: MealPlanStartupData = {
-      patient_age: data.patient_age,
-      patient_weight: data.patient_weight,
-      patient_height: data.patient_height,
-      activity_level: data.activity_level,
-      target_kcal: data.target_kcal,
-      target_macro_distribution: data.target_macro_distribution,
-      meal_names: data.meal_names,
-      exclusions_guidelines: data.exclusions_guidelines,
-    };
-
-    setEditorState({
-      mode: "edit",
-      isLoading: false,
-      error: null,
-      planName: data.name,
-      meals: data.plan_content.meals,
-      dailySummary: data.plan_content.daily_summary,
-      startupData,
-      mealPlanId: id,
-    });
-  };
-
-  /**
-   * Handles plan name change.
-   */
-  const handlePlanNameChange = (value: string) => {
-    setEditorState((prev) => ({ ...prev, planName: value }));
-  };
-
-  /**
-   * Handles adding a new meal card.
-   */
-  const handleMealAdd = () => {
-    const newMeal: MealPlanMeal = {
-      name: "",
-      ingredients: "",
-      preparation: "",
-      summary: {
-        kcal: 0,
-        p: 0,
-        f: 0,
-        c: 0,
-      },
-    };
-    setEditorState((prev) => ({
-      ...prev,
-      meals: [...prev.meals, newMeal],
-    }));
-  };
-
-  /**
-   * Handles removing a meal card by index.
-   */
-  const handleMealRemove = (index: number) => {
-    if (editorState.meals.length <= 1) {
-      return; // Don't remove if only one meal remains
-    }
-    setEditorState((prev) => ({
-      ...prev,
-      meals: prev.meals.filter((_, i) => i !== index),
-    }));
-  };
-
-  /**
-   * Handles updating a meal field value.
-   */
-  const handleMealChange = (index: number, field: keyof MealPlanMeal, value: string) => {
-    setEditorState((prev) => ({
-      ...prev,
-      meals: prev.meals.map((meal, i) => (i === index ? { ...meal, [field]: value } : meal)),
-    }));
-  };
-
-  /**
-   * Validates form before saving.
-   * Returns error message if validation fails, null if valid.
-   */
-  const validateForm = (): string | null => {
-    return validateMealPlanForm({
-      planName: editorState.planName,
-      meals: editorState.meals,
-    });
-  };
-
-  /**
-   * Handles form submission (save).
-   */
-  const handleSave = async () => {
-    const validationError = validateForm();
-    if (validationError) {
-      setEditorState((prev) => ({ ...prev, error: validationError }));
-      return;
-    }
-
-    setEditorState((prev) => ({ ...prev, isLoading: true, error: null }));
-
-    try {
-      const planContent: MealPlanContent = {
-        daily_summary: editorState.dailySummary,
-        meals: editorState.meals,
-      };
-
-      if (editorState.mode === "create") {
-        // Create Mode: POST /api/meal-plans
-        const command: CreateMealPlanCommand = {
-          name: editorState.planName.trim(),
-          source_chat_session_id: editorState.sessionId || null,
-          plan_content: planContent,
-          startup_data: editorState.startupData || {
-            patient_age: null,
-            patient_weight: null,
-            patient_height: null,
-            activity_level: null,
-            target_kcal: null,
-            target_macro_distribution: null,
-            meal_names: null,
-            exclusions_guidelines: null,
-          },
-        };
-
-        const token = await getAuthToken();
-        if (!token) {
-          window.location.href = "/auth/login";
-          return;
-        }
-
-        const response = await fetch("/api/meal-plans", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(command),
-        });
-
-        if (!response.ok) {
-          if (response.status === 401) {
-            window.location.href = "/auth/login";
-            return;
-          }
-          const errorData = await response.json().catch(() => ({
-            error: "Failed to create meal plan",
-          }));
-          throw new Error(errorData.error || errorData.details || "Failed to create meal plan");
-        }
-
-        // On success, redirect to dashboard
-        window.location.href = "/app/dashboard";
-      } else {
-        // Edit Mode: PUT /api/meal-plans/{id}
-        if (!editorState.mealPlanId) {
-          throw new Error("Meal plan ID is required for update");
-        }
-
-        const command: UpdateMealPlanCommand = {
-          name: editorState.planName.trim(),
-          plan_content: planContent,
-        };
-
-        const token = await getAuthToken();
-        if (!token) {
-          window.location.href = "/auth/login";
-          return;
-        }
-
-        const response = await fetch(`/api/meal-plans/${editorState.mealPlanId}`, {
-          method: "PUT",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(command),
-        });
-
-        if (!response.ok) {
-          if (response.status === 401) {
-            window.location.href = "/auth/login";
-            return;
-          }
-          if (response.status === 404) {
-            throw new Error("Meal plan not found or you don't have access to it.");
-          }
-          const errorData = await response.json().catch(() => ({
-            error: "Failed to update meal plan",
-          }));
-          throw new Error(errorData.error || errorData.details || "Failed to update meal plan");
-        }
-
-        // On success, redirect to dashboard
-        window.location.href = "/app/dashboard";
-      }
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "An error occurred while saving. Please try again.";
-      setEditorState((prev) => ({
-        ...prev,
-        isLoading: false,
-        error: errorMessage,
-      }));
-    }
-  };
-
-  /**
-   * Handles export button click (Edit Mode only) - downloads the meal plan as a .doc file.
-   */
-  const handleExport = async () => {
-    if (!editorState.mealPlanId) {
-      return;
-    }
-
-    try {
-      const token = await getAuthToken();
-      if (!token) {
-        window.location.href = "/auth/login";
-        return;
-      }
-
-      const response = await fetch(`/api/meal-plans/${editorState.mealPlanId}/export`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (response.status === 401) {
-        window.location.href = "/auth/login";
-        return;
-      }
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({
-          error: "Failed to export meal plan",
-        }));
-        throw new Error(errorData.error || "Failed to export meal plan");
-      }
-
-      // Get the filename from Content-Disposition header or use a default
-      const contentDisposition = response.headers.get("Content-Disposition");
-      let filename = "meal-plan.doc";
-      if (contentDisposition) {
-        const filenameMatch = contentDisposition.match(/filename="(.+)"/);
-        if (filenameMatch) {
-          filename = filenameMatch[1];
-        }
-      }
-
-      // Create blob and download
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-    } catch (error) {
-      console.error("Error exporting meal plan:", error);
-      setEditorState((prev) => ({
-        ...prev,
-        error: error instanceof Error ? error.message : "Failed to export meal plan",
-      }));
-    }
-  };
+  const {
+    form,
+    fields,
+    append,
+    remove,
+    isLoading,
+    error,
+    dailySummary,
+    startupData,
+    sessionId,
+    mode,
+    handleSave,
+    handleExport,
+  } = useMealPlanEditor({ mealPlanId });
 
   /**
    * Handles cancel button click - navigates back to dashboard.
@@ -417,55 +41,40 @@ export default function MealPlanEditor({ mealPlanId }: MealPlanEditorProps) {
   };
 
   /**
-   * Checks if form is ready to be saved.
+   * Handles adding a new meal card.
    */
-  const isFormReady = (): boolean => {
-    return isMealPlanFormReady(
-      {
-        planName: editorState.planName,
-        meals: editorState.meals,
+  const handleMealAdd = () => {
+    append({
+      name: "",
+      ingredients: "",
+      preparation: "",
+      summary: {
+        kcal: 0,
+        p: 0,
+        f: 0,
+        c: 0,
       },
-      editorState.isLoading
-    );
-  };
-
-  /**
-   * Loads meal plan data from sessionStorage bridge (Create Mode).
-   * Parses AI-generated meal plan text into structured format.
-   */
-  const loadMealPlanFromBridge = async () => {
-    // Read from sessionStorage
-    const storedData = sessionStorage.getItem("mealPlanBridge");
-
-    if (!storedData) {
-      throw new Error("No meal plan data available. Please start from the dashboard.");
-    }
-
-    const bridge: StateBridge = JSON.parse(storedData);
-
-    // Clear sessionStorage after reading
-    sessionStorage.removeItem("mealPlanBridge");
-
-    // Parse XML structure from AI message
-    const { meals, dailySummary } = parseXmlMealPlan(bridge.lastAssistantMessage);
-
-    // If daily summary from XML is empty, fall back to calculated values
-    const finalDailySummary = resolveDailySummary(dailySummary, bridge.startupData);
-
-    setEditorState({
-      mode: "create",
-      isLoading: false,
-      error: null,
-      planName: "",
-      meals,
-      dailySummary: finalDailySummary,
-      sessionId: bridge.sessionId,
-      startupData: bridge.startupData,
     });
   };
 
+  /**
+   * Handles removing a meal card by index.
+   */
+  const handleMealRemove = (index: number) => {
+    if (fields.length > 1) {
+      remove(index);
+    }
+  };
+
+  /**
+   * Checks if form is ready to be saved.
+   */
+  const isFormReady = (): boolean => {
+    return form.formState.isValid && !isLoading && fields.length > 0;
+  };
+
   // Show loading state
-  if (editorState.isLoading) {
+  if (isLoading && fields.length === 0) {
     return (
       <div className="container mx-auto p-4 sm:p-8 max-w-4xl">
         <Skeleton className="h-12 w-64 mb-6" />
@@ -477,11 +86,11 @@ export default function MealPlanEditor({ mealPlanId }: MealPlanEditorProps) {
   }
 
   // Show error state
-  if (editorState.error) {
+  if (error && fields.length === 0) {
     return (
       <div className="container mx-auto p-4 sm:p-8 max-w-4xl">
         <Alert className="border-destructive bg-destructive/10 text-destructive">
-          <AlertDescription>{editorState.error}</AlertDescription>
+          <AlertDescription>{error}</AlertDescription>
         </Alert>
       </div>
     );
@@ -491,35 +100,45 @@ export default function MealPlanEditor({ mealPlanId }: MealPlanEditorProps) {
   return (
     <div className="container mx-auto p-4 sm:p-8 max-w-4xl">
       <h1 className="text-3xl font-bold mb-6">
-        {editorState.mode === "create" ? "Create Meal Plan" : "Edit Meal Plan"}
+        {mode === "create" ? "Create Meal Plan" : "Edit Meal Plan"}
       </h1>
 
       {/* Error Alert */}
-      {editorState.error && (
+      {error && (
         <Alert className="mb-6 border-destructive bg-destructive/10 text-destructive">
-          <AlertDescription>{editorState.error}</AlertDescription>
+          <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
 
       {/* Form Content */}
-      <div className="space-y-6">
+      <form className="space-y-6" onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
         {/* Plan Name Input */}
         <div className="space-y-2">
           <Label htmlFor="plan-name">
             Meal Plan Name <span className="text-destructive">*</span>
           </Label>
-          <Input
-            id="plan-name"
-            value={editorState.planName}
-            onChange={(e) => handlePlanNameChange(e.target.value)}
-            placeholder="Enter meal plan name..."
-            required
-            data-testid="meal-plan-editor-plan-name-input"
+          <Controller
+            name="planName"
+            control={form.control}
+            render={({ field, fieldState }) => (
+              <>
+                <Input
+                  id="plan-name"
+                  {...field}
+                  placeholder="Enter meal plan name..."
+                  aria-invalid={fieldState.invalid}
+                  data-testid="meal-plan-editor-plan-name-input"
+                />
+                {fieldState.error && (
+                  <p className="text-sm text-destructive">{fieldState.error.message}</p>
+                )}
+              </>
+            )}
           />
         </div>
 
         {/* Daily Summary Display */}
-        <DailySummaryStaticDisplay summary={editorState.dailySummary} />
+        <DailySummaryStaticDisplay summary={dailySummary} />
 
         {/* Meals List */}
         <div className="space-y-4">
@@ -530,41 +149,40 @@ export default function MealPlanEditor({ mealPlanId }: MealPlanEditorProps) {
             </Button>
           </div>
 
-          {editorState.meals.length === 0 ? (
+          {fields.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               No meals added yet. Click "Add Meal" to get started.
             </div>
           ) : (
             <div className="space-y-4">
-              {editorState.meals.map((meal, index) => (
+              {fields.map((field, index) => (
                 <MealCard
-                  key={index}
-                  meal={meal}
+                  key={field.id}
                   mealIndex={index}
-                  isRemoveable={editorState.meals.length > 1}
-                  onNameChange={(idx, value) => handleMealChange(idx, "name", value)}
-                  onIngredientsChange={(idx, value) => handleMealChange(idx, "ingredients", value)}
-                  onPreparationChange={(idx, value) => handleMealChange(idx, "preparation", value)}
+                  control={form.control}
+                  isRemoveable={fields.length > 1}
                   onRemove={handleMealRemove}
                 />
               ))}
             </div>
+          )}
+          {form.formState.errors.meals && (
+            <p className="text-sm text-destructive">{form.formState.errors.meals.message}</p>
           )}
         </div>
 
         {/* Form Actions */}
         <div className="flex gap-4 pt-4 border-t">
           <Button
-            type="button"
+            type="submit"
             variant="default"
-            onClick={handleSave}
             disabled={!isFormReady()}
             data-testid="meal-plan-editor-save-button"
           >
-            {editorState.isLoading ? "Saving..." : "Save changes"}
+            {isLoading ? "Saving..." : "Save changes"}
           </Button>
 
-          {editorState.mode === "edit" && (
+          {mode === "edit" && (
             <Button type="button" variant="outline" onClick={handleExport}>
               Export to .doc
             </Button>
@@ -574,7 +192,7 @@ export default function MealPlanEditor({ mealPlanId }: MealPlanEditorProps) {
             Cancel
           </Button>
         </div>
-      </div>
+      </form>
     </div>
   );
 }
