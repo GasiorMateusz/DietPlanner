@@ -1,0 +1,190 @@
+name: Pull Request Checks
+
+on:
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  lint:
+    name: Lint Code
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run linter
+        run: npm run lint
+
+  unit-test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    needs: [lint]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run unit tests with coverage
+        run: npm run test:coverage
+        env:
+          SUPABASE_URL: ${{ secrets.INTEGRATION_SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.INTEGRATION_SUPABASE_KEY }}
+          PUBLIC_SUPABASE_URL: ${{ secrets.INTEGRATION_PUBLIC_SUPABASE_URL }}
+          PUBLIC_SUPABASE_KEY: ${{ secrets.INTEGRATION_PUBLIC_SUPABASE_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.INTEGRATION_OPENROUTER_API_KEY }}
+
+      - name: Upload coverage reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-coverage
+          path: coverage
+          retention-days: 7
+
+  e2e-test:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    needs: [lint]
+    env:
+      SUPABASE_URL: ${{ secrets.INTEGRATION_SUPABASE_URL }}
+      SUPABASE_KEY: ${{ secrets.INTEGRATION_SUPABASE_KEY }}
+      PUBLIC_SUPABASE_URL: ${{ secrets.INTEGRATION_PUBLIC_SUPABASE_URL }}
+      PUBLIC_SUPABASE_KEY: ${{ secrets.INTEGRATION_PUBLIC_SUPABASE_KEY }}
+      OPENROUTER_API_KEY: ${{ secrets.INTEGRATION_OPENROUTER_API_KEY }}
+      E2E_USERNAME: ${{ secrets.INTEGRATION_E2E_USERNAME }}
+      E2E_PASSWORD: ${{ secrets.INTEGRATION_E2E_PASSWORD }}
+      PLAYWRIGHT_BASE_URL: ${{ secrets.INTEGRATION_PLAYWRIGHT_BASE_URL }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run E2E tests
+        run: npm run test:e2e
+
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: playwright-report
+          retention-days: 7
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-results
+          path: test-results
+          retention-days: 7
+
+  status-comment:
+    name: PR Status Comment
+    runs-on: ubuntu-latest
+    needs: [lint, unit-test, e2e-test]
+    if: success()
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download coverage artifacts
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: unit-test-coverage
+          path: coverage
+
+      - name: Read coverage summary
+        id: coverage
+        run: |
+          if [ -f coverage/coverage-summary.json ]; then
+            COVERAGE=$(node -p "require('./coverage/coverage-summary.json').total.lines.pct")
+            echo "coverage=$COVERAGE" >> $GITHUB_OUTPUT
+          else
+            echo "coverage=N/A" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Find existing comment
+        uses: actions/github-script@v7
+        id: find-comment
+        with:
+          script: |
+            const comments = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            
+            const botComment = comments.data.find(comment => 
+              comment.user.type === 'Bot' && 
+              comment.body.includes('Pull Request Checks Status')
+            );
+            
+            return botComment ? botComment.id : null;
+
+      - name: Create or update PR comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const coverage = '${{ steps.coverage.outputs.coverage }}';
+            const lintStatus = '${{ needs.lint.result }}' === 'success' ? '✅ Passed' : '❌ Failed';
+            const unitTestStatus = '${{ needs.unit-test.result }}' === 'success' ? '✅ Passed' : '❌ Failed';
+            const e2eTestStatus = '${{ needs.e2e-test.result }}' === 'success' ? '✅ Passed' : '❌ Failed';
+            
+            const allPassed = '${{ needs.lint.result }}' === 'success' && 
+                             '${{ needs.unit-test.result }}' === 'success' && 
+                             '${{ needs.e2e-test.result }}' === 'success';
+            
+            const body = `## 🔍 Pull Request Checks Status
+            
+            | Check | Status |
+            |-------|--------|
+            | Linting | ${lintStatus} |
+            | Unit Tests | ${unitTestStatus} |
+            | E2E Tests | ${e2eTestStatus} |
+            | Coverage | ${coverage !== 'N/A' ? coverage + '%' : 'N/A'} |
+            
+            ${allPassed ? 'All checks have passed successfully! ✅' : 'Some checks have failed. Please review the details above. ❌'}`;
+            
+            const commentId = '${{ steps.find-comment.outputs.result }}';
+            
+            if (commentId) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: commentId,
+                body: body
+              });
+            } else {
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: body
+              });
+            }
