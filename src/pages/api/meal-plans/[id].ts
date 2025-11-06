@@ -1,6 +1,6 @@
 import type { APIRoute } from "astro";
 import { DatabaseError, NotFoundError } from "../../../lib/errors.ts";
-import { MealPlanService } from "../../../lib/meal-plans/meal-plan.service.ts";
+import * as MealPlanService from "../../../lib/meal-plans/meal-plan.service.ts";
 import { mealPlanIdParamSchema, updateMealPlanSchema } from "../../../lib/validation/meal-plans.schemas.ts";
 import type { UpdateMealPlanCommand } from "../../../types.ts";
 import { getUserFromRequest } from "@/lib/auth/session.service.js";

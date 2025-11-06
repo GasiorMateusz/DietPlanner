@@ -8,7 +8,7 @@
 
 1. **StartupFormDialog.tsx** (368 lines)
    - **Functionality**: Collects patient data and dietary requirements for AI meal plan generation
-   - **Fields**: 
+   - **Fields**:
      - Patient info: age, weight, height (numbers)
      - Activity level (select)
      - Target calories (number)
@@ -57,6 +57,7 @@
 ### 1.2 Form-Related Logic Identification
 
 #### StartupFormDialog.tsx
+
 ```typescript
 // Current issues:
 - Manual state management with useState for all fields (lines 23-32)
@@ -68,6 +69,7 @@
 ```
 
 #### MealPlanEditor.tsx
+
 ```typescript
 // Current issues:
 - Complex editorState object managing all form state (lines 71-84)
@@ -78,6 +80,7 @@
 ```
 
 #### Auth Forms (LoginForm, RegisterForm)
+
 ```typescript
 // Current issues:
 - Manual state for values and errors (similar pattern)
@@ -109,6 +112,7 @@
 ### 1.4 API Call Locations
 
 #### Direct fetch calls in components:
+
 - **MealPlanEditor.tsx**:
   - `loadMealPlanFromApi` (lines 117-169) - GET `/api/meal-plans/{id}`
   - `handleSave` (lines 236-348) - POST `/api/meal-plans` or PUT `/api/meal-plans/{id}`
@@ -129,6 +133,7 @@
   - GET `/api/meal-plans` with query params
 
 #### Common patterns:
+
 - All fetch calls include auth token retrieval
 - Duplicated error handling (401 redirects, error parsing)
 - No centralized API client
@@ -143,6 +148,7 @@
 ### StartupFormDialog.tsx Analysis
 
 **Current State:**
+
 - 368 lines of code with manual state management
 - Uses `useState` for form data and errors separately
 - Complex number parsing logic (`handleNumberInputChange`)
@@ -153,6 +159,7 @@
 **React Hook Form Integration Strategy:**
 
 **Option A: Full RHF Integration**
+
 - Use `useForm` with Zod resolver (`@hookform/resolvers/zod`)
 - Replace all `useState` calls with RHF form state
 - Use `Controller` for complex inputs (Select, macro distribution)
@@ -160,6 +167,7 @@
 - Use `watch` for conditional validation (macro sum = 100%)
 
 **Pros:**
+
 - Significant code reduction (estimated 40-50% reduction)
 - Automatic validation integration with Zod
 - Better performance (fewer re-renders)
@@ -167,19 +175,23 @@
 - Automatic error handling
 
 **Cons:**
+
 - Learning curve for team
 - Need to refactor number input handling
 - Macro distribution structure might need adjustment
 
 **Option B: Hybrid Approach**
+
 - Keep manual state for complex nested structures
 - Use RHF for simple fields only
 
 **Pros:**
+
 - Less invasive change
 - Can migrate incrementally
 
 **Cons:**
+
 - Doesn't fully leverage RHF benefits
 - Still have manual state management
 
@@ -188,13 +200,14 @@
 **Specific Refactoring Areas:**
 
 1. **Number Input Handling** (lines 45-50):
+
    ```typescript
    // Current: Manual parsing with null handling
    const handleNumberInputChange = (field, value) => {
      const numValue = value === "" ? null : parseFloat(value);
      // ...
    }
-   
+
    // Refactored: Use RHF with valueAsNumber and custom transform
    <Controller
      name="patient_age"
@@ -214,6 +227,7 @@
    ```
 
 2. **Macro Distribution** (lines 52-71):
+
    ```typescript
    // Current: Nested state updates
    const handleMacroChange = (macro, value) => {
@@ -225,7 +239,7 @@
        }
      }));
    }
-   
+
    // Refactored: Use RHF with nested field paths
    <Controller
      name="target_macro_distribution.p_perc"
@@ -245,6 +259,7 @@
    ```
 
 3. **Validation** (lines 99-111):
+
    ```typescript
    // Current: Manual Zod validation and error mapping
    const validation = mealPlanStartupDataSchema.safeParse(dataToValidate);
@@ -255,20 +270,21 @@
      });
      setErrors(fieldErrors);
    }
-   
+
    // Refactored: Automatic with zodResolver
    const form = useForm<MealPlanStartupData>({
      resolver: zodResolver(mealPlanStartupDataSchema),
      defaultValues: {
        patient_age: null,
        // ...
-     }
+     },
    });
    ```
 
 ### MealPlanEditor.tsx Analysis
 
 **Current State:**
+
 - 581 lines with complex state management
 - Two modes: create and edit
 - Dynamic meal array
@@ -278,12 +294,14 @@
 **React Hook Form Integration Strategy:**
 
 **Challenges:**
+
 1. Dynamic meal array - Perfect use case for `useFieldArray`
 2. Two initialization modes - Need different default values
 3. Daily summary is read-only - Not part of form
 4. API calls should be separated from form logic
 
 **Approach:**
+
 - Use `useForm` with `useFieldArray` for meals
 - Separate API calls into custom hooks or services
 - Use form mode/reset for switching between create/edit
@@ -292,6 +310,7 @@
 **Specific Refactoring Areas:**
 
 1. **Dynamic Meal Array** (lines 181-220):
+
    ```typescript
    // Current: Manual array manipulation
    const handleMealAdd = () => {
@@ -301,13 +320,13 @@
        meals: [...prev.meals, newMeal]
      }));
    };
-   
+
    // Refactored: useFieldArray
    const { fields, append, remove } = useFieldArray({
      control,
      name: "meals"
    });
-   
+
    const handleMealAdd = () => {
      append({
        name: "",
@@ -319,6 +338,7 @@
    ```
 
 2. **Form Initialization** (lines 89-112):
+
    ```typescript
    // Current: useEffect with conditional logic
    useEffect(() => {
@@ -328,17 +348,15 @@
        loadMealPlanFromBridge();
      }
    }, [mealPlanId]);
-   
+
    // Refactored: Use reset() with loaded data
    useEffect(() => {
      const loadData = async () => {
-       const data = mealPlanId 
-         ? await loadMealPlanFromApi(mealPlanId)
-         : await loadMealPlanFromBridge();
-       
+       const data = mealPlanId ? await loadMealPlanFromApi(mealPlanId) : await loadMealPlanFromBridge();
+
        reset({
          planName: data.planName,
-         meals: data.meals
+         meals: data.meals,
        });
      };
      loadData();
@@ -346,25 +364,27 @@
    ```
 
 3. **Validation** (lines 226-231):
+
    ```typescript
    // Current: Manual validation function
    const validateForm = (): string | null => {
      return validateMealPlanForm({
        planName: editorState.planName,
-       meals: editorState.meals
+       meals: editorState.meals,
      });
    };
-   
+
    // Refactored: Use Zod schema with RHF
    const form = useForm<MealPlanFormData>({
      resolver: zodResolver(mealPlanFormSchema),
-     mode: "onChange" // or "onBlur"
+     mode: "onChange", // or "onBlur"
    });
    ```
 
 ### AIChatInterface.tsx Analysis
 
 **Current State:**
+
 - Simple textarea input
 - Complex chat state management
 - Optimistic UI updates
@@ -373,11 +393,13 @@
 **React Hook Form Integration Strategy:**
 
 This is a good candidate for RHF, but simpler than others. The main benefit is:
+
 - Automatic validation
 - Cleaner form submission
 - Better integration with validation
 
 **Specific Refactoring:**
+
 ```typescript
 // Current: Manual state and validation
 const [inputValue, setInputValue] = useState("");
@@ -385,11 +407,14 @@ const validation = validateChatMessage(inputValue, MAX_MESSAGE_LENGTH);
 
 // Refactored: RHF with validation
 const form = useForm<{ message: string }>({
-  resolver: zodResolver(z.object({
-    message: z.string()
-      .min(1, "Message cannot be empty")
-      .max(MAX_MESSAGE_LENGTH, `Message must be less than ${MAX_MESSAGE_LENGTH} characters`)
-  }))
+  resolver: zodResolver(
+    z.object({
+      message: z
+        .string()
+        .min(1, "Message cannot be empty")
+        .max(MAX_MESSAGE_LENGTH, `Message must be less than ${MAX_MESSAGE_LENGTH} characters`),
+    })
+  ),
 });
 
 const onSubmit = form.handleSubmit(async (data) => {
@@ -400,6 +425,7 @@ const onSubmit = form.handleSubmit(async (data) => {
 ### Auth Forms Analysis
 
 **Current State:**
+
 - LoginForm: Simple email/password
 - RegisterForm: Email, password, confirm password, terms
 - Manual validation with Zod
@@ -408,11 +434,13 @@ const onSubmit = form.handleSubmit(async (data) => {
 **React Hook Form Integration Strategy:**
 
 These are straightforward candidates for RHF. Benefits:
+
 - Remove manual state management
 - Automatic validation
 - Cleaner code
 
 **Specific Refactoring:**
+
 ```typescript
 // Current: Manual state
 const [values, setValues] = useState({ email: "", password: "" });
@@ -436,6 +464,7 @@ const form = useForm<LoginInput>({
 ### API Call Management Considerations
 
 **Current Issues:**
+
 - API calls scattered across components
 - Duplicated error handling
 - Auth token retrieval in every call
@@ -470,11 +499,13 @@ const form = useForm<LoginInput>({
 #### 2.1.1 Create API Client Layer
 
 **New Files:**
+
 - `src/lib/api/meal-plans.client.ts`
 - `src/lib/api/ai-chat.client.ts`
 - `src/lib/api/base.client.ts` (shared utilities)
 
 **Structure:**
+
 ```typescript
 // src/lib/api/base.client.ts
 export async function getAuthHeaders(): Promise<HeadersInit> {
@@ -494,14 +525,14 @@ export async function handleApiResponse<T>(response: Response): Promise<T> {
     window.location.href = "/auth/login";
     throw new Error("Unauthorized");
   }
-  
+
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({
       error: "An error occurred",
     }));
     throw new Error(errorData.error || "An error occurred");
   }
-  
+
   return response.json();
 }
 
@@ -512,7 +543,7 @@ export const mealPlansApi = {
     const response = await fetch(`/api/meal-plans/${id}`, { headers });
     return handleApiResponse(response);
   },
-  
+
   async create(command: CreateMealPlanCommand): Promise<void> {
     const headers = await getAuthHeaders();
     const response = await fetch("/api/meal-plans", {
@@ -522,7 +553,7 @@ export const mealPlansApi = {
     });
     await handleApiResponse(response);
   },
-  
+
   async update(id: string, command: UpdateMealPlanCommand): Promise<void> {
     const headers = await getAuthHeaders();
     const response = await fetch(`/api/meal-plans/${id}`, {
@@ -532,7 +563,7 @@ export const mealPlansApi = {
     });
     await handleApiResponse(response);
   },
-  
+
   async export(id: string): Promise<Blob> {
     const headers = await getAuthHeaders();
     const response = await fetch(`/api/meal-plans/${id}/export`, { headers });
@@ -545,7 +576,7 @@ export const mealPlansApi = {
     }
     return response.blob();
   },
-  
+
   async delete(id: string): Promise<void> {
     const headers = await getAuthHeaders();
     const response = await fetch(`/api/meal-plans/${id}`, {
@@ -560,12 +591,14 @@ export const mealPlansApi = {
 #### 2.1.2 Create Custom Hooks for Form Logic
 
 **New Files:**
+
 - `src/components/hooks/useMealPlanEditor.ts`
 - `src/components/hooks/useStartupForm.ts`
 - `src/components/hooks/useAIChatForm.ts`
 - `src/components/hooks/useMealPlanExport.ts`
 
 **Example Structure:**
+
 ```typescript
 // src/components/hooks/useMealPlanEditor.ts
 export function useMealPlanEditor(mealPlanId?: string) {
@@ -573,16 +606,16 @@ export function useMealPlanEditor(mealPlanId?: string) {
     resolver: zodResolver(mealPlanFormSchema),
     mode: "onChange",
   });
-  
+
   const { fields, append, remove } = useFieldArray({
     control: form.control,
     name: "meals",
   });
-  
+
   // Load data logic
   // Save logic
   // Export logic
-  
+
   return {
     form,
     fields,
@@ -968,6 +1001,7 @@ const onSubmit = form.handleSubmit(async (data) => {
 #### 2.3.1 Extract Form Logic to Custom Hooks
 
 **useStartupForm.ts:**
+
 ```typescript
 export function useStartupForm(onSubmit: (data: MealPlanStartupData) => void) {
   const form = useForm<MealPlanStartupData>({
@@ -998,6 +1032,7 @@ export function useStartupForm(onSubmit: (data: MealPlanStartupData) => void) {
 ```
 
 **useMealPlanEditor.ts:**
+
 ```typescript
 export function useMealPlanEditor(mealPlanId?: string) {
   const form = useForm<MealPlanFormData>({
@@ -1015,10 +1050,8 @@ export function useMealPlanEditor(mealPlanId?: string) {
     const loadData = async () => {
       try {
         form.reset({ isLoading: true });
-        const data = mealPlanId
-          ? await mealPlansApi.getById(mealPlanId)
-          : await loadFromBridge();
-        
+        const data = mealPlanId ? await mealPlansApi.getById(mealPlanId) : await loadFromBridge();
+
         form.reset({
           planName: data.planName,
           meals: data.meals,
@@ -1074,12 +1107,14 @@ export function useMealPlanEditor(mealPlanId?: string) {
 #### 2.3.2 Simplify Component Code
 
 **Before (MealPlanEditor.tsx - 581 lines):**
+
 - Complex state management
 - Inline API calls
 - Manual validation
 - Mixed concerns
 
 **After (MealPlanEditor.tsx - ~150 lines):**
+
 ```typescript
 export default function MealPlanEditor({ mealPlanId }: MealPlanEditorProps) {
   const { form, fields, append, remove, handleSave, isFormReady } = useMealPlanEditor(mealPlanId);
@@ -1091,7 +1126,7 @@ export default function MealPlanEditor({ mealPlanId }: MealPlanEditorProps) {
   return (
     <div className="container mx-auto p-4 sm:p-8 max-w-4xl">
       <h1>Meal Plan Editor</h1>
-      
+
       <form onSubmit={handleSave}>
         <Controller
           name="planName"
@@ -1100,9 +1135,9 @@ export default function MealPlanEditor({ mealPlanId }: MealPlanEditorProps) {
             <Input {...field} placeholder="Plan name" />
           )}
         />
-        
+
         <DailySummaryStaticDisplay summary={dailySummary} />
-        
+
         {fields.map((field, index) => (
           <MealCard
             key={field.id}
@@ -1111,11 +1146,11 @@ export default function MealPlanEditor({ mealPlanId }: MealPlanEditorProps) {
             onRemove={() => remove(index)}
           />
         ))}
-        
+
         <Button type="button" onClick={() => append(defaultMeal)}>
           Add Meal
         </Button>
-        
+
         <Button type="submit" disabled={!isFormReady}>
           Save
         </Button>
@@ -1134,6 +1169,7 @@ As outlined in section 2.1.1, create centralized API clients.
 #### 2.4.2 Create Custom Hooks for API Operations
 
 **useMealPlanExport.ts:**
+
 ```typescript
 export function useMealPlanExport() {
   const [isExporting, setIsExporting] = useState(false);
@@ -1142,13 +1178,13 @@ export function useMealPlanExport() {
   const exportMealPlan = async (id: string) => {
     setIsExporting(true);
     setError(null);
-    
+
     try {
       const blob = await mealPlansApi.export(id);
-      
+
       // Extract filename from blob or use default
       const filename = `meal-plan-${id}.doc`;
-      
+
       // Download blob
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -1171,6 +1207,7 @@ export function useMealPlanExport() {
 ```
 
 **useAIChat.ts:**
+
 ```typescript
 export function useAIChat() {
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -1191,13 +1228,13 @@ export function useAIChat() {
 
   const sendMessage = async (message: UserChatMessage) => {
     if (!sessionId) throw new Error("No active session");
-    
+
     setIsLoading(true);
     setError(null);
-    
+
     // Optimistic update
     setMessages((prev) => [...prev, message]);
-    
+
     try {
       const response = await aiChatApi.sendMessage(sessionId, message);
       setMessages((prev) => [...prev, response.message]);
@@ -1225,6 +1262,7 @@ export function useAIChat() {
 #### 2.4.3 Update Components to Use API Clients
 
 **Before:**
+
 ```typescript
 const response = await fetch(`/api/meal-plans/${id}`, {
   headers: {
@@ -1235,6 +1273,7 @@ const response = await fetch(`/api/meal-plans/${id}`, {
 ```
 
 **After:**
+
 ```typescript
 const data = await mealPlansApi.getById(id);
 ```
@@ -1244,6 +1283,7 @@ const data = await mealPlansApi.getById(id);
 #### 2.5.1 Unit Testing for Forms
 
 **Test Form Validation:**
+
 ```typescript
 // src/test/unit/StartupFormDialog.test.tsx
 import { render, screen, waitFor } from "@testing-library/react";
@@ -1254,10 +1294,10 @@ describe("StartupFormDialog", () => {
   it("should validate required fields", async () => {
     const onSubmit = vi.fn();
     render(<StartupFormDialog open={true} onClose={vi.fn()} onSubmit={onSubmit} />);
-    
+
     const submitButton = screen.getByTestId("startup-form-generate-button");
     await userEvent.click(submitButton);
-    
+
     // RHF automatically handles validation
     await waitFor(() => {
       expect(onSubmit).not.toHaveBeenCalled();
@@ -1275,12 +1315,13 @@ describe("StartupFormDialog", () => {
 ```
 
 **Test useFieldArray:**
+
 ```typescript
 // src/test/unit/MealPlanEditor.test.tsx
 describe("MealPlanEditor", () => {
   it("should add new meal", async () => {
     const { result } = renderHook(() => useMealPlanEditor());
-    
+
     act(() => {
       result.current.append({
         name: "Breakfast",
@@ -1289,7 +1330,7 @@ describe("MealPlanEditor", () => {
         summary: { kcal: 0, p: 0, f: 0, c: 0 },
       });
     });
-    
+
     expect(result.current.fields).toHaveLength(1);
   });
 
@@ -1302,6 +1343,7 @@ describe("MealPlanEditor", () => {
 #### 2.5.2 Integration Testing
 
 **Test Form Submission:**
+
 ```typescript
 // src/test/integration/meal-plan-creation.test.tsx
 describe("Meal Plan Creation Flow", () => {
@@ -1309,17 +1351,17 @@ describe("Meal Plan Creation Flow", () => {
     // Mock API
     const mockCreate = vi.fn().mockResolvedValue({});
     vi.spyOn(mealPlansApi, "create").mockImplementation(mockCreate);
-    
+
     render(<MealPlanEditor />);
-    
+
     // Fill form
     await userEvent.type(screen.getByLabelText("Plan Name"), "Test Plan");
     await userEvent.click(screen.getByText("Add Meal"));
     await userEvent.type(screen.getByLabelText("Meal Name"), "Breakfast");
-    
+
     // Submit
     await userEvent.click(screen.getByText("Save"));
-    
+
     await waitFor(() => {
       expect(mockCreate).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -1337,23 +1379,24 @@ describe("Meal Plan Creation Flow", () => {
 #### 2.5.3 E2E Testing
 
 **Test Complete User Flows:**
+
 ```typescript
 // src/test/e2e/meal-plan-workflow.spec.ts
 import { test, expect } from "@playwright/test";
 
 test("create meal plan workflow", async ({ page }) => {
   await page.goto("/app/dashboard");
-  
+
   // Open startup form
   await page.click('[data-testid="dashboard-create-meal-plan-button"]');
-  
+
   // Fill form using RHF
   await page.fill('[data-testid="startup-form-patient-age"]', "30");
   await page.fill('[data-testid="startup-form-target-kcal"]', "2000");
-  
+
   // Submit
   await page.click('[data-testid="startup-form-generate-button"]');
-  
+
   // Verify navigation and form submission
   await expect(page).toHaveURL(/\/app\/create/);
 });
@@ -1394,6 +1437,7 @@ test("create meal plan workflow", async ({ page }) => {
 #### 2.5.5 Testing Utilities
 
 **Create Test Helpers:**
+
 ```typescript
 // src/test/utils/form-helpers.tsx
 import { render } from "@testing-library/react";
@@ -1415,30 +1459,35 @@ export function createMockForm(defaultValues: any) {
 ### 2.6 Migration Strategy
 
 #### Phase 1: Setup (Week 1)
+
 1. Install React Hook Form and resolvers
 2. Create API client layer
 3. Create base client utilities
 4. Set up testing utilities
 
 #### Phase 2: Simple Forms (Week 2)
+
 1. Refactor LoginForm
 2. Refactor RegisterForm
 3. Test thoroughly
 4. Deploy and monitor
 
 #### Phase 3: Complex Forms - Part 1 (Week 3)
+
 1. Refactor StartupFormDialog
 2. Create useStartupForm hook
 3. Test validation edge cases
 4. Deploy and monitor
 
 #### Phase 4: Complex Forms - Part 2 (Week 4)
+
 1. Refactor AIChatInterface
 2. Create useAIChat hook
 3. Test optimistic updates
 4. Deploy and monitor
 
 #### Phase 5: Most Complex Form (Week 5-6)
+
 1. Refactor MealPlanEditor
 2. Create useMealPlanEditor hook
 3. Refactor MealCard component
@@ -1446,6 +1495,7 @@ export function createMockForm(defaultValues: any) {
 5. Deploy and monitor
 
 #### Phase 6: Cleanup (Week 7) ✅ COMPLETED
+
 1. ✅ Remove old validation utilities if no longer needed
    - Removed `src/lib/validation/meal-plan-form.validation.ts` (validateMealPlanForm, isMealPlanFormReady)
    - Removed `src/test/unit/lib/validation/meal-plan-form.validation.test.ts`
@@ -1461,6 +1511,7 @@ export function createMockForm(defaultValues: any) {
    - Fixed Vitest cache issue by adding explicit exclude pattern for deleted test file
 
 **Cleanup Summary:**
+
 - Removed 50 lines of unused validation code
 - Removed 355 lines of obsolete test code (26 test cases)
 - Updated documentation to reflect RHF usage
@@ -1471,6 +1522,7 @@ export function createMockForm(defaultValues: any) {
 ### 2.7 Benefits Summary
 
 **Improvements:**
+
 - Better separation of concerns
 - Reusable form logic
 - Centralized API calls
@@ -1481,6 +1533,7 @@ export function createMockForm(defaultValues: any) {
 - Better error handling
 
 **Maintainability:**
+
 - Easier to add new form fields
 - Consistent form patterns
 - Centralized error handling
@@ -1491,12 +1544,14 @@ export function createMockForm(defaultValues: any) {
 ## 3. Implementation Checklist
 
 ### Prerequisites
+
 - [ ] Install `react-hook-form`
 - [ ] Install `@hookform/resolvers`
 - [ ] Review existing Zod schemas
 - [ ] Set up API client structure
 
 ### API Client Layer
+
 - [ ] Create `src/lib/api/base.client.ts`
 - [ ] Create `src/lib/api/meal-plans.client.ts`
 - [ ] Create `src/lib/api/ai-chat.client.ts`
@@ -1504,6 +1559,7 @@ export function createMockForm(defaultValues: any) {
 - [ ] Test API client error handling
 
 ### Custom Hooks
+
 - [ ] Create `useMealPlanEditor.ts`
 - [ ] Create `useStartupForm.ts`
 - [ ] Create `useAIChatForm.ts`
@@ -1511,6 +1567,7 @@ export function createMockForm(defaultValues: any) {
 - [ ] Test all hooks
 
 ### Component Refactoring
+
 - [ ] Refactor `LoginForm.tsx`
 - [ ] Refactor `RegisterForm.tsx`
 - [ ] Refactor `StartupFormDialog.tsx`
@@ -1519,6 +1576,7 @@ export function createMockForm(defaultValues: any) {
 - [ ] Update `MealCard.tsx` to use form control
 
 ### Testing
+
 - [ ] Unit tests for forms
 - [ ] Unit tests for hooks
 - [ ] Integration tests
@@ -1526,6 +1584,7 @@ export function createMockForm(defaultValues: any) {
 - [ ] Edge case testing
 
 ### Documentation
+
 - [ ] Update component documentation
 - [ ] Create form patterns guide
 - [ ] Update API client documentation
@@ -1535,18 +1594,22 @@ export function createMockForm(defaultValues: any) {
 ## 4. Risk Assessment
 
 ### Low Risk
+
 - LoginForm, RegisterForm refactoring (simple forms)
 - API client extraction (clear separation)
 
 ### Medium Risk
+
 - StartupFormDialog (complex validation, but isolated)
 - AIChatInterface (optimistic updates need careful handling)
 
 ### High Risk
+
 - MealPlanEditor (complex, dynamic forms, critical user flow)
   - **Mitigation**: Extensive testing, gradual rollout, feature flag
 
 ### Dependencies
+
 - React Hook Form compatibility with React 19
 - Zod resolver compatibility
 - Shadcn/ui components compatibility with Controller
@@ -1554,9 +1617,9 @@ export function createMockForm(defaultValues: any) {
 ## 6. Rollback Plan
 
 If issues arise:
+
 1. Keep old component versions as backup
 2. Use feature flags for gradual rollout
 3. Monitor error rates and user feedback
 4. Have rollback procedure documented
 5. Test rollback procedure in staging
-

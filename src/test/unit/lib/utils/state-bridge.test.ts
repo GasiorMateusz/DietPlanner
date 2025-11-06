@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { createStateBridge } from "@/lib/utils/chat-helpers";
-import type { ChatMessage, AssistantChatMessage, UserChatMessage, MealPlanStartupData } from "@/types";
+import type { MealPlanStartupData } from "@/types";
 
 describe("createStateBridge", () => {
   const mockStartupData: MealPlanStartupData = {

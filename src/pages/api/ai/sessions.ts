@@ -1,6 +1,6 @@
 import type { APIRoute } from "astro";
 import { createAiSessionSchema } from "../../../lib/validation/ai.schemas.ts";
-import { AiSessionService } from "../../../lib/ai/session.service.ts";
+import * as AiSessionService from "../../../lib/ai/session.service.ts";
 import { OpenRouterError } from "../../../lib/ai/openrouter.service.ts";
 import type { CreateAiSessionCommand } from "../../../types.ts";
 import { getUserFromRequest } from "@/lib/auth/session.service.js";

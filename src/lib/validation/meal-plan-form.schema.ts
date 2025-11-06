@@ -11,4 +11,3 @@ export const mealPlanFormSchema = z.object({
 });
 
 export type MealPlanFormData = z.infer<typeof mealPlanFormSchema>;
-

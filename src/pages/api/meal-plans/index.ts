@@ -1,6 +1,6 @@
 import type { APIRoute } from "astro";
-import { DatabaseError, NotFoundError, UnauthorizedError, ValidationError } from "../../../lib/errors.ts";
-import { MealPlanService } from "../../../lib/meal-plans/meal-plan.service.ts";
+import { DatabaseError, UnauthorizedError, ValidationError } from "../../../lib/errors.ts";
+import * as MealPlanService from "../../../lib/meal-plans/meal-plan.service.ts";
 import { createMealPlanSchema, listMealPlansQuerySchema } from "../../../lib/validation/meal-plans.schemas.ts";
 import type { CreateMealPlanCommand } from "../../../types.ts";
 import { getUserFromRequest } from "@/lib/auth/session.service.js";

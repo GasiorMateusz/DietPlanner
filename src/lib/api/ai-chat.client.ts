@@ -56,4 +56,3 @@ export const aiChatApi = {
     return handleApiResponse<SendAiMessageResponseDto>(response);
   },
 };
-

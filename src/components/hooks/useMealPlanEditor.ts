@@ -6,7 +6,6 @@ import { mealPlansApi } from "@/lib/api/meal-plans.client";
 import { parseXmlMealPlan } from "@/lib/utils/meal-plan-parser";
 import { resolveDailySummary } from "@/lib/utils/meal-plan-calculations";
 import type {
-  MealPlanMeal,
   MealPlanContentDailySummary,
   MealPlanStartupData,
   MealPlanContent,
@@ -57,7 +56,7 @@ export function useMealPlanEditor({ mealPlanId }: UseMealPlanEditorProps): UseMe
   });
   const [startupData, setStartupData] = useState<MealPlanStartupData | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
-  const [mode, setMode] = useState<"create" | "edit">(mealPlanId ? "edit" : "create");
+  const [mode] = useState<"create" | "edit">(mealPlanId ? "edit" : "create");
 
   const form = useForm<MealPlanFormData>({
     resolver: zodResolver(mealPlanFormSchema),
@@ -78,32 +77,28 @@ export function useMealPlanEditor({ mealPlanId }: UseMealPlanEditorProps): UseMe
    */
   const loadMealPlanFromApi = useCallback(
     async (id: string) => {
-      try {
-        const data = await mealPlansApi.getById(id);
+      const data = await mealPlansApi.getById(id);
 
-        // Extract startup data from flat fields
-        const extractedStartupData: MealPlanStartupData = {
-          patient_age: data.patient_age,
-          patient_weight: data.patient_weight,
-          patient_height: data.patient_height,
-          activity_level: data.activity_level,
-          target_kcal: data.target_kcal,
-          target_macro_distribution: data.target_macro_distribution,
-          meal_names: data.meal_names,
-          exclusions_guidelines: data.exclusions_guidelines,
-        };
+      // Extract startup data from flat fields
+      const extractedStartupData: MealPlanStartupData = {
+        patient_age: data.patient_age,
+        patient_weight: data.patient_weight,
+        patient_height: data.patient_height,
+        activity_level: data.activity_level,
+        target_kcal: data.target_kcal,
+        target_macro_distribution: data.target_macro_distribution,
+        meal_names: data.meal_names,
+        exclusions_guidelines: data.exclusions_guidelines,
+      };
 
-        setStartupData(extractedStartupData);
-        setDailySummary(data.plan_content.daily_summary);
+      setStartupData(extractedStartupData);
+      setDailySummary(data.plan_content.daily_summary);
 
-        // Reset form with loaded data
-        form.reset({
-          planName: data.name,
-          meals: data.plan_content.meals,
-        });
-      } catch (err) {
-        throw err;
-      }
+      // Reset form with loaded data
+      form.reset({
+        planName: data.name,
+        meals: data.plan_content.meals,
+      });
     },
     [form]
   );

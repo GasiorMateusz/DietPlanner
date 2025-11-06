@@ -8,12 +8,12 @@ describe("cn utility function", () => {
   });
 
   it("should handle conditional classes", () => {
-    const result = cn("base-class", true && "conditional-class");
+    const result = cn("base-class", "conditional-class");
     expect(result).toBe("base-class conditional-class");
   });
 
   it("should filter out falsy values", () => {
-    const result = cn("base", false && "hidden", null, undefined);
+    const result = cn("base", null, undefined);
     expect(result).toBe("base");
   });
 });

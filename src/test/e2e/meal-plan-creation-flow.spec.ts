@@ -1,9 +1,6 @@
-import { test, expect } from "@playwright/test";
+import { test } from "@playwright/test";
 import { LoginPage, DashboardPage, AIChatPage, MealPlanEditorPage } from "./pages";
-import {
-  getTestUserId,
-  cleanupMealPlansByNamePattern,
-} from "./utils/test-cleanup";
+import { getTestUserId, cleanupMealPlansByNamePattern } from "./utils/test-cleanup";
 
 test.describe("Meal Plan Creation and Editing Flow", () => {
   const TEST_MEAL_PLAN_NAME = "test meal plan";
@@ -35,10 +32,7 @@ test.describe("Meal Plan Creation and Editing Flow", () => {
 
       // Always attempt cleanup - even if userId is null, cleanup will try to find it
       // from existing meal plans or use service role key to bypass RLS
-      const deletedPlans = await cleanupMealPlansByNamePattern(
-        userId,
-        TEST_MEAL_PLAN_NAME
-      );
+      const deletedPlans = await cleanupMealPlansByNamePattern(userId, TEST_MEAL_PLAN_NAME);
 
       if (deletedPlans > 0) {
         console.log(

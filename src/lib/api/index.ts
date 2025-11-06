@@ -8,4 +8,3 @@
 export * from "./base.client";
 export * from "./meal-plans.client";
 export * from "./ai-chat.client";
-

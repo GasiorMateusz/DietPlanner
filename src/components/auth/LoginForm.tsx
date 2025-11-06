@@ -38,6 +38,7 @@ export default function LoginForm({ className }: Props) {
     }
 
     // Use full page reload to ensure cookies are synced and middleware can detect session
+    // eslint-disable-next-line react-compiler/react-compiler
     window.location.href = "/app/dashboard";
   });
 

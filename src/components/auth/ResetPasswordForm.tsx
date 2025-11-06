@@ -6,9 +6,9 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
 import { resetPasswordSchema, type ResetPasswordInput } from "@/lib/validation/auth.schemas";
 
-type Props = {
+interface Props {
   className?: string;
-};
+}
 
 export default function ResetPasswordForm({ className }: Props) {
   const [values, setValues] = React.useState<ResetPasswordInput>({ newPassword: "", confirmPassword: "" });

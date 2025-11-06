@@ -139,12 +139,12 @@ jobs:
               repo: context.repo.repo,
               issue_number: context.issue.number,
             });
-            
+
             const botComment = comments.data.find(comment => 
               comment.user.type === 'Bot' && 
               comment.body.includes('Pull Request Checks Status')
             );
-            
+
             return botComment ? botComment.id : null;
 
       - name: Create or update PR comment
@@ -155,24 +155,24 @@ jobs:
             const lintStatus = '${{ needs.lint.result }}' === 'success' ? '✅ Passed' : '❌ Failed';
             const unitTestStatus = '${{ needs.unit-test.result }}' === 'success' ? '✅ Passed' : '❌ Failed';
             const e2eTestStatus = '${{ needs.e2e-test.result }}' === 'success' ? '✅ Passed' : '❌ Failed';
-            
+
             const allPassed = '${{ needs.lint.result }}' === 'success' && 
                              '${{ needs.unit-test.result }}' === 'success' && 
                              '${{ needs.e2e-test.result }}' === 'success';
-            
+
             const body = `## 🔍 Pull Request Checks Status
-            
+
             | Check | Status |
             |-------|--------|
             | Linting | ${lintStatus} |
             | Unit Tests | ${unitTestStatus} |
             | E2E Tests | ${e2eTestStatus} |
             | Coverage | ${coverage !== 'N/A' ? coverage + '%' : 'N/A'} |
-            
+
             ${allPassed ? 'All checks have passed successfully! ✅' : 'Some checks have failed. Please review the details above. ❌'}`;
-            
+
             const commentId = '${{ steps.find-comment.outputs.result }}';
-            
+
             if (commentId) {
               await github.rest.issues.updateComment({
                 owner: context.repo.owner,

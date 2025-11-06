@@ -17,12 +17,7 @@ interface MealCardProps {
  * Contains editable fields for name, ingredients, and preparation,
  * plus a read-only summary display.
  */
-export function MealCard({
-  mealIndex,
-  control,
-  isRemoveable,
-  onRemove,
-}: MealCardProps) {
+export function MealCard({ mealIndex, control, isRemoveable, onRemove }: MealCardProps) {
   return (
     <div className="border rounded-lg p-4 space-y-4">
       <div className="flex items-center justify-between">
@@ -50,9 +45,7 @@ export function MealCard({
                 aria-invalid={fieldState.invalid}
                 data-testid={`meal-card-name-input-${mealIndex}`}
               />
-              {fieldState.error && (
-                <p className="text-sm text-destructive">{fieldState.error.message}</p>
-              )}
+              {fieldState.error && <p className="text-sm text-destructive">{fieldState.error.message}</p>}
             </>
           )}
         />

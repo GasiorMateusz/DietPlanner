@@ -129,17 +129,20 @@ To set up and run this project on your local machine, follow these steps.
 The `package.json` file includes the following scripts for development and maintenance:
 
 **Development:**
+
 - `npm run dev` - Starts the development server with hot-reloading
 - `npm run build` - Builds the application for production
 - `npm run preview` - Serves the production build locally for testing
 - `npm run astro` - Accesses the Astro CLI for various commands
 
 **Code Quality:**
+
 - `npm run lint` - Lints the codebase using ESLint
 - `npm run lint:fix` - Lints the codebase and automatically fixes issues
 - `npm run format` - Formats the code using Prettier
 
 **Testing:**
+
 - `npm run test` - Runs all tests in watch mode
 - `npm run test:unit` - Runs unit tests
 - `npm run test:integration` - Runs integration tests

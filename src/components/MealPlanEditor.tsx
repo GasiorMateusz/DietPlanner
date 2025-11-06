@@ -18,20 +18,8 @@ interface MealPlanEditorProps {
  * Supports both Create Mode (from AI chat) and Edit Mode (existing meal plan).
  */
 export default function MealPlanEditor({ mealPlanId }: MealPlanEditorProps) {
-  const {
-    form,
-    fields,
-    append,
-    remove,
-    isLoading,
-    error,
-    dailySummary,
-    startupData,
-    sessionId,
-    mode,
-    handleSave,
-    handleExport,
-  } = useMealPlanEditor({ mealPlanId });
+  const { form, fields, append, remove, isLoading, error, dailySummary, mode, handleSave, handleExport } =
+    useMealPlanEditor({ mealPlanId });
 
   /**
    * Handles cancel button click - navigates back to dashboard.
@@ -99,9 +87,7 @@ export default function MealPlanEditor({ mealPlanId }: MealPlanEditorProps) {
   // Main form UI
   return (
     <div className="container mx-auto p-4 sm:p-8 max-w-4xl">
-      <h1 className="text-3xl font-bold mb-6">
-        {mode === "create" ? "Create Meal Plan" : "Edit Meal Plan"}
-      </h1>
+      <h1 className="text-3xl font-bold mb-6">{mode === "create" ? "Create Meal Plan" : "Edit Meal Plan"}</h1>
 
       {/* Error Alert */}
       {error && (
@@ -111,7 +97,13 @@ export default function MealPlanEditor({ mealPlanId }: MealPlanEditorProps) {
       )}
 
       {/* Form Content */}
-      <form className="space-y-6" onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
+      <form
+        className="space-y-6"
+        onSubmit={(e) => {
+          e.preventDefault();
+          handleSave();
+        }}
+      >
         {/* Plan Name Input */}
         <div className="space-y-2">
           <Label htmlFor="plan-name">
@@ -129,9 +121,7 @@ export default function MealPlanEditor({ mealPlanId }: MealPlanEditorProps) {
                   aria-invalid={fieldState.invalid}
                   data-testid="meal-plan-editor-plan-name-input"
                 />
-                {fieldState.error && (
-                  <p className="text-sm text-destructive">{fieldState.error.message}</p>
-                )}
+                {fieldState.error && <p className="text-sm text-destructive">{fieldState.error.message}</p>}
               </>
             )}
           />
@@ -151,7 +141,7 @@ export default function MealPlanEditor({ mealPlanId }: MealPlanEditorProps) {
 
           {fields.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              No meals added yet. Click "Add Meal" to get started.
+              No meals added yet. Click &quot;Add Meal&quot; to get started.
             </div>
           ) : (
             <div className="space-y-4">
@@ -173,12 +163,7 @@ export default function MealPlanEditor({ mealPlanId }: MealPlanEditorProps) {
 
         {/* Form Actions */}
         <div className="flex gap-4 pt-4 border-t">
-          <Button
-            type="submit"
-            variant="default"
-            disabled={!isFormReady()}
-            data-testid="meal-plan-editor-save-button"
-          >
+          <Button type="submit" variant="default" disabled={!isFormReady()} data-testid="meal-plan-editor-save-button">
             {isLoading ? "Saving..." : "Save changes"}
           </Button>
 
