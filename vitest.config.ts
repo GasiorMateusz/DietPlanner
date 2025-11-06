@@ -43,6 +43,7 @@ export default defineConfig({
       "node_modules",
       "dist",
       ".astro",
+      "src/test/e2e/**",
       "**/meal-plan-form.validation.test.ts", // Removed - validation now handled by Zod + RHF
     ],
     coverage: {
