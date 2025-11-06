@@ -34,37 +34,37 @@ The project uses the following technologies:
 
 ### Frontend
 
-- **Astro 5**: For fast, performant static site generation with minimal JavaScript.
-- **React 19**: For interactive components (e.g., chat, editor).
-- **React Hook Form**: For efficient form state management and validation.
-- **TypeScript 5**: For static type checking.
-- **Tailwind 4**: For utility-first CSS styling.
-- **Shadcn/ui**: For the base library of accessible React components.
+- **Astro 5** - Fast, performant static site generation with minimal JavaScript
+- **React 19** - Interactive components (e.g., chat, editor)
+- **React Hook Form** - Efficient form state management and validation
+- **TypeScript 5** - Static type checking
+- **Tailwind 4** - Utility-first CSS styling
+- **Shadcn/ui** - Base library of accessible React components
 
 ### Backend
 
-- **Supabase**: A comprehensive BaaS (Backend-as-a-Service) solution providing:
+- **Supabase** - Comprehensive BaaS (Backend-as-a-Service) solution providing:
   - PostgreSQL Database
   - User Authentication
   - SDKs for backend operations
 
 ### AI
 
-- **Openrouter.ai**: Provides access to a wide range of AI models (OpenAI, Anthropic, Google, etc.) to power the meal plan generation.
+- **Openrouter.ai** - Access to a wide range of AI models (OpenAI, Anthropic, Google, etc.) to power the meal plan generation
 
 ### Testing
 
-- **Vitest**: Primary test runner for unit and integration tests.
-- **React Testing Library**: Component testing utilities for React components.
-- **@testing-library/jest-dom**: DOM matchers for enhanced assertions.
-- **MSW (Mock Service Worker)**: API mocking for unit tests and integration testing of external services (e.g., OpenRouter API).
-- **Supertest**: HTTP assertions for API endpoint testing.
-- **Playwright**: Cross-browser end-to-end (E2E) testing framework supporting Chromium, Firefox, and WebKit with built-in test runner, reporting, and screenshot/video capture capabilities.
+- **Vitest** - Primary test runner for unit and integration tests
+- **React Testing Library** - Component testing utilities for React components
+- **@testing-library/jest-dom** - DOM matchers for enhanced assertions
+- **MSW (Mock Service Worker)** - API mocking for unit tests and integration testing of external services (e.g., OpenRouter API)
+- **Supertest** - HTTP assertions for API endpoint testing
+- **Playwright** - Cross-browser end-to-end (E2E) testing framework supporting Chromium, Firefox, and WebKit with built-in test runner, reporting, and screenshot/video capture capabilities
 
 ### CI/CD & Hosting
 
-- **Github Actions**: For CI/CD pipelines.
-- **DigitalOcean**: For hosting the application via a Docker image.
+- **Github Actions** - CI/CD pipelines
+- **DigitalOcean** - Hosting the application via a Docker image
 
 ## Getting Started Locally
 
@@ -128,25 +128,41 @@ To set up and run this project on your local machine, follow these steps.
 
 The `package.json` file includes the following scripts for development and maintenance:
 
-- `npm run dev`: Starts the development server with hot-reloading.
-- `npm run build`: Builds the application for production.
-- `npm run preview`: Serves the production build locally for testing.
-- `npm run astro`: Accesses the Astro CLI for various commands.
-- `npm run lint`: Lints the codebase using ESLint.
-- `npm run lint:fix`: Lints the codebase and automatically fixes issues.
-- `npm run format`: Formats the code using Prettier.
+**Development:**
+- `npm run dev` - Starts the development server with hot-reloading
+- `npm run build` - Builds the application for production
+- `npm run preview` - Serves the production build locally for testing
+- `npm run astro` - Accesses the Astro CLI for various commands
+
+**Code Quality:**
+- `npm run lint` - Lints the codebase using ESLint
+- `npm run lint:fix` - Lints the codebase and automatically fixes issues
+- `npm run format` - Formats the code using Prettier
+
+**Testing:**
+- `npm run test` - Runs all tests in watch mode
+- `npm run test:unit` - Runs unit tests
+- `npm run test:integration` - Runs integration tests
+- `npm run test:watch` - Runs tests in watch mode
+- `npm run test:ui` - Opens Vitest UI for test debugging
+- `npm run test:coverage` - Runs tests with coverage reporting
+- `npm run test:e2e` - Runs end-to-end tests with Playwright
+- `npm run test:e2e:ui` - Opens Playwright UI for E2E test debugging
+- `npm run test:e2e:debug` - Runs E2E tests in debug mode
+- `npm run test:e2e:headed` - Runs E2E tests in headed mode (visible browser)
+- `npm run test:all` - Runs all test suites (unit, integration, and E2E)
 
 ## Project Scope
 
 ### Key Features
 
-- **User Authentication**: Dietitian registration and login (email/password).
-- **Dashboard**: View, search, and delete all saved meal plans.
+- **User Authentication** - Dietitian registration and login (email/password)
+- **Dashboard** - View, search, and delete all saved meal plans
 - **Meal Plan Creation**:
-  - **Startup Form**: Collects all necessary patient data and dietary guidelines.
-  - **AI Chat**: Generates a plan and allows for iterative conversational corrections.
-  - **Manual Editor**: A structured editor to finalize the plan's details.
-  - **Export**: Export the final meal plan to a .doc file.
+  - **Startup Form** - Collects all necessary patient data and dietary guidelines
+  - **AI Chat** - Generates a plan and allows for iterative conversational corrections
+  - **Manual Editor** - A structured editor to finalize the plan's details
+  - **Export** - Export the final meal plan to a .doc file
 
 ### Out of Scope (MVP Boundaries)
 
