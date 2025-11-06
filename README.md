@@ -81,8 +81,8 @@ To set up and run this project on your local machine, follow these steps.
 1. **Clone the repository:**
 
    ```bash
-   git clone https://github.com/your-username/your-repository-name.git
-   cd your-repository-name
+   git clone https://github.com/GasiorMateusz/DietPlanner.git
+   cd DietPlanner
    ```
 
 2. **Set the Node.js version:**
@@ -101,9 +101,7 @@ To set up and run this project on your local machine, follow these steps.
    ```
 
 4. **Set up environment variables:**
-   This project requires API keys and service URLs to function. Create a `.env` file in the root of the project by copying the `.env.example` file (if one exists) or by creating it manually.
-
-   Your `.env` file should contain the following keys:
+   This project requires API keys and service URLs to function. Create a `.env` file in the root of the project with the following keys:
 
    ```env
    # Supabase credentials (server-side)
@@ -122,19 +120,35 @@ To set up and run this project on your local machine, follow these steps.
    ```bash
    npm run dev
    ```
-   The application will be available at `http://localhost:4321` (or another port if specified by Astro).
+   The application will be available at `http://localhost:4321` (default Astro port).
 
 ### Available Scripts
 
 The `package.json` file includes the following scripts for development and maintenance:
 
+**Development:**
 - `npm run dev`: Starts the development server with hot-reloading.
 - `npm run build`: Builds the application for production.
 - `npm run preview`: Serves the production build locally for testing.
 - `npm run astro`: Accesses the Astro CLI for various commands.
+
+**Code Quality:**
 - `npm run lint`: Lints the codebase using ESLint.
 - `npm run lint:fix`: Lints the codebase and automatically fixes issues.
 - `npm run format`: Formats the code using Prettier.
+
+**Testing:**
+- `npm run test`: Runs all tests in watch mode.
+- `npm run test:unit`: Runs unit tests.
+- `npm run test:integration`: Runs integration tests.
+- `npm run test:watch`: Runs tests in watch mode.
+- `npm run test:ui`: Opens Vitest UI for test debugging.
+- `npm run test:coverage`: Runs tests with coverage reporting.
+- `npm run test:e2e`: Runs end-to-end tests with Playwright.
+- `npm run test:e2e:ui`: Opens Playwright UI for E2E test debugging.
+- `npm run test:e2e:debug`: Runs E2E tests in debug mode.
+- `npm run test:e2e:headed`: Runs E2E tests in headed mode (visible browser).
+- `npm run test:all`: Runs all test suites (unit, integration, and E2E).
 
 ## Project Scope
 
