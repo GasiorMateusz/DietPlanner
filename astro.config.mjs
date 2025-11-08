@@ -20,16 +20,8 @@ const _env = globalThis && globalThis.process && globalThis.process.env ? global
 const isCloudflare = _env.TARGET === "cloudflare" || _env.CLOUDFLARE_PAGES === "true";
 
 export default defineConfig({
-  // --- UPDATED LOGIC ---
-  // We always want server output, the adapter just changes.
-  output: "server", 
-  
-  // Use the correct adapter based on the environment
-  adapter: isCloudflare 
-    ? cloudflare() 
-    : node({ mode: "standalone" }),
-  
-  // --- Your other settings ---
+  output: "server",
+  adapter: isCloudflare ? cloudflare() : node({ mode: "standalone" }),
   integrations: [react(), sitemap()],
   server: { port: 3000 },
   vite: {
