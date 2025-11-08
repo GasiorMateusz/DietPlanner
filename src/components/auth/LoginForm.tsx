@@ -16,6 +16,7 @@ interface Props {
 export default function LoginForm({ className }: Props) {
   const emailId = React.useId();
   const passwordId = React.useId();
+  const formRef = React.useRef<HTMLFormElement | null>(null);
 
   const form = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
@@ -42,8 +43,17 @@ export default function LoginForm({ className }: Props) {
     window.location.href = "/app/dashboard";
   });
 
+  React.useEffect(() => {
+    // mark the form as hydrated on the client so E2E tests can wait for JS handlers
+    try {
+      formRef.current?.setAttribute("data-hydrated", "true");
+    } catch {
+      // ignore — best-effort for tests only
+    }
+  }, []);
+
   return (
-    <form onSubmit={onSubmit} className={cn("space-y-4", className)} noValidate data-testid="login-form">
+    <form ref={formRef} onSubmit={onSubmit} className={cn("space-y-4", className)} noValidate data-testid="login-form">
       {form.formState.errors.root ? (
         <Alert className="border-destructive/30 text-destructive">
           <AlertTitle>Unable to log in</AlertTitle>
@@ -104,3 +114,8 @@ export default function LoginForm({ className }: Props) {
     </form>
   );
 }
+
+// Set a small effect that marks the form as hydrated when the React island mounts.
+// This helps end-to-end tests reliably detect that client-side JS has attached handlers
+// (avoiding native form submits in cases where hydration is still pending).
+// The attribute is set only on the client during hydration and does not affect SSR output.
