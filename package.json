@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
-  "build:cloudflare": "TARGET=cloudflare npm run build",
+    "build:cloudflare": "TARGET=cloudflare npm run build",
     "preview": "astro preview",
     "astro": "astro",
     "lint": "eslint .",
@@ -24,6 +24,7 @@
     "test:all": "npm run test:unit && npm run test:integration && npm run test:e2e"
   },
   "dependencies": {
+    "@astrojs/cloudflare": "^12.6.10",
     "@astrojs/node": "^9.4.3",
     "@astrojs/react": "^4.3.1",
     "@astrojs/sitemap": "^3.5.1",
