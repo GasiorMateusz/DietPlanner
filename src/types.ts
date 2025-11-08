@@ -1,4 +1,4 @@
-import type { Database, Tables, TablesInsert, TablesUpdate } from "./database.types";
+import type { Tables, TablesInsert, TablesUpdate } from "./db/database.types";
 
 // =================================================================
 //   1. JSON BLOB DEFINITIONS
@@ -9,26 +9,26 @@ import type { Database, Tables, TablesInsert, TablesUpdate } from "./database.ty
  * Defines the structure for the `target_macro_distribution` JSON blob.
  * e.g., { "p_perc": 30, "f_perc": 25, "c_perc": 45 }
  */
-export type TargetMacroDistribution = {
+export interface TargetMacroDistribution {
   p_perc: number;
   f_perc: number;
   c_perc: number;
-};
+}
 
 /**
  * Defines the structure for the `daily_summary` object within `plan_content`.
  */
-export type MealPlanContentDailySummary = {
+export interface MealPlanContentDailySummary {
   kcal: number;
   proteins: number;
   fats: number;
   carbs: number;
-};
+}
 
 /**
  * Defines the structure for a single meal within the `plan_content.meals` array.
  */
-export type MealPlanMeal = {
+export interface MealPlanMeal {
   name: string;
   ingredients: string;
   preparation: string;
@@ -38,31 +38,31 @@ export type MealPlanMeal = {
     f: number;
     c: number;
   };
-};
+}
 
 /**
  * Defines the full structure for the `plan_content` JSON blob in `meal_plans`.
  */
-export type MealPlanContent = {
+export interface MealPlanContent {
   daily_summary: MealPlanContentDailySummary;
   meals: MealPlanMeal[];
-};
+}
 
 /**
  * Defines the message structure for a user prompt.
  */
-export type UserChatMessage = {
+export interface UserChatMessage {
   role: "user";
   content: string;
-};
+}
 
 /**
  * Defines the message structure for an assistant response.
  */
-export type AssistantChatMessage = {
+export interface AssistantChatMessage {
   role: "assistant";
   content: string;
-};
+}
 
 /**
  * Union type representing any message in a chat history.
@@ -214,27 +214,27 @@ export type CreateAiSessionCommand = MealPlanStartupData;
  * Includes the session ID and the first assistant message.
  * @Endpoint `POST /api/ai/sessions`
  */
-export type CreateAiSessionResponseDto = {
+export interface CreateAiSessionResponseDto {
   session_id: Tables<"ai_chat_sessions">["id"];
   message: AssistantChatMessage;
   prompt_count: Tables<"ai_chat_sessions">["final_prompt_count"];
-};
+}
 
 /**
  * **Command**: The request payload for sending a follow-up message.
  * @Endpoint `POST /api/ai/sessions/{id}/message`
  */
-export type SendAiMessageCommand = {
+export interface SendAiMessageCommand {
   message: UserChatMessage;
-};
+}
 
 /**
  * **DTO**: The response after sending a follow-up message.
  * Includes the session ID and the new assistant response.
  * @Endpoint `POST /api/ai/sessions/{id}/message`
  */
-export type SendAiMessageResponseDto = {
+export interface SendAiMessageResponseDto {
   session_id: Tables<"ai_chat_sessions">["id"];
   message: AssistantChatMessage;
   prompt_count: Tables<"ai_chat_sessions">["final_prompt_count"];
-};
+}

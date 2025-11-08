@@ -53,11 +53,15 @@ const reactConfig = tseslint.config({
     ...eslintPluginReactHooks.configs.recommended.rules,
     "react/react-in-jsx-scope": "off",
     "react-compiler/react-compiler": "error",
+    "react/prop-types": "off", // TypeScript provides type checking
   },
 });
 
 export default tseslint.config(
   includeIgnoreFile(gitignorePath),
+  {
+    ignores: [".github/workflows/**/*.yml", "src/db/database.types.ts"], // Ignore auto-generated files
+  },
   baseConfig,
   jsxA11yConfig,
   reactConfig,

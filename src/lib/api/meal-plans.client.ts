@@ -6,7 +6,12 @@ import type {
   UpdateMealPlanCommand,
   UpdateMealPlanResponseDto,
 } from "@/types";
-import { getAuthHeaders, getAuthHeadersWithoutContentType, handleApiResponse, handleApiBlobResponse } from "./base.client";
+import {
+  getAuthHeaders,
+  getAuthHeadersWithoutContentType,
+  handleApiResponse,
+  handleApiBlobResponse,
+} from "./base.client";
 
 /**
  * API client for meal plan operations.
@@ -19,9 +24,9 @@ export const mealPlansApi = {
    * @param order - Sort order (default: "desc")
    * @returns Array of meal plan list items
    */
-  async getAll(search?: string, sort: string = "created_at", order: "asc" | "desc" = "desc"): Promise<GetMealPlansResponseDto> {
+  async getAll(search?: string, sort = "created_at", order: "asc" | "desc" = "desc"): Promise<GetMealPlansResponseDto> {
     const headers = await getAuthHeaders();
-    
+
     const params = new URLSearchParams();
     if (search && search.trim()) {
       params.append("search", search.trim());
@@ -94,7 +99,7 @@ export const mealPlansApi = {
       headers,
     });
 
-    await handleApiResponse<void>(response);
+    await handleApiResponse<undefined>(response);
   },
 
   /**
@@ -111,4 +116,3 @@ export const mealPlansApi = {
     return handleApiBlobResponse(response);
   },
 };
-

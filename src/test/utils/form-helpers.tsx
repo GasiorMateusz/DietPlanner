@@ -31,11 +31,7 @@ export function renderWithForm<T extends FieldValues>(
  * @param callback - Function that triggers validation
  * @param timeout - Maximum time to wait (default: 1000ms)
  */
-export async function waitForFormValidation(
-  callback: () => void,
-  timeout = 1000
-): Promise<void> {
+export async function waitForFormValidation(callback: () => void): Promise<void> {
   callback();
   await new Promise((resolve) => setTimeout(resolve, 100));
 }
-

@@ -10,9 +10,11 @@ export class LoginPage {
   readonly passwordInput: Locator;
   readonly submitButton: Locator;
   readonly form: Locator;
+  readonly formSelector: string;
 
   constructor(page: Page) {
     this.page = page;
+    this.formSelector = '[data-testid="login-form"]';
     this.form = page.getByTestId("login-form");
     this.emailInput = page.getByTestId("login-email-input");
     this.passwordInput = page.getByTestId("login-password-input");
@@ -26,6 +28,23 @@ export class LoginPage {
     await this.page.goto("/auth/login");
     // Wait for the form to be visible (React component needs to load)
     await this.form.waitFor({ state: "visible", timeout: 10000 });
+
+    // Wait for client hydration marker added by the React component (data-hydrated="true").
+    // This prevents Playwright from clicking the submit button before handlers are attached
+    // (which would cause a native form GET submit).
+    try {
+      await this.page.waitForFunction(
+        (selector: string) => {
+          const el = document.querySelector(selector);
+          return !!el && el.getAttribute("data-hydrated") === "true";
+        },
+        this.formSelector,
+        { timeout: 10000 }
+      );
+    } catch {
+      // If the hydration marker doesn't appear within the timeout, proceed anyway so tests
+      // can fail with the real error (keeps behavior visible for debugging).
+    }
   }
 
   /**

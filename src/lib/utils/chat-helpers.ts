@@ -19,10 +19,10 @@ export interface StateBridge {
 /**
  * Parsed meal plan structure.
  */
-export type ParsedMealPlan = {
+export interface ParsedMealPlan {
   meals: MealPlanMeal[];
   dailySummary: MealPlanContentDailySummary;
-};
+}
 
 /**
  * Validation result for chat message input.

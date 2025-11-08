@@ -100,4 +100,3 @@ export async function handleApiBlobResponse(response: Response): Promise<Blob> {
 
   return response.blob();
 }
-

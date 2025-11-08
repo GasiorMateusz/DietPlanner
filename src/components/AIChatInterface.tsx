@@ -5,17 +5,10 @@ import { Textarea } from "./ui/textarea";
 import { DailySummaryStaticDisplay } from "./DailySummaryStaticDisplay";
 import { MealCardReadOnly } from "./MealCardReadOnly";
 import { MessageItem } from "./MessageItem";
-import {
-  extractCurrentMealPlan,
-  createStateBridge,
-} from "../lib/utils/chat-helpers";
+import { extractCurrentMealPlan, createStateBridge } from "../lib/utils/chat-helpers";
 import { aiChatApi } from "@/lib/api/ai-chat.client";
 import { useAIChatForm } from "./hooks/useAIChatForm";
-import type {
-  ChatMessage,
-  UserChatMessage,
-  MealPlanStartupData,
-} from "../types";
+import type { ChatMessage, UserChatMessage, MealPlanStartupData } from "../types";
 
 /**
  * State structure for managing chat state.
@@ -134,7 +127,6 @@ export default function AIChatInterface() {
       messageEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [chatState.messageHistory]);
-
 
   /**
    * Handles Accept button click - navigates to editor with final plan.

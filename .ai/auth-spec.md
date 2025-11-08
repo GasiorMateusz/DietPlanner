@@ -35,7 +35,7 @@ Tech Stack Reference: Astro 5 (server output with Node adapter), React 19, TypeS
   - Extend `src/components/DashboardHeader.tsx` consumers or parent layout areas to include a user menu with “My Account” and “Logout”. Keep `DashboardHeader` focused on search/create; add a separate user menu component:
     - `src/components/auth/UserMenu.tsx` (shows email initial/avatar, links to /app/account, Logout action)
 
-    1.3 Astro pages vs React components – separation of concerns
+      1.3 Astro pages vs React components – separation of concerns
 
 - Astro pages:
   - Provide SSR shells, SEO metadata, and route-level guards/redirects.

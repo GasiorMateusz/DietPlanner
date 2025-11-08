@@ -55,7 +55,7 @@ export function StartupFormDialog({ open, onClose, onSubmit }: StartupFormDialog
                       value={field.value ?? ""}
                       onChange={(e) => {
                         const val = e.target.value === "" ? null : parseFloat(e.target.value);
-                        if (e.target.value === "" || (!isNaN(val!) && val! >= 0)) {
+                        if (e.target.value === "" || (val !== null && !isNaN(val) && val >= 0)) {
                           field.onChange(val);
                         }
                       }}
@@ -88,7 +88,7 @@ export function StartupFormDialog({ open, onClose, onSubmit }: StartupFormDialog
                       value={field.value ?? ""}
                       onChange={(e) => {
                         const val = e.target.value === "" ? null : parseFloat(e.target.value);
-                        if (e.target.value === "" || (!isNaN(val!) && val! >= 0)) {
+                        if (e.target.value === "" || (val !== null && !isNaN(val) && val >= 0)) {
                           field.onChange(val);
                         }
                       }}
@@ -121,7 +121,7 @@ export function StartupFormDialog({ open, onClose, onSubmit }: StartupFormDialog
                       value={field.value ?? ""}
                       onChange={(e) => {
                         const val = e.target.value === "" ? null : parseFloat(e.target.value);
-                        if (e.target.value === "" || (!isNaN(val!) && val! >= 0)) {
+                        if (e.target.value === "" || (val !== null && !isNaN(val) && val >= 0)) {
                           field.onChange(val);
                         }
                       }}
@@ -181,7 +181,7 @@ export function StartupFormDialog({ open, onClose, onSubmit }: StartupFormDialog
                     value={field.value ?? ""}
                     onChange={(e) => {
                       const val = e.target.value === "" ? null : parseFloat(e.target.value);
-                      if (e.target.value === "" || (!isNaN(val!) && val! >= 0)) {
+                      if (e.target.value === "" || (val !== null && !isNaN(val) && val >= 0)) {
                         field.onChange(val);
                       }
                     }}
@@ -206,7 +206,7 @@ export function StartupFormDialog({ open, onClose, onSubmit }: StartupFormDialog
                   name="target_macro_distribution.p_perc"
                   control={form.control}
                   rules={{
-                    validate: (value) => {
+                    validate: () => {
                       const macros = form.getValues("target_macro_distribution");
                       if (!macros) return true;
                       const total = (macros.p_perc ?? 0) + (macros.f_perc ?? 0) + (macros.c_perc ?? 0);
@@ -227,8 +227,12 @@ export function StartupFormDialog({ open, onClose, onSubmit }: StartupFormDialog
                         value={field.value ?? ""}
                         onChange={(e) => {
                           const val = e.target.value === "" ? null : parseFloat(e.target.value);
-                          if (e.target.value === "" || (!isNaN(val!) && val! >= 0 && val! <= 100)) {
-                            const current = form.getValues("target_macro_distribution") || { p_perc: 0, f_perc: 0, c_perc: 0 };
+                          if (e.target.value === "" || (val !== null && !isNaN(val) && val >= 0 && val <= 100)) {
+                            const current = form.getValues("target_macro_distribution") || {
+                              p_perc: 0,
+                              f_perc: 0,
+                              c_perc: 0,
+                            };
                             const newMacros = {
                               ...current,
                               p_perc: val ?? 0,
@@ -236,15 +240,17 @@ export function StartupFormDialog({ open, onClose, onSubmit }: StartupFormDialog
                             field.onChange(val ?? 0);
                             form.setValue("target_macro_distribution", newMacros);
                             // Trigger validation on all macro fields
-                            form.trigger(["target_macro_distribution.p_perc", "target_macro_distribution.f_perc", "target_macro_distribution.c_perc"]);
+                            form.trigger([
+                              "target_macro_distribution.p_perc",
+                              "target_macro_distribution.f_perc",
+                              "target_macro_distribution.c_perc",
+                            ]);
                           }
                         }}
                         onBlur={field.onBlur}
                         aria-invalid={fieldState.invalid}
                       />
-                      {fieldState.error && (
-                        <p className="text-xs text-destructive">{fieldState.error.message}</p>
-                      )}
+                      {fieldState.error && <p className="text-xs text-destructive">{fieldState.error.message}</p>}
                     </>
                   )}
                 />
@@ -257,7 +263,7 @@ export function StartupFormDialog({ open, onClose, onSubmit }: StartupFormDialog
                   name="target_macro_distribution.f_perc"
                   control={form.control}
                   rules={{
-                    validate: (value) => {
+                    validate: () => {
                       const macros = form.getValues("target_macro_distribution");
                       if (!macros) return true;
                       const total = (macros.p_perc ?? 0) + (macros.f_perc ?? 0) + (macros.c_perc ?? 0);
@@ -278,8 +284,12 @@ export function StartupFormDialog({ open, onClose, onSubmit }: StartupFormDialog
                         value={field.value ?? ""}
                         onChange={(e) => {
                           const val = e.target.value === "" ? null : parseFloat(e.target.value);
-                          if (e.target.value === "" || (!isNaN(val!) && val! >= 0 && val! <= 100)) {
-                            const current = form.getValues("target_macro_distribution") || { p_perc: 0, f_perc: 0, c_perc: 0 };
+                          if (e.target.value === "" || (val !== null && !isNaN(val) && val >= 0 && val <= 100)) {
+                            const current = form.getValues("target_macro_distribution") || {
+                              p_perc: 0,
+                              f_perc: 0,
+                              c_perc: 0,
+                            };
                             const newMacros = {
                               ...current,
                               f_perc: val ?? 0,
@@ -287,15 +297,17 @@ export function StartupFormDialog({ open, onClose, onSubmit }: StartupFormDialog
                             field.onChange(val ?? 0);
                             form.setValue("target_macro_distribution", newMacros);
                             // Trigger validation on all macro fields
-                            form.trigger(["target_macro_distribution.p_perc", "target_macro_distribution.f_perc", "target_macro_distribution.c_perc"]);
+                            form.trigger([
+                              "target_macro_distribution.p_perc",
+                              "target_macro_distribution.f_perc",
+                              "target_macro_distribution.c_perc",
+                            ]);
                           }
                         }}
                         onBlur={field.onBlur}
                         aria-invalid={fieldState.invalid}
                       />
-                      {fieldState.error && (
-                        <p className="text-xs text-destructive">{fieldState.error.message}</p>
-                      )}
+                      {fieldState.error && <p className="text-xs text-destructive">{fieldState.error.message}</p>}
                     </>
                   )}
                 />
@@ -308,7 +320,7 @@ export function StartupFormDialog({ open, onClose, onSubmit }: StartupFormDialog
                   name="target_macro_distribution.c_perc"
                   control={form.control}
                   rules={{
-                    validate: (value) => {
+                    validate: () => {
                       const macros = form.getValues("target_macro_distribution");
                       if (!macros) return true;
                       const total = (macros.p_perc ?? 0) + (macros.f_perc ?? 0) + (macros.c_perc ?? 0);
@@ -329,8 +341,12 @@ export function StartupFormDialog({ open, onClose, onSubmit }: StartupFormDialog
                         value={field.value ?? ""}
                         onChange={(e) => {
                           const val = e.target.value === "" ? null : parseFloat(e.target.value);
-                          if (e.target.value === "" || (!isNaN(val!) && val! >= 0 && val! <= 100)) {
-                            const current = form.getValues("target_macro_distribution") || { p_perc: 0, f_perc: 0, c_perc: 0 };
+                          if (e.target.value === "" || (val !== null && !isNaN(val) && val >= 0 && val <= 100)) {
+                            const current = form.getValues("target_macro_distribution") || {
+                              p_perc: 0,
+                              f_perc: 0,
+                              c_perc: 0,
+                            };
                             const newMacros = {
                               ...current,
                               c_perc: val ?? 0,
@@ -338,15 +354,17 @@ export function StartupFormDialog({ open, onClose, onSubmit }: StartupFormDialog
                             field.onChange(val ?? 0);
                             form.setValue("target_macro_distribution", newMacros);
                             // Trigger validation on all macro fields
-                            form.trigger(["target_macro_distribution.p_perc", "target_macro_distribution.f_perc", "target_macro_distribution.c_perc"]);
+                            form.trigger([
+                              "target_macro_distribution.p_perc",
+                              "target_macro_distribution.f_perc",
+                              "target_macro_distribution.c_perc",
+                            ]);
                           }
                         }}
                         onBlur={field.onBlur}
                         aria-invalid={fieldState.invalid}
                       />
-                      {fieldState.error && (
-                        <p className="text-xs text-destructive">{fieldState.error.message}</p>
-                      )}
+                      {fieldState.error && <p className="text-xs text-destructive">{fieldState.error.message}</p>}
                     </>
                   )}
                 />

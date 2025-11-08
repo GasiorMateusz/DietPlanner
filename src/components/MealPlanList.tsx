@@ -55,7 +55,7 @@ export function MealPlanList({
   }
 
   return (
-    <ul className="space-y-4" role="list">
+    <ul className="space-y-4">
       {mealPlans.map((mealPlan) => (
         <MealPlanListItem
           key={mealPlan.id}

@@ -11,18 +11,14 @@ export function createTestSupabaseClient() {
   const anonKey = process.env.SUPABASE_KEY || process.env.PUBLIC_SUPABASE_KEY;
 
   if (!supabaseUrl) {
-    throw new Error(
-      "SUPABASE_URL or PUBLIC_SUPABASE_URL must be set for test cleanup"
-    );
+    throw new Error("SUPABASE_URL or PUBLIC_SUPABASE_URL must be set for test cleanup");
   }
 
   // Prefer service role key for admin operations (bypasses RLS)
   const key = serviceRoleKey || anonKey;
 
   if (!key) {
-    throw new Error(
-      "SUPABASE_SERVICE_ROLE_KEY or SUPABASE_KEY must be set for test cleanup"
-    );
+    throw new Error("SUPABASE_SERVICE_ROLE_KEY or SUPABASE_KEY must be set for test cleanup");
   }
 
   return createClient<Database>(supabaseUrl, key, {
@@ -45,17 +41,17 @@ export async function getTestUserId(email: string): Promise<string | null> {
   // Try admin API first (requires service role key)
   if (serviceRoleKey) {
     try {
-      const { data, error } = await supabase.auth.admin.getUserByEmail(email);
+      const { data, error } = await supabase.auth.admin.listUsers();
 
-      if (!error && data?.user) {
-        return data.user.id;
+      if (!error && data?.users) {
+        const user = data.users.find((u) => u.email === email);
+        if (user) {
+          return user.id;
+        }
       }
 
       if (error) {
-        console.warn(
-          `Admin API failed to get user ID for ${email}:`,
-          error.message
-        );
+        console.warn(`Admin API failed to get user ID for ${email}:`, error.message);
       }
     } catch (error) {
       console.warn(`Error using admin API:`, error);
@@ -77,9 +73,7 @@ export async function getTestUserId(email: string): Promise<string | null> {
 
     if (!error && mealPlans && mealPlans.length > 0) {
       const userId = mealPlans[0].user_id;
-      console.log(
-        `Found user ID from meal plan (fallback method): ${userId}`
-      );
+      console.log(`Found user ID from meal plan (fallback method): ${userId}`);
       return userId;
     }
 
@@ -108,10 +102,7 @@ export async function getTestUserId(email: string): Promise<string | null> {
  * Useful for cleaning up test data created during e2e tests.
  * Works with or without userId - uses service role key to bypass RLS when needed.
  */
-export async function cleanupMealPlansByNamePattern(
-  userId: string | null,
-  namePattern: string
-): Promise<number> {
+export async function cleanupMealPlansByNamePattern(userId: string | null, namePattern: string): Promise<number> {
   const supabase = createTestSupabaseClient();
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
@@ -129,9 +120,7 @@ export async function cleanupMealPlansByNamePattern(
 
       if (!error && mealPlans && mealPlans.length > 0) {
         actualUserId = mealPlans[0].user_id;
-        console.log(
-          `Found user ID from existing meal plan for cleanup: ${actualUserId}`
-        );
+        console.log(`Found user ID from existing meal plan for cleanup: ${actualUserId}`);
       }
     } catch (error) {
       // Ignore errors - we'll proceed without userId if needed
@@ -181,12 +170,11 @@ export async function cleanupMealPlansByNamePattern(
 
   if (deleteError) {
     console.error("Failed to delete meal plans:", deleteError.message);
-    
+
     // If delete failed and we don't have service role key, provide helpful message
     if (!serviceRoleKey) {
       console.warn(
-        "Delete failed - RLS may be blocking. " +
-          "Set SUPABASE_SERVICE_ROLE_KEY for reliable cleanup on test failures."
+        "Delete failed - RLS may be blocking. " + "Set SUPABASE_SERVICE_ROLE_KEY for reliable cleanup on test failures."
       );
     }
     return 0;
@@ -198,21 +186,14 @@ export async function cleanupMealPlansByNamePattern(
 /**
  * Deletes meal plans by their IDs.
  */
-export async function cleanupMealPlansByIds(
-  userId: string,
-  mealPlanIds: string[]
-): Promise<void> {
+export async function cleanupMealPlansByIds(userId: string, mealPlanIds: string[]): Promise<void> {
   if (mealPlanIds.length === 0) {
     return;
   }
 
   const supabase = createTestSupabaseClient();
 
-  const { error } = await supabase
-    .from("meal_plans")
-    .delete()
-    .eq("user_id", userId)
-    .in("id", mealPlanIds);
+  const { error } = await supabase.from("meal_plans").delete().eq("user_id", userId).in("id", mealPlanIds);
 
   if (error) {
     console.error("Failed to delete meal plans by IDs:", error.message);
@@ -233,10 +214,7 @@ export async function cleanupChatSessionsByUserId(userId: string): Promise<numbe
     .eq("user_id", userId);
 
   if (selectError) {
-    console.error(
-      "Failed to find chat sessions for cleanup:",
-      selectError.message
-    );
+    console.error("Failed to find chat sessions for cleanup:", selectError.message);
     return 0;
   }
 
@@ -245,10 +223,7 @@ export async function cleanupChatSessionsByUserId(userId: string): Promise<numbe
   }
 
   const ids = sessions.map((session) => session.id);
-  const { error: deleteError } = await supabase
-    .from("ai_chat_sessions")
-    .delete()
-    .in("id", ids);
+  const { error: deleteError } = await supabase.from("ai_chat_sessions").delete().in("id", ids);
 
   if (deleteError) {
     console.error("Failed to delete chat sessions:", deleteError.message);
@@ -257,4 +232,3 @@ export async function cleanupChatSessionsByUserId(userId: string): Promise<numbe
 
   return ids.length;
 }
-

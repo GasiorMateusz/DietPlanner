@@ -1,5 +1,5 @@
 import type { APIRoute } from "astro";
-import { AiSessionService } from "../../../../../lib/ai/session.service.ts";
+import * as AiSessionService from "../../../../../lib/ai/session.service.ts";
 import { NotFoundError } from "../../../../../lib/errors.ts";
 import { OpenRouterError } from "../../../../../lib/ai/openrouter.service.ts";
 import { sendAiMessageSchema } from "../../../../../lib/validation/ai.schemas.ts";
@@ -85,7 +85,7 @@ export const POST: APIRoute = async (context) => {
       sessionId,
       validation.data as SendAiMessageCommand,
       user.id,
-      supabase,
+      supabase
     );
 
     return new Response(JSON.stringify(responseDto), {

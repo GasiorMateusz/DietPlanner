@@ -48,32 +48,15 @@ export default defineConfig({
   webServer: {
     command: "npm run dev",
     url: "http://localhost:3000",
-    reuseExistingServer: !process.env.CI,
+    // Start a fresh server for each run to avoid reusing a stale/dev server instance
+    // (this improves reliability when .env.test is used to configure the app)
+    reuseExistingServer: false,
     timeout: 120 * 1000,
-    // Pass environment variables from .env.test to the dev server
-    // These will be available as import.meta.env in the Astro application
-    env: envTest.parsed
-      ? {
-          // Explicitly set required variables
-          SUPABASE_URL: envTest.parsed.SUPABASE_URL || process.env.SUPABASE_URL || "",
-          SUPABASE_KEY: envTest.parsed.SUPABASE_KEY || process.env.SUPABASE_KEY || "",
-          PUBLIC_SUPABASE_URL: envTest.parsed.PUBLIC_SUPABASE_URL || process.env.PUBLIC_SUPABASE_URL || "",
-          PUBLIC_SUPABASE_KEY: envTest.parsed.PUBLIC_SUPABASE_KEY || process.env.PUBLIC_SUPABASE_KEY || "",
-          OPENROUTER_API_KEY: envTest.parsed.OPENROUTER_API_KEY || process.env.OPENROUTER_API_KEY || "",
-          // Pass through all other variables from .env.test
-          ...Object.fromEntries(
-            Object.entries(envTest.parsed).filter(
-              ([key]) => !["E2E_USERNAME", "E2E_PASSWORD", "PLAYWRIGHT_BASE_URL"].includes(key)
-            )
-          ),
-        }
-      : {
-          // Fallback to process.env if .env.test doesn't exist
-          SUPABASE_URL: process.env.SUPABASE_URL || "",
-          SUPABASE_KEY: process.env.SUPABASE_KEY || "",
-          PUBLIC_SUPABASE_URL: process.env.PUBLIC_SUPABASE_URL || "",
-          PUBLIC_SUPABASE_KEY: process.env.PUBLIC_SUPABASE_KEY || "",
-          OPENROUTER_API_KEY: process.env.OPENROUTER_API_KEY || "",
-        },
+    // Merge the current process.env with variables parsed from .env.test (if present).
+    // This ensures the dev server receives both the runtime environment and any test-specific
+    // variables defined in .env.test (PUBLIC_* vars, SUPABASE_*, etc.).
+    env: Object.fromEntries(
+      Object.entries({ ...(process.env || {}), ...(envTest.parsed || {}) }).map(([k, v]) => [k, v ?? ""])
+    ),
   },
 });

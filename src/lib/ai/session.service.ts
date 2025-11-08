@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database } from "../../db/database.types.ts";
+import type { Database, Json, TablesInsert, TablesUpdate } from "../../db/database.types.ts";
 import type {
   ChatMessage,
   CreateAiSessionCommand,
@@ -167,158 +167,154 @@ function convertHistoryForOpenRouter(
 }
 
 /**
- * Service for managing AI chat sessions.
- * Handles session creation, prompt formatting, and database operations.
+ * Creates a new AI chat session with an initial prompt and AI response.
+ * @param command - The startup data for the meal plan generation
+ * @param userId - The authenticated user's ID
+ * @param supabase - The Supabase client instance
+ * @returns The created session response with session ID, message, and prompt count
+ * @throws {OpenRouterError} If the OpenRouter API call fails
+ * @throws {Error} If the database operation fails
  */
-export class AiSessionService {
-  /**
-   * Creates a new AI chat session with an initial prompt and AI response.
-   * @param command - The startup data for the meal plan generation
-   * @param userId - The authenticated user's ID
-   * @param supabase - The Supabase client instance
-   * @returns The created session response with session ID, message, and prompt count
-   * @throws {OpenRouterError} If the OpenRouter API call fails
-   * @throws {Error} If the database operation fails
-   */
-  static async createSession(
-    command: CreateAiSessionCommand,
-    userId: string,
-    supabase: SupabaseClient<Database>
-  ): Promise<CreateAiSessionResponseDto> {
-    // Generate UUID for the new session
-    const newSessionId = crypto.randomUUID();
+export async function createSession(
+  command: CreateAiSessionCommand,
+  userId: string,
+  supabase: SupabaseClient<Database>
+): Promise<CreateAiSessionResponseDto> {
+  // Generate UUID for the new session
+  const newSessionId = crypto.randomUUID();
 
-    // Format prompts
-    const systemPromptContent = formatSystemPrompt();
-    const userPromptContent = formatUserPrompt(command);
+  // Format prompts
+  const systemPromptContent = formatSystemPrompt();
+  const userPromptContent = formatUserPrompt(command);
 
-    // Create messages for OpenRouter API
-    // OpenRouter supports 'system' role
-    const messagesForOpenRouter = [
-      {
-        role: "system" as const,
-        content: systemPromptContent,
-      },
-      {
-        role: "user" as const,
-        content: userPromptContent,
-      },
-    ];
-
-    // Call OpenRouter API
-    const assistantResponse = await OpenRouterService.getChatCompletion(
-      import.meta.env.OPENROUTER_API_KEY,
-      messagesForOpenRouter
-    );
-
-    // Build message history for database storage
-    // Store system, user, assistant for telemetry
-    // Since ChatMessage type doesn't support 'system', store it as a user message
-    // with special content that can be identified
-    const systemMessage: UserChatMessage = {
-      role: "user",
-      content: `[SYSTEM] ${systemPromptContent}`,
-    };
-    const userPrompt: UserChatMessage = {
-      role: "user",
+  // Create messages for OpenRouter API
+  // OpenRouter supports 'system' role
+  const messagesForOpenRouter = [
+    {
+      role: "system" as const,
+      content: systemPromptContent,
+    },
+    {
+      role: "user" as const,
       content: userPromptContent,
-    };
-    const messageHistory: ChatMessage[] = [systemMessage, userPrompt, assistantResponse];
+    },
+  ];
 
-    // Prepare database record
-    const newSessionRecord = {
-      id: newSessionId,
-      user_id: userId,
-      message_history: messageHistory,
-      final_prompt_count: 1,
-    };
+  // Call OpenRouter API
+  const assistantResponse = await OpenRouterService.getChatCompletion(
+    import.meta.env.OPENROUTER_API_KEY,
+    messagesForOpenRouter
+  );
 
-    // Insert into database
-    const { error: insertError } = await supabase.from("ai_chat_sessions").insert(newSessionRecord);
+  // Build message history for database storage
+  // Store system, user, assistant for telemetry
+  // Since ChatMessage type doesn't support 'system', store it as a user message
+  // with special content that can be identified
+  const systemMessage: UserChatMessage = {
+    role: "user",
+    content: `[SYSTEM] ${systemPromptContent}`,
+  };
+  const userPrompt: UserChatMessage = {
+    role: "user",
+    content: userPromptContent,
+  };
+  const messageHistory: ChatMessage[] = [systemMessage, userPrompt, assistantResponse];
 
-    if (insertError) {
-      // Log the error for debugging
-      console.error("Database insert error:", insertError);
-      throw new Error(`Database operation failed: ${insertError.message}`);
-    }
+  // Prepare database record
+  const newSessionRecord = {
+    id: newSessionId,
+    user_id: userId,
+    message_history: messageHistory,
+    final_prompt_count: 1,
+  };
 
-    // Build and return response DTO
-    const responseDto: CreateAiSessionResponseDto = {
-      session_id: newSessionId,
-      message: assistantResponse,
-      prompt_count: 1,
-    };
+  // Insert into database
+  const { error: insertError } = await supabase
+    .from("ai_chat_sessions")
+    .insert(newSessionRecord as unknown as TablesInsert<"ai_chat_sessions">);
 
-    return responseDto;
+  if (insertError) {
+    // Log the error for debugging
+    console.error("Database insert error:", insertError);
+    throw new Error(`Database operation failed: ${insertError.message}`);
   }
 
-  /**
-   * Sends a follow-up message to an existing AI chat session.
-   * Retrieves the session, appends the user message, calls OpenRouter,
-   * updates the database with the new message history and incremented prompt count.
-   * @param sessionId - The UUID of the existing AI chat session
-   * @param command - The user message to send
-   * @param userId - The authenticated user's ID
-   * @param supabase - The Supabase client instance
-   * @returns The response with session ID, assistant message, and updated prompt count
-   * @throws {NotFoundError} If the session doesn't exist or doesn't belong to the user
-   * @throws {OpenRouterError} If the OpenRouter API call fails
-   * @throws {Error} If the database operation fails
-   */
-  static async sendMessage(
-    sessionId: string,
-    command: SendAiMessageCommand,
-    userId: string,
-    supabase: SupabaseClient<Database>
-  ): Promise<SendAiMessageResponseDto> {
-    // Query session by ID (RLS will enforce user ownership)
-    const { data: session, error: queryError } = await supabase
-      .from("ai_chat_sessions")
-      .select("id, message_history, final_prompt_count")
-      .eq("id", sessionId)
-      .eq("user_id", userId)
-      .single();
+  // Build and return response DTO
+  const responseDto: CreateAiSessionResponseDto = {
+    session_id: newSessionId,
+    message: assistantResponse,
+    prompt_count: 1,
+  };
 
-    if (queryError || !session) {
-      throw new NotFoundError("Chat session not found");
-    }
+  return responseDto;
+}
 
-    const existingHistory: ChatMessage[] = (session.message_history as ChatMessage[]) || [];
+/**
+ * Sends a follow-up message to an existing AI chat session.
+ * Retrieves the session, appends the user message, calls OpenRouter,
+ * updates the database with the new message history and incremented prompt count.
+ * @param sessionId - The UUID of the existing AI chat session
+ * @param command - The user message to send
+ * @param userId - The authenticated user's ID
+ * @param supabase - The Supabase client instance
+ * @returns The response with session ID, assistant message, and updated prompt count
+ * @throws {NotFoundError} If the session doesn't exist or doesn't belong to the user
+ * @throws {OpenRouterError} If the OpenRouter API call fails
+ * @throws {Error} If the database operation fails
+ */
+export async function sendMessage(
+  sessionId: string,
+  command: SendAiMessageCommand,
+  userId: string,
+  supabase: SupabaseClient<Database>
+): Promise<SendAiMessageResponseDto> {
+  // Query session by ID (RLS will enforce user ownership)
+  const { data: session, error: queryError } = await supabase
+    .from("ai_chat_sessions")
+    .select("id, message_history, final_prompt_count")
+    .eq("id", sessionId)
+    .eq("user_id", userId)
+    .single();
 
-    const updatedHistory: ChatMessage[] = [...existingHistory, command.message];
-
-    // Convert history for OpenRouter (handles [SYSTEM] prefix conversion)
-    const messagesForOpenRouter = convertHistoryForOpenRouter(updatedHistory);
-
-    const assistantResponse = await OpenRouterService.getChatCompletion(
-      import.meta.env.OPENROUTER_API_KEY,
-      messagesForOpenRouter
-    );
-
-    const finalHistory: ChatMessage[] = [...updatedHistory, assistantResponse];
-
-    const newPromptCount = (session.final_prompt_count || 0) + 1;
-
-    const { error: updateError } = await supabase
-      .from("ai_chat_sessions")
-      .update({
-        message_history: finalHistory,
-        final_prompt_count: newPromptCount,
-      })
-      .eq("id", sessionId)
-      .eq("user_id", userId);
-
-    if (updateError) {
-      console.error("Database update error:", updateError);
-      throw new Error(`Database operation failed: ${updateError.message}`);
-    }
-
-    const responseDto: SendAiMessageResponseDto = {
-      session_id: sessionId,
-      message: assistantResponse,
-      prompt_count: newPromptCount,
-    };
-
-    return responseDto;
+  if (queryError || !session) {
+    throw new NotFoundError("Chat session not found");
   }
+
+  const existingHistory: ChatMessage[] = (session.message_history as unknown as ChatMessage[]) || [];
+
+  const updatedHistory: ChatMessage[] = [...existingHistory, command.message];
+
+  // Convert history for OpenRouter (handles [SYSTEM] prefix conversion)
+  const messagesForOpenRouter = convertHistoryForOpenRouter(updatedHistory);
+
+  const assistantResponse = await OpenRouterService.getChatCompletion(
+    import.meta.env.OPENROUTER_API_KEY,
+    messagesForOpenRouter
+  );
+
+  const finalHistory: ChatMessage[] = [...updatedHistory, assistantResponse];
+
+  const newPromptCount = (session.final_prompt_count || 0) + 1;
+
+  const { error: updateError } = await supabase
+    .from("ai_chat_sessions")
+    .update({
+      message_history: finalHistory as unknown as Json,
+      final_prompt_count: newPromptCount,
+    } as unknown as TablesUpdate<"ai_chat_sessions">)
+    .eq("id", sessionId)
+    .eq("user_id", userId);
+
+  if (updateError) {
+    console.error("Database update error:", updateError);
+    throw new Error(`Database operation failed: ${updateError.message}`);
+  }
+
+  const responseDto: SendAiMessageResponseDto = {
+    session_id: sessionId,
+    message: assistantResponse,
+    prompt_count: newPromptCount,
+  };
+
+  return responseDto;
 }

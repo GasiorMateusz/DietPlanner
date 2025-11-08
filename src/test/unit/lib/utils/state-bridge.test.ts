@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { createStateBridge } from "@/lib/utils/chat-helpers";
-import type { ChatMessage, AssistantChatMessage, UserChatMessage, MealPlanStartupData } from "@/types";
+import type { MealPlanStartupData, ChatMessage } from "@/types";
 
 describe("createStateBridge", () => {
   const mockStartupData: MealPlanStartupData = {
@@ -14,7 +14,7 @@ describe("createStateBridge", () => {
       f_perc: 25,
       c_perc: 45,
     },
-    meal_names: ["Breakfast", "Lunch", "Dinner"],
+    meal_names: "Breakfast, Lunch, Dinner",
     exclusions_guidelines: "No nuts",
   };
 

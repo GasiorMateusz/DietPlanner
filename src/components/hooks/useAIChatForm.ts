@@ -38,4 +38,3 @@ export function useAIChatForm(onSubmit: (message: string) => Promise<void>) {
     maxLength: MAX_MESSAGE_LENGTH,
   };
 }
-

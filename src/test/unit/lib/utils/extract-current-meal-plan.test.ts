@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { extractCurrentMealPlan } from "@/lib/utils/chat-helpers";
-import type { ChatMessage, AssistantChatMessage, UserChatMessage } from "@/types";
+import type { ChatMessage } from "@/types";
 
 describe("extractCurrentMealPlan", () => {
   describe("valid meal plan in last assistant message", () => {
