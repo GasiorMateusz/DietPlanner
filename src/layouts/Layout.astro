@@ -1,7 +1,7 @@
 ---
 import "../styles/global.css";
 import { NavBar } from "@/components/NavBar";
-import { createSupabaseServerClient } from "@/db/supabase.server";
+// import { createSupabaseServerClient } from "@/db/supabase.server";
 
 interface Props {
   title?: string;
@@ -10,12 +10,12 @@ interface Props {
 const { title = "Diet Planner" } = Astro.props;
 
 // Verify user session - use getUser() to ensure authenticity
-const supabase = createSupabaseServerClient(Astro.cookies);
-const {
-  data: { user },
-} = await supabase.auth.getUser();
+// const supabase = createSupabaseServerClient(Astro.cookies);
+// const {
+//   data: { user },
+// } = await supabase.auth.getUser();
 
-const userEmail = user?.email;
+// const userEmail = user?.email;
 ---
 
 <!doctype html>
@@ -28,7 +28,7 @@ const userEmail = user?.email;
     <title>{title}</title>
   </head>
   <body>
-    <NavBar userEmail={userEmail ?? null} client:load />
+    <NavBar client:load />
     <main>
       <slot />
     </main>
