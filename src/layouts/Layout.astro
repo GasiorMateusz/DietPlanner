@@ -28,10 +28,16 @@ const userEmail = user?.email;
     <title>{title}</title>
   </head>
   <body>
-    <NavBar userEmail={userEmail} client:load />
+    <NavBar userEmail={userEmail ?? null} client:load />
     <main>
       <slot />
     </main>
+    <script>
+      // Defensive check to prevent [object Object] rendering
+      if (typeof window !== "undefined" && window.ASTRO_PROPS && typeof window.ASTRO_PROPS === "object") {
+        window.ASTRO_PROPS = JSON.parse(JSON.stringify(window.ASTRO_PROPS));
+      }
+    </script>
   </body>
 </html>
 
