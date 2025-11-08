@@ -168,7 +168,10 @@ jobs:
 
             ${allPassed ? 'All checks have passed successfully! ✅' : 'Some checks have failed. Please review the details above. ❌'}`;
 
-            const commentId = '${{ steps.find-comment.outputs.result }}';
+            // steps.find-comment.outputs.result may be the string 'null' when
+            // no comment was found. Treat 'null' (and empty) as no comment.
+            const commentIdRaw = '${{ steps.find-comment.outputs.result }}';
+            const commentId = (commentIdRaw && commentIdRaw !== 'null') ? Number(commentIdRaw) : null;
 
             if (commentId) {
               await github.rest.issues.updateComment({
