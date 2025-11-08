@@ -154,6 +154,7 @@ The `package.json` file includes the following scripts for development and maint
 - `npm run test:all` - Runs all test suites (unit, integration, and E2E)
 
 **Testing:**
+
 - `npm run test`: Runs all tests in watch mode.
 - `npm run test:unit`: Runs unit tests.
 - `npm run test:integration`: Runs integration tests.

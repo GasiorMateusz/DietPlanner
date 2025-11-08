@@ -7,9 +7,10 @@ export const createSupabaseServerClient = (cookies: AstroCookies) => {
   const supabaseKey = import.meta.env.SUPABASE_KEY;
 
   if (!supabaseUrl || !supabaseKey) {
+    // eslint-disable-next-line no-console
     console.error("Missing Supabase credentials:", {
       hasUrl: Boolean(supabaseUrl),
-      hasKey: Boolean(supabaseKey)
+      hasKey: Boolean(supabaseKey),
     });
     throw new Error("SUPABASE_URL and SUPABASE_KEY must be set");
   }

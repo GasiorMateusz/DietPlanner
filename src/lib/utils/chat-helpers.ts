@@ -56,6 +56,7 @@ export function extractCurrentMealPlan(messageHistory: ChatMessage[]): ParsedMea
       return parsed;
     }
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error("Failed to parse meal plan:", error);
   }
 

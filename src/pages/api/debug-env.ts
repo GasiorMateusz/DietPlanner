@@ -6,13 +6,13 @@ export const GET: APIRoute = async () => {
       supabaseUrl: !!import.meta.env.SUPABASE_URL,
       supabaseKey: !!import.meta.env.SUPABASE_KEY,
       publicSupabaseUrl: !!import.meta.env.PUBLIC_SUPABASE_URL,
-      publicSupabaseKey: !!import.meta.env.PUBLIC_SUPABASE_KEY
+      publicSupabaseKey: !!import.meta.env.PUBLIC_SUPABASE_KEY,
     }),
     {
       status: 200,
       headers: {
-        "Content-Type": "application/json"
-      }
+        "Content-Type": "application/json",
+      },
     }
   );
 };

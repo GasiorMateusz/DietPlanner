@@ -235,6 +235,7 @@ export async function createSession(
 
   if (insertError) {
     // Log the error for debugging
+    // eslint-disable-next-line no-console
     console.error("Database insert error:", insertError);
     throw new Error(`Database operation failed: ${insertError.message}`);
   }
@@ -306,6 +307,7 @@ export async function sendMessage(
     .eq("user_id", userId);
 
   if (updateError) {
+    // eslint-disable-next-line no-console
     console.error("Database update error:", updateError);
     throw new Error(`Database operation failed: ${updateError.message}`);
   }

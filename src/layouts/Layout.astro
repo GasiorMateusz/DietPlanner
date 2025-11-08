@@ -32,12 +32,6 @@ const userEmail = user?.email;
     <main>
       <slot />
     </main>
-    <script>
-      // Defensive check to prevent [object Object] rendering
-      if (typeof window !== "undefined" && window.ASTRO_PROPS && typeof window.ASTRO_PROPS === "object") {
-        window.ASTRO_PROPS = JSON.parse(JSON.stringify(window.ASTRO_PROPS));
-      }
-    </script>
   </body>
 </html>
 
