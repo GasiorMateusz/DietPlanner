@@ -20,6 +20,9 @@ export default function RegisterForm({ className }: Props) {
   const termsId = React.useId();
   const [success, setSuccess] = React.useState<string | null>(null);
 
+  // Cast defaultValues to avoid strict literal type mismatch between
+  // the zod literal(true) validator and our UI default (unchecked).
+  // The runtime validation will still enforce `termsAccepted === true`.
   const form = useForm<RegisterInput>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
@@ -27,7 +30,7 @@ export default function RegisterForm({ className }: Props) {
       password: "",
       confirmPassword: "",
       termsAccepted: false,
-    },
+    } as unknown as RegisterInput,
     mode: "onBlur",
   });
 
