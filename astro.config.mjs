@@ -13,7 +13,8 @@ import node from "@astrojs/node";
 // - Cloudflare / Pages mode (set TARGET=cloudflare or CLOUDFLARE_PAGES=true)
 //   will produce a static build (output: 'static') which is suitable for
 //   Cloudflare Pages static deployments.
-const isCloudflare = (globalThis?.process?.env?.TARGET === "cloudflare") || (globalThis?.process?.env?.CLOUDFLARE_PAGES === "true");
+const _env = globalThis && globalThis.process && globalThis.process.env ? globalThis.process.env : {};
+const isCloudflare = _env.TARGET === "cloudflare" || _env.CLOUDFLARE_PAGES === "true";
 
 export default defineConfig({
   output: isCloudflare ? "static" : "server",
