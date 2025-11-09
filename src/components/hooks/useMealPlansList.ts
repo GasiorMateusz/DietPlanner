@@ -74,6 +74,7 @@ export function useMealPlansList(): UseMealPlansListReturn {
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : "An error occurred. Please try again.";
         setError(errorMessage);
+        // eslint-disable-next-line no-console
         console.error("Error fetching meal plans:", err);
       } finally {
         setIsLoading(false);

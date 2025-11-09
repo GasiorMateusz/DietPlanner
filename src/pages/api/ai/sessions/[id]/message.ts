@@ -1,6 +1,6 @@
 import type { APIRoute } from "astro";
 import * as AiSessionService from "../../../../../lib/ai/session.service.ts";
-import { NotFoundError } from "../../../../../lib/errors.ts";
+import { NotFoundError, UnauthorizedError } from "../../../../../lib/errors.ts";
 import { OpenRouterError } from "../../../../../lib/ai/openrouter.service.ts";
 import { sendAiMessageSchema } from "../../../../../lib/validation/ai.schemas.ts";
 import type { SendAiMessageCommand } from "../../../../../types.ts";
@@ -93,6 +93,20 @@ export const POST: APIRoute = async (context) => {
       headers: { "Content-Type": "application/json" },
     });
   } catch (error) {
+    // Handle UnauthorizedError (401 Unauthorized)
+    if (error instanceof UnauthorizedError) {
+      return new Response(
+        JSON.stringify({
+          error: error.message,
+          details: error.data.details,
+        }),
+        {
+          status: 401,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    }
+
     // Handle NotFoundError (404 Not Found)
     if (error instanceof NotFoundError) {
       return new Response(JSON.stringify({ error: error.message }), {
@@ -101,10 +115,26 @@ export const POST: APIRoute = async (context) => {
       });
     }
 
-    // Handle OpenRouter errors (502 Bad Gateway)
+    // Handle OpenRouter errors (502 Bad Gateway or 500 for missing API key)
     if (error instanceof OpenRouterError) {
       // eslint-disable-next-line no-console
       console.error("OpenRouter error:", error.message, error.statusCode);
+
+      // For 401 errors (invalid API key), return 500 with a more helpful message
+      if (error.statusCode === 401) {
+        return new Response(
+          JSON.stringify({
+            error: "OpenRouter API key is invalid or missing. Please check your server configuration.",
+            details: error.message,
+          }),
+          {
+            status: 500,
+            headers: { "Content-Type": "application/json" },
+          }
+        );
+      }
+
+      // For other OpenRouter errors, return 502
       return new Response(JSON.stringify({ error: "AI service unavailable" }), {
         status: 502,
         headers: { "Content-Type": "application/json" },

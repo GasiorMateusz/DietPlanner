@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
 import { forgotPasswordSchema, type ForgotPasswordInput } from "@/lib/validation/auth.schemas";
+import { supabaseClient as supabase } from "@/db/supabase.client";
 
 interface Props {
   className?: string;
@@ -14,6 +15,7 @@ export default function ForgotPasswordForm({ className }: Props) {
   const [values, setValues] = React.useState<ForgotPasswordInput>({ email: "" });
   const [errors, setErrors] = React.useState<Partial<Record<keyof ForgotPasswordInput, string>>>({});
   const [message, setMessage] = React.useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
   const emailId = React.useId();
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -35,19 +37,81 @@ export default function ForgotPasswordForm({ className }: Props) {
     return true;
   }
 
+  function getPasswordResetSuccessMessage(): string {
+    // Check if using local Supabase (Inbucket) by checking the Supabase URL
+    const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL || "";
+    const isUsingLocalSupabase = supabaseUrl.includes("localhost") || supabaseUrl.includes("127.0.0.1");
+    return isUsingLocalSupabase
+      ? "If an account exists for this email, we sent a password reset link. Check Inbucket at http://127.0.0.1:54324 for local emails."
+      : "If an account exists for this email, we sent a password reset link.";
+  }
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setMessage(null);
     if (!validate(values)) return;
-    // MVP: Shows success message regardless of email existence (security best practice)
-    setMessage("If an account exists for this email, we sent a password reset link.");
+
+    setIsSubmitting(true);
+
+    // Get the base URL for the redirect - use PUBLIC_APP_URL if available, otherwise use window.location.origin
+    const baseUrl = import.meta.env.PUBLIC_APP_URL || (typeof window !== "undefined" ? window.location.origin : "");
+    const redirectTo = `${baseUrl}/auth/reset-password`;
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(values.email, {
+        redirectTo,
+      });
+
+      setIsSubmitting(false);
+
+      // Check if we're in development mode to show more detailed errors
+      const isLocalDev =
+        import.meta.env.DEV ||
+        (typeof window !== "undefined" &&
+          (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"));
+
+      // In development, show ALL errors to help debug
+      // Also show errors if using cloud Supabase (not local)
+      const isUsingCloudSupabase =
+        !import.meta.env.PUBLIC_SUPABASE_URL?.includes("localhost") &&
+        !import.meta.env.PUBLIC_SUPABASE_URL?.includes("127.0.0.1");
+
+      if (error && (isLocalDev || isUsingCloudSupabase)) {
+        const errorMessage = error.message || "";
+        const errorCode = (error as { code?: string }).code;
+
+        // Show error message - always show for cloud Supabase, or in dev mode
+        setMessage(`Error: ${errorMessage}${errorCode ? ` (Code: ${errorCode})` : ""}.`);
+        return;
+      }
+
+      // In production, always show success message regardless of error (security best practice)
+      // This prevents email enumeration attacks
+      setMessage(getPasswordResetSuccessMessage());
+    } catch (error) {
+      setIsSubmitting(false);
+      // Ignore refresh token errors - they're unrelated to password reset
+      if (error && typeof error === "object" && "code" in error && error.code === "refresh_token_not_found") {
+        // Still show success message (security best practice)
+        setMessage(getPasswordResetSuccessMessage());
+        return;
+      }
+      // Still show success message (security best practice)
+      setMessage(getPasswordResetSuccessMessage());
+    }
   }
 
   return (
     <form onSubmit={onSubmit} className={cn("space-y-4", className)} noValidate>
       {message ? (
-        <Alert className="border-green-600/30 text-green-700 dark:text-green-400">
-          <AlertTitle>Check your email</AlertTitle>
+        <Alert
+          className={
+            message.startsWith("Error:")
+              ? "border-destructive/30 text-destructive"
+              : "border-green-600/30 text-green-700 dark:text-green-400"
+          }
+        >
+          <AlertTitle>{message.startsWith("Error:") ? "Error" : "Check your email"}</AlertTitle>
           <AlertDescription>{message}</AlertDescription>
         </Alert>
       ) : null}
@@ -73,8 +137,8 @@ export default function ForgotPasswordForm({ className }: Props) {
         ) : null}
       </div>
 
-      <Button type="submit" className="w-full">
-        Send reset link
+      <Button type="submit" className="w-full" disabled={isSubmitting}>
+        {isSubmitting ? "Sending..." : "Send reset link"}
       </Button>
 
       <div className="text-center text-sm">

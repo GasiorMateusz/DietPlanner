@@ -200,11 +200,17 @@ export async function createSession(
     },
   ];
 
+  // Validate API key before making request
+  const apiKey = import.meta.env.OPENROUTER_API_KEY;
+  if (!apiKey || apiKey.trim() === "") {
+    throw new OpenRouterError(
+      "OpenRouter API key is not configured. Please set OPENROUTER_API_KEY environment variable.",
+      500
+    );
+  }
+
   // Call OpenRouter API
-  const assistantResponse = await OpenRouterService.getChatCompletion(
-    import.meta.env.OPENROUTER_API_KEY,
-    messagesForOpenRouter
-  );
+  const assistantResponse = await OpenRouterService.getChatCompletion(apiKey, messagesForOpenRouter);
 
   // Build message history for database storage
   // Store system, user, assistant for telemetry
@@ -288,10 +294,16 @@ export async function sendMessage(
   // Convert history for OpenRouter (handles [SYSTEM] prefix conversion)
   const messagesForOpenRouter = convertHistoryForOpenRouter(updatedHistory);
 
-  const assistantResponse = await OpenRouterService.getChatCompletion(
-    import.meta.env.OPENROUTER_API_KEY,
-    messagesForOpenRouter
-  );
+  // Validate API key before making request
+  const apiKey = import.meta.env.OPENROUTER_API_KEY;
+  if (!apiKey || apiKey.trim() === "") {
+    throw new OpenRouterError(
+      "OpenRouter API key is not configured. Please set OPENROUTER_API_KEY environment variable.",
+      500
+    );
+  }
+
+  const assistantResponse = await OpenRouterService.getChatCompletion(apiKey, messagesForOpenRouter);
 
   const finalHistory: ChatMessage[] = [...updatedHistory, assistantResponse];
 

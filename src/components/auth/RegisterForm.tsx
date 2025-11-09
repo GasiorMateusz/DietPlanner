@@ -38,9 +38,16 @@ export default function RegisterForm({ className }: Props) {
     setSuccess(null);
     form.clearErrors("root");
 
+    // Get the base URL for the redirect - use PUBLIC_APP_URL if available, otherwise use window.location.origin
+    const baseUrl = import.meta.env.PUBLIC_APP_URL || (typeof window !== "undefined" ? window.location.origin : "");
+    const redirectTo = `${baseUrl}/auth/login`;
+
     const { data: signUpData, error } = await supabase.auth.signUp({
       email: data.email,
       password: data.password,
+      options: {
+        emailRedirectTo: redirectTo,
+      },
     });
 
     if (error) {
@@ -64,8 +71,7 @@ export default function RegisterForm({ className }: Props) {
     } else {
       // Email confirmation disabled - user is automatically logged in
       // Use full page reload to ensure cookies are synced and middleware can detect session
-      // eslint-disable-next-line react-compiler/react-compiler
-      window.location.href = "/app/dashboard";
+      window.location.assign("/app/dashboard");
     }
   });
 
