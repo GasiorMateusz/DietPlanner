@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
 import { forgotPasswordSchema, type ForgotPasswordInput } from "@/lib/validation/auth.schemas";
+import { supabaseClient as supabase } from "@/db/supabase.client";
 
 interface Props {
   className?: string;
@@ -14,6 +15,7 @@ export default function ForgotPasswordForm({ className }: Props) {
   const [values, setValues] = React.useState<ForgotPasswordInput>({ email: "" });
   const [errors, setErrors] = React.useState<Partial<Record<keyof ForgotPasswordInput, string>>>({});
   const [message, setMessage] = React.useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
   const emailId = React.useId();
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -39,8 +41,27 @@ export default function ForgotPasswordForm({ className }: Props) {
     e.preventDefault();
     setMessage(null);
     if (!validate(values)) return;
-    // MVP: Shows success message regardless of email existence (security best practice)
+
+    setIsSubmitting(true);
+
+    // Get the base URL for the redirect - use PUBLIC_APP_URL if available, otherwise use window.location.origin
+    const baseUrl = import.meta.env.PUBLIC_APP_URL || (typeof window !== "undefined" ? window.location.origin : "");
+    const redirectTo = `${baseUrl}/auth/reset-password`;
+
+    const { error } = await supabase.auth.resetPasswordForEmail(values.email, {
+      redirectTo,
+    });
+
+    setIsSubmitting(false);
+
+    // Always show success message regardless of error (security best practice)
+    // This prevents email enumeration attacks
     setMessage("If an account exists for this email, we sent a password reset link.");
+
+    // Log error for debugging but don't show to user
+    if (error) {
+      console.error("Password reset error:", error);
+    }
   }
 
   return (
@@ -73,8 +94,8 @@ export default function ForgotPasswordForm({ className }: Props) {
         ) : null}
       </div>
 
-      <Button type="submit" className="w-full">
-        Send reset link
+      <Button type="submit" className="w-full" disabled={isSubmitting}>
+        {isSubmitting ? "Sending..." : "Send reset link"}
       </Button>
 
       <div className="text-center text-sm">
