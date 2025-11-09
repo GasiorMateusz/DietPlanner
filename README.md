@@ -112,6 +112,11 @@ To set up and run this project on your local machine, follow these steps.
    PUBLIC_SUPABASE_URL=your_supabase_project_url
    PUBLIC_SUPABASE_KEY=your_supabase_anon_key
 
+   # Application URL (used for email verification and password reset links)
+   # For production, set this to your production URL WITHOUT trailing slash (e.g., https://yourdomain.com)
+   # For local development, this can be omitted (will use window.location.origin)
+   PUBLIC_APP_URL=https://yourdomain.com
+
    # OpenRouter API Key
    OPENROUTER_API_KEY=your_openrouter_api_key
    ```
