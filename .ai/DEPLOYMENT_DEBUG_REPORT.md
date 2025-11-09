@@ -688,3 +688,61 @@ pages_build_output_dir = "dist"
 **Review Status**: Pending  
 **Next Review Date**: After version downgrade testing
 
+
+---
+
+## 13. Phase 5: Fundamental Configuration & Environment Verification
+
+This phase aims to re-verify the most basic settings to rule out simple configuration errors as the root cause of the problem.
+
+### Step 11: Meticulous Cloudflare Pages UI Verification
+
+It is crucial to verify that the settings in the Cloudflare Pages dashboard are 100% aligned with expectations. UI configurations can sometimes override or conflict with repository settings.
+
+**Build & Deployments Settings:**
+- **Build command:** Verify that the build command is set to `npm run build:cloudflare`.
+- **Build output directory:** Ensure it is set to `dist`.
+- **Root directory:** Check that this field is empty (indicating the repository root).
+
+**Environment Variables:**
+- Navigate to `Settings > Environment variables`.
+- Confirm that **all** variables (`SUPABASE_URL`, `PUBLIC_SUPABASE_URL`, etc.) are set for the **Production** environment, not just Preview.
+- Scrutinize each variable for typos or hidden spaces at the beginning or end.
+
+**Node.js Version:**
+- In `Settings > Environment variables`, check if a `NODE_VERSION` variable is set. Cloudflare Pages defaults to a specific Node.js version which might differ from the `.nvmrc` file. A version mismatch can cause subtle bugs. It's recommended to set `NODE_VERSION` to a version compatible with the project (e.g., `20`).
+
+### Step 12: Isolate the Response Generation with a Minimal Page
+
+To definitively rule out any issues within Astro layouts or React components, we will create a minimal test page with no dependencies.
+
+1. Create a new file: `src/pages/debug.astro`.
+2. Add the following simple HTML content:
+   ```astro
+   ---
+   console.log('[debug.astro] Rendering simple, static HTML response');
+   ---
+   <!DOCTYPE html>
+   <html lang="en">
+     <head>
+       <title>Debug Page</title>
+     </head>
+     <body>
+       <h1>It works! Plain HTML.</h1>
+     </body>
+   </html>
+   ```
+3. Deploy this change and access the `/debug` path in the production environment.
+   - **If `/debug` renders correctly:** The problem is confirmed to be within one of the Astro or React components (e.g., `LandingLayout.astro`, `LoginForm.tsx`).
+   - **If `/debug` also returns `[object Object]`:** This will provide strong evidence that the issue lies deeper, within the Astro adapter or the Cloudflare runtime, as initially concluded.
+
+### Step 13: Verify Build Environment Variables in CI/CD
+
+Although the `master.yml` workflow appears to correctly set the `TARGET=cloudflare` variable, we will add a verification step for absolute certainty.
+
+1. In the `.github/workflows/master.yml` file, within the `deploy` job, insert a new step just before the "Build for Cloudflare Pages" step:
+   ```yaml
+     - name: Verify Environment Variables
+       run: env | grep TARGET
+   ```
+2. This command will print the value of the `TARGET` variable in the GitHub Actions logs, confirming that `astro.config.mjs` is selecting the correct adapter during the build process.
