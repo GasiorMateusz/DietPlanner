@@ -51,10 +51,10 @@ export async function handleApiResponse<T>(response: Response): Promise<T> {
     const errorData = await response.json().catch(() => ({
       error: "An error occurred",
     }));
-    
+
     // Format error message with details if available
     let errorMessage = errorData.error || "An error occurred";
-    
+
     // If there are validation details, format them into a readable message
     if (errorData.details && Array.isArray(errorData.details) && errorData.details.length > 0) {
       const validationErrors = errorData.details
@@ -62,10 +62,10 @@ export async function handleApiResponse<T>(response: Response): Promise<T> {
           if (!detail.path || detail.path.length === 0) {
             return detail.message || "Invalid value";
           }
-          
+
           // Format field path to be more readable
           const fieldPath = detail.path
-            .map((segment, index) => {
+            .map((segment) => {
               // Convert array indices to "item #X" format
               if (typeof segment === "number") {
                 return `item ${segment + 1}`;
@@ -77,17 +77,17 @@ export async function handleApiResponse<T>(response: Response): Promise<T> {
                 .join(" ");
             })
             .join(" → ");
-          
+
           return `${fieldPath}: ${detail.message || "Invalid value"}`;
         })
         .join("; ");
-      
+
       errorMessage = `${errorMessage}. ${validationErrors}`;
     } else if (errorData.details && typeof errorData.details === "string") {
       // If details is a string, append it
       errorMessage = `${errorMessage}. ${errorData.details}`;
     }
-    
+
     throw new Error(errorMessage);
   }
 

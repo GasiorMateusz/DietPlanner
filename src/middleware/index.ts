@@ -17,7 +17,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
     if (error) {
       const errorCode = (error as { code?: string }).code;
       const errorMessage = (error.message || "").toLowerCase();
-      
+
       // These are expected errors that don't need logging:
       // - refresh_token_not_found: No valid refresh token (user not logged in)
       // - Auth session missing: No active session (user not logged in)
@@ -30,6 +30,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
       if (!isExpectedError) {
         // Only log unexpected auth errors
+        // eslint-disable-next-line no-console
         console.error(`[Middleware] Auth error for ${pathname}:`, error.message);
       }
     }
@@ -50,7 +51,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
     if (error && typeof error === "object") {
       const errorCode = "code" in error ? (error.code as string) : undefined;
       const errorMessage = error instanceof Error ? (error.message || "").toLowerCase() : String(error).toLowerCase();
-      
+
       const isExpectedError =
         errorCode === "refresh_token_not_found" ||
         errorMessage.includes("auth session missing") ||
@@ -63,6 +64,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
       }
     }
 
+    // eslint-disable-next-line no-console
     console.error(`[Middleware] Error for ${pathname}:`, {
       error: error instanceof Error ? error.message : String(error),
       stack: error instanceof Error ? error.stack : undefined,

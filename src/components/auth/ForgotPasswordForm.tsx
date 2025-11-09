@@ -58,25 +58,28 @@ export default function ForgotPasswordForm({ className }: Props) {
     const redirectTo = `${baseUrl}/auth/reset-password`;
 
     try {
-      const { data, error } = await supabase.auth.resetPasswordForEmail(values.email, {
+      const { error } = await supabase.auth.resetPasswordForEmail(values.email, {
         redirectTo,
       });
 
       setIsSubmitting(false);
 
       // Check if we're in development mode to show more detailed errors
-      const isLocalDev = import.meta.env.DEV || 
-        (typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"));
+      const isLocalDev =
+        import.meta.env.DEV ||
+        (typeof window !== "undefined" &&
+          (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"));
 
       // In development, show ALL errors to help debug
       // Also show errors if using cloud Supabase (not local)
-      const isUsingCloudSupabase = !import.meta.env.PUBLIC_SUPABASE_URL?.includes("localhost") && 
-                                    !import.meta.env.PUBLIC_SUPABASE_URL?.includes("127.0.0.1");
-      
+      const isUsingCloudSupabase =
+        !import.meta.env.PUBLIC_SUPABASE_URL?.includes("localhost") &&
+        !import.meta.env.PUBLIC_SUPABASE_URL?.includes("127.0.0.1");
+
       if (error && (isLocalDev || isUsingCloudSupabase)) {
         const errorMessage = error.message || "";
         const errorCode = (error as { code?: string }).code;
-        
+
         // Show error message - always show for cloud Supabase, or in dev mode
         setMessage(`Error: ${errorMessage}${errorCode ? ` (Code: ${errorCode})` : ""}.`);
         return;
@@ -101,7 +104,7 @@ export default function ForgotPasswordForm({ className }: Props) {
   return (
     <form onSubmit={onSubmit} className={cn("space-y-4", className)} noValidate>
       {message ? (
-        <Alert 
+        <Alert
           className={
             message.startsWith("Error:")
               ? "border-destructive/30 text-destructive"

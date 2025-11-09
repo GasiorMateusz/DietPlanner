@@ -71,7 +71,6 @@ export default function RegisterForm({ className }: Props) {
     } else {
       // Email confirmation disabled - user is automatically logged in
       // Use full page reload to ensure cookies are synced and middleware can detect session
-      // eslint-disable-next-line react-compiler/react-compiler
       window.location.assign("/app/dashboard");
     }
   });

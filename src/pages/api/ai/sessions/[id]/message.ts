@@ -119,7 +119,7 @@ export const POST: APIRoute = async (context) => {
     if (error instanceof OpenRouterError) {
       // eslint-disable-next-line no-console
       console.error("OpenRouter error:", error.message, error.statusCode);
-      
+
       // For 401 errors (invalid API key), return 500 with a more helpful message
       if (error.statusCode === 401) {
         return new Response(
@@ -133,7 +133,7 @@ export const POST: APIRoute = async (context) => {
           }
         );
       }
-      
+
       // For other OpenRouter errors, return 502
       return new Response(JSON.stringify({ error: "AI service unavailable" }), {
         status: 502,

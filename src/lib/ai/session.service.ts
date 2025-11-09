@@ -210,10 +210,7 @@ export async function createSession(
   }
 
   // Call OpenRouter API
-  const assistantResponse = await OpenRouterService.getChatCompletion(
-    apiKey,
-    messagesForOpenRouter
-  );
+  const assistantResponse = await OpenRouterService.getChatCompletion(apiKey, messagesForOpenRouter);
 
   // Build message history for database storage
   // Store system, user, assistant for telemetry
@@ -306,10 +303,7 @@ export async function sendMessage(
     );
   }
 
-  const assistantResponse = await OpenRouterService.getChatCompletion(
-    apiKey,
-    messagesForOpenRouter
-  );
+  const assistantResponse = await OpenRouterService.getChatCompletion(apiKey, messagesForOpenRouter);
 
   const finalHistory: ChatMessage[] = [...updatedHistory, assistantResponse];
 
