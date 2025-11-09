@@ -86,9 +86,7 @@ jobs:
       - name: Deploy to Cloudflare Pages
         run: |
           npx wrangler pages deploy dist \
-            --project-name=${{ secrets.CF_PROJECT_NAME }} \
-            --compatibility-date=2025-11-09 \
-            --compatibility-flags=nodejs_compat
+            --project-name=${{ secrets.CF_PROJECT_NAME }}
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
