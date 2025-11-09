@@ -48,19 +48,54 @@ export default function ForgotPasswordForm({ className }: Props) {
     const baseUrl = import.meta.env.PUBLIC_APP_URL || (typeof window !== "undefined" ? window.location.origin : "");
     const redirectTo = `${baseUrl}/auth/reset-password`;
 
-    const { error } = await supabase.auth.resetPasswordForEmail(values.email, {
-      redirectTo,
-    });
+    try {
+      const { data, error } = await supabase.auth.resetPasswordForEmail(values.email, {
+        redirectTo,
+      });
 
-    setIsSubmitting(false);
+      setIsSubmitting(false);
 
-    // Always show success message regardless of error (security best practice)
-    // This prevents email enumeration attacks
-    setMessage("If an account exists for this email, we sent a password reset link.");
+      // Log the response for debugging
+      console.log("Password reset response:", { data, error });
 
-    // Log error for debugging but don't show to user
-    if (error) {
-      console.error("Password reset error:", error);
+      // Always show success message regardless of error (security best practice)
+      // This prevents email enumeration attacks
+      const isLocalDev = import.meta.env.DEV || window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+      const successMessage = isLocalDev
+        ? "If an account exists for this email, we sent a password reset link. Check Inbucket at http://127.0.0.1:54324 for local emails."
+        : "If an account exists for this email, we sent a password reset link.";
+      
+      setMessage(successMessage);
+
+      // Log error for debugging but don't show to user
+      if (error) {
+        console.error("Password reset error:", {
+          message: error.message,
+          status: error.status,
+          code: (error as { code?: string }).code,
+          name: error.name,
+        });
+      }
+    } catch (error) {
+      setIsSubmitting(false);
+      // Ignore refresh token errors - they're unrelated to password reset
+      if (error && typeof error === "object" && "code" in error && error.code === "refresh_token_not_found") {
+        // Still show success message (security best practice)
+        const isLocalDev = import.meta.env.DEV || window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+        const successMessage = isLocalDev
+          ? "If an account exists for this email, we sent a password reset link. Check Inbucket at http://127.0.0.1:54324 for local emails."
+          : "If an account exists for this email, we sent a password reset link.";
+        setMessage(successMessage);
+        return;
+      }
+      // Log unexpected errors
+      console.error("Unexpected error during password reset:", error);
+      // Still show success message (security best practice)
+      const isLocalDev = import.meta.env.DEV || window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+      const successMessage = isLocalDev
+        ? "If an account exists for this email, we sent a password reset link. Check Inbucket at http://127.0.0.1:54324 for local emails."
+        : "If an account exists for this email, we sent a password reset link.";
+      setMessage(successMessage);
     }
   }
 

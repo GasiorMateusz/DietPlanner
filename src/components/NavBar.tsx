@@ -20,16 +20,34 @@ export function NavBar({ userEmail: initialUserEmail, className }: NavBarProps) 
   // Use getUser() to verify the session is authentic
   useEffect(() => {
     const checkSession = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      if (session?.access_token) {
+      try {
         const {
-          data: { user },
-        } = await supabase.auth.getUser(session.access_token);
-        setUserEmail(user?.email);
-      } else {
+          data: { session },
+          error,
+        } = await supabase.auth.getSession();
+
+        // Ignore refresh token errors - they're harmless if user can still authenticate
+        if (error && (error as { code?: string }).code === "refresh_token_not_found") {
+          setUserEmail(undefined);
+          return;
+        }
+
+        if (session?.access_token) {
+          const {
+            data: { user },
+          } = await supabase.auth.getUser(session.access_token);
+          setUserEmail(user?.email);
+        } else {
+          setUserEmail(undefined);
+        }
+      } catch (error) {
+        // Ignore refresh token errors silently
+        if (error && typeof error === "object" && "code" in error && error.code === "refresh_token_not_found") {
+          setUserEmail(undefined);
+          return;
+        }
+        // Only log unexpected errors
+        console.error("Error checking session:", error);
         setUserEmail(undefined);
       }
     };
@@ -40,12 +58,23 @@ export function NavBar({ userEmail: initialUserEmail, className }: NavBarProps) 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      if (session?.access_token) {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser(session.access_token);
-        setUserEmail(user?.email);
-      } else {
+      try {
+        if (session?.access_token) {
+          const {
+            data: { user },
+          } = await supabase.auth.getUser(session.access_token);
+          setUserEmail(user?.email);
+        } else {
+          setUserEmail(undefined);
+        }
+      } catch (error) {
+        // Ignore refresh token errors silently
+        if (error && typeof error === "object" && "code" in error && error.code === "refresh_token_not_found") {
+          setUserEmail(undefined);
+          return;
+        }
+        // Only log unexpected errors
+        console.error("Error in auth state change:", error);
         setUserEmail(undefined);
       }
     });
