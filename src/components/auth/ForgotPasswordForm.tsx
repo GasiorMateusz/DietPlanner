@@ -37,6 +37,15 @@ export default function ForgotPasswordForm({ className }: Props) {
     return true;
   }
 
+  function getPasswordResetSuccessMessage(): string {
+    // Check if using local Supabase (Inbucket) by checking the Supabase URL
+    const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL || "";
+    const isUsingLocalSupabase = supabaseUrl.includes("localhost") || supabaseUrl.includes("127.0.0.1");
+    return isUsingLocalSupabase
+      ? "If an account exists for this email, we sent a password reset link. Check Inbucket at http://127.0.0.1:54324 for local emails."
+      : "If an account exists for this email, we sent a password reset link.";
+  }
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setMessage(null);
@@ -55,55 +64,51 @@ export default function ForgotPasswordForm({ className }: Props) {
 
       setIsSubmitting(false);
 
-      // Log the response for debugging
-      console.log("Password reset response:", { data, error });
+      // Check if we're in development mode to show more detailed errors
+      const isLocalDev = import.meta.env.DEV || 
+        (typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"));
 
-      // Always show success message regardless of error (security best practice)
-      // This prevents email enumeration attacks
-      const isLocalDev = import.meta.env.DEV || window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
-      const successMessage = isLocalDev
-        ? "If an account exists for this email, we sent a password reset link. Check Inbucket at http://127.0.0.1:54324 for local emails."
-        : "If an account exists for this email, we sent a password reset link.";
+      // In development, show ALL errors to help debug
+      // Also show errors if using cloud Supabase (not local)
+      const isUsingCloudSupabase = !import.meta.env.PUBLIC_SUPABASE_URL?.includes("localhost") && 
+                                    !import.meta.env.PUBLIC_SUPABASE_URL?.includes("127.0.0.1");
       
-      setMessage(successMessage);
-
-      // Log error for debugging but don't show to user
-      if (error) {
-        console.error("Password reset error:", {
-          message: error.message,
-          status: error.status,
-          code: (error as { code?: string }).code,
-          name: error.name,
-        });
+      if (error && (isLocalDev || isUsingCloudSupabase)) {
+        const errorMessage = error.message || "";
+        const errorCode = (error as { code?: string }).code;
+        
+        // Show error message - always show for cloud Supabase, or in dev mode
+        setMessage(`Error: ${errorMessage}${errorCode ? ` (Code: ${errorCode})` : ""}.`);
+        return;
       }
+
+      // In production, always show success message regardless of error (security best practice)
+      // This prevents email enumeration attacks
+      setMessage(getPasswordResetSuccessMessage());
     } catch (error) {
       setIsSubmitting(false);
       // Ignore refresh token errors - they're unrelated to password reset
       if (error && typeof error === "object" && "code" in error && error.code === "refresh_token_not_found") {
         // Still show success message (security best practice)
-        const isLocalDev = import.meta.env.DEV || window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
-        const successMessage = isLocalDev
-          ? "If an account exists for this email, we sent a password reset link. Check Inbucket at http://127.0.0.1:54324 for local emails."
-          : "If an account exists for this email, we sent a password reset link.";
-        setMessage(successMessage);
+        setMessage(getPasswordResetSuccessMessage());
         return;
       }
-      // Log unexpected errors
-      console.error("Unexpected error during password reset:", error);
       // Still show success message (security best practice)
-      const isLocalDev = import.meta.env.DEV || window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
-      const successMessage = isLocalDev
-        ? "If an account exists for this email, we sent a password reset link. Check Inbucket at http://127.0.0.1:54324 for local emails."
-        : "If an account exists for this email, we sent a password reset link.";
-      setMessage(successMessage);
+      setMessage(getPasswordResetSuccessMessage());
     }
   }
 
   return (
     <form onSubmit={onSubmit} className={cn("space-y-4", className)} noValidate>
       {message ? (
-        <Alert className="border-green-600/30 text-green-700 dark:text-green-400">
-          <AlertTitle>Check your email</AlertTitle>
+        <Alert 
+          className={
+            message.startsWith("Error:")
+              ? "border-destructive/30 text-destructive"
+              : "border-green-600/30 text-green-700 dark:text-green-400"
+          }
+        >
+          <AlertTitle>{message.startsWith("Error:") ? "Error" : "Check your email"}</AlertTitle>
           <AlertDescription>{message}</AlertDescription>
         </Alert>
       ) : null}
