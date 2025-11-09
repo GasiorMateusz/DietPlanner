@@ -3,12 +3,19 @@ import Layout from "@/layouts/Layout.astro";
 import LoginForm from "@/components/auth/LoginForm";
 import { createSupabaseServerClient } from "@/db/supabase.server";
 
-const supabase = createSupabaseServerClient(Astro.cookies);
-
-// Verify if user is already authenticated using getUser() to ensure session is valid
-const {
-  data: { user },
-} = await supabase.auth.getUser();
+let user = null;
+try {
+  const supabase = createSupabaseServerClient(Astro.cookies);
+  // Verify if user is already authenticated using getUser() to ensure session is valid
+  const {
+    data: { user: authenticatedUser },
+  } = await supabase.auth.getUser();
+  user = authenticatedUser;
+} catch (error) {
+  // If Supabase client creation fails, continue without auth
+  // User will see login form
+  console.error("Failed to initialize Supabase client:", error);
+}
 
 if (user) {
   return Astro.redirect("/app/dashboard");
