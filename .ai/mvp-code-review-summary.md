@@ -133,26 +133,43 @@ window.location.href = "/app/dashboard";
 
 ## 3. MVP-Specific Implementation Notes
 
-### 3.1 ResetPasswordForm - Placeholder Implementation
+### 3.1 ResetPasswordForm - ✅ FIXED
 
-**Location:** `src/components/auth/ResetPasswordForm.tsx` (Line 45)
+**Location:** `src/components/auth/ResetPasswordForm.tsx` (Lines 43-84)
+
+**Status:** ✅ **COMPLETE IMPLEMENTATION**
+
+The form now properly implements password reset functionality:
 
 ```typescript
-// MVP: Shows success message (actual reset handled via Supabase email link flow)
-setMessage("Password updated. You can now log in.");
+// Update password using Supabase Auth
+// When user arrives via password reset link, Supabase creates a temporary session
+const { error } = await supabase.auth.updateUser({
+  password: values.newPassword,
+});
+
+// Success - password updated
+// Check if user has a session (they should after clicking reset link)
+const {
+  data: { session },
+} = await supabase.auth.getSession();
+
+if (session) {
+  // User is logged in, redirect to dashboard
+  window.location.assign("/app/dashboard");
+} else {
+  // No session, show success message and let user log in
+  setMessage("Password updated. You can now log in.");
+}
 ```
 
-**Issue:** ⚠️ **INCOMPLETE IMPLEMENTATION**
-
-The form doesn't actually call `supabase.auth.updateUser()` to update the password. It only shows a success message.
-
-**Expected Behavior:** 
-- User clicks reset link from email
-- Supabase creates a temporary session
-- Form should call `supabase.auth.updateUser({ password: newPassword })`
-- Then redirect to login or dashboard
-
-**Action Required:** Implement actual password update logic.
+**Implementation Details:**
+- ✅ Calls `supabase.auth.updateUser({ password })` to update password
+- ✅ Handles error cases (expired link, invalid password, generic errors)
+- ✅ Checks for session after password update
+- ✅ Redirects to dashboard if session exists, otherwise shows success message
+- ✅ Includes loading state ("Updating password..." / "Set new password")
+- ✅ Proper error messages for all failure scenarios
 
 ---
 
@@ -403,21 +420,24 @@ Lists features **deliberately NOT included in MVP:**
 
 ## 6. Configuration Settings for MVP
 
-### 6.1 Password Requirements - MINIMAL
+### 6.1 Password Requirements - ✅ UPDATED
 
 **Location:** `supabase/config.toml` (Lines 141-145)
 
+**Status:** ✅ **UPDATED FOR PRODUCTION**
+
 ```toml
 # Passwords shorter than this value will be rejected as weak. Minimum 6, recommended 8 or more.
-minimum_password_length = 6  # ⚠️ MVP: Set to minimum (6 chars)
+minimum_password_length = 8  # ✅ Updated from 6 to 8
 
 # Passwords that do not meet the following requirements will be rejected as weak.
-password_requirements = ""  # ⚠️ MVP: No complexity requirements
+password_requirements = "letters_digits"  # ✅ Added complexity requirement
 ```
 
-**Note:** Client-side validation enforces 8+ chars with letters and numbers, but server accepts 6+.
-
-**Recommendation:** Increase to 8 and add complexity requirements for production.
+**Changes Made:**
+- ✅ Increased `minimum_password_length` from 6 to 8 characters
+- ✅ Added `password_requirements = "letters_digits"` to enforce complexity
+- ✅ Now matches client-side validation requirements
 
 ---
 
@@ -436,16 +456,21 @@ secure_password_change = false  # ⚠️ MVP: Disabled
 
 ---
 
-### 6.3 Email Rate Limits - LOW
+### 6.3 Email Rate Limits - ✅ UPDATED
 
 **Location:** `supabase/config.toml` (Line 149)
 
+**Status:** ✅ **UPDATED FOR PRODUCTION**
+
 ```toml
 # Number of emails that can be sent per hour. Requires auth.email.smtp to be enabled.
-email_sent = 2  # ⚠️ MVP: Very low limit (2 per hour)
+email_sent = 30  # ✅ Updated from 2 to 30 per hour
 ```
 
-**Status:** Very restrictive for testing. Increase for production.
+**Changes Made:**
+- ✅ Increased `email_sent` rate limit from 2 to 30 emails per hour
+- ✅ More reasonable limit for production use
+- ✅ Still provides protection against abuse while allowing normal usage
 
 ---
 
@@ -453,17 +478,18 @@ email_sent = 2  # ⚠️ MVP: Very low limit (2 per hour)
 
 ### Critical (Must Fix Before Production)
 
-1. **ResetPasswordForm Implementation** ⚠️
-   - Currently shows success message without actually updating password
-   - Must implement `supabase.auth.updateUser({ password })` call
+1. **ResetPasswordForm Implementation** ✅ **FIXED**
+   - ✅ Now properly calls `supabase.auth.updateUser({ password })`
+   - ✅ Handles all error cases
+   - ✅ Redirects to dashboard or shows success message appropriately
 
-2. **SMTP Configuration**
+2. **SMTP Configuration** ⚠️ **STILL REQUIRED**
    - Uncomment and configure SMTP settings in `supabase/config.toml`
    - Or ensure Supabase Cloud email service is properly configured
 
-3. **Password Requirements**
-   - Increase `minimum_password_length` to 8
-   - Add `password_requirements = "letters_digits"` or stronger
+3. **Password Requirements** ✅ **FIXED**
+   - ✅ Increased `minimum_password_length` to 8
+   - ✅ Added `password_requirements = "letters_digits"`
 
 ### Recommended (Enhance Security)
 
@@ -477,8 +503,8 @@ email_sent = 2  # ⚠️ MVP: Very low limit (2 per hour)
 6. **Session Timeouts**
    - Configure `[auth.sessions]` with appropriate timeouts
 
-7. **Rate Limits**
-   - Increase `email_sent` rate limit for production
+7. **Rate Limits** ✅ **FIXED**
+   - ✅ Increased `email_sent` rate limit to 30 per hour
 
 8. **Captcha**
    - Enable captcha to prevent bot registrations
@@ -501,11 +527,12 @@ email_sent = 2  # ⚠️ MVP: Very low limit (2 per hour)
 
 ## 8. Summary Statistics
 
-- **Commented Out Code Blocks:** 2 (Layout.astro auth check, ResetPasswordForm logic)
+- **Commented Out Code Blocks:** 1 (Layout.astro auth check - correctly commented)
 - **MVP-Specific Settings:** 15+ (email confirmation, MFA, OAuth, etc.)
 - **Commented Configuration Sections:** 10+ (SMTP, templates, hooks, etc.)
-- **Incomplete Implementations:** 1 (ResetPasswordForm)
+- **Incomplete Implementations:** 0 ✅ (All fixed)
 - **ESLint Disables:** 2 (intentional, for navigation)
+- **Fixed Issues:** 3 (ResetPasswordForm, Password Requirements, Email Rate Limits)
 
 ---
 
@@ -514,12 +541,41 @@ email_sent = 2  # ⚠️ MVP: Very low limit (2 per hour)
 - All MVP-specific configurations are intentional and documented
 - Code is structured to easily enable features when needed
 - Most commented code is configuration, not business logic
-- Only one incomplete implementation found (ResetPasswordForm)
+- ✅ All incomplete implementations have been fixed
 - Security best practices are followed (email enumeration prevention)
+- ✅ Password requirements now match client-side validation
+- ✅ Email rate limits increased for production readiness
+- ✅ ResetPasswordForm fully implemented with proper error handling
 
 ---
 
-**Last Updated:** Generated from codebase review
+**Last Updated:** Code fixes applied and document updated
 **Reviewer:** AI Code Review
-**Status:** Complete
+**Status:** Complete - Critical issues fixed
+
+## 10. Recent Fixes (Latest Update)
+
+### ✅ Fixed Issues
+
+1. **ResetPasswordForm Implementation** (Section 3.1)
+   - Implemented `supabase.auth.updateUser({ password })` call
+   - Added proper error handling for expired links, invalid passwords, etc.
+   - Added session check and appropriate redirect/success message
+   - Added loading state for better UX
+
+2. **Password Requirements** (Section 6.1)
+   - Updated `minimum_password_length` from 6 to 8
+   - Added `password_requirements = "letters_digits"`
+   - Now matches client-side validation requirements
+
+3. **Email Rate Limits** (Section 6.3)
+   - Updated `email_sent` from 2 to 30 per hour
+   - More reasonable for production use
+
+### Remaining Action Items
+
+- **SMTP Configuration** - Still needs to be configured for production (if self-hosted)
+- **Email Confirmation** - Can be enabled for production (code already supports it)
+- **Secure Password Change** - Can be enabled for enhanced security
+- **Session Timeouts** - Can be configured for production security
 

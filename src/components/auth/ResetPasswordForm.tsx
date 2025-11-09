@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
 import { resetPasswordSchema, type ResetPasswordInput } from "@/lib/validation/auth.schemas";
+import { supabaseClient as supabase } from "@/db/supabase.client";
 
 interface Props {
   className?: string;
@@ -14,6 +15,7 @@ export default function ResetPasswordForm({ className }: Props) {
   const [values, setValues] = React.useState<ResetPasswordInput>({ newPassword: "", confirmPassword: "" });
   const [errors, setErrors] = React.useState<Partial<Record<keyof ResetPasswordInput, string>>>({});
   const [message, setMessage] = React.useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
   const newPassId = React.useId();
   const confirmId = React.useId();
 
@@ -42,15 +44,62 @@ export default function ResetPasswordForm({ className }: Props) {
     e.preventDefault();
     setMessage(null);
     if (!validate(values)) return;
-    // MVP: Shows success message (actual reset handled via Supabase email link flow)
-    setMessage("Password updated. You can now log in.");
+
+    setIsSubmitting(true);
+
+    // Update password using Supabase Auth
+    // When user arrives via password reset link, Supabase creates a temporary session
+    const { error } = await supabase.auth.updateUser({
+      password: values.newPassword,
+    });
+
+    setIsSubmitting(false);
+
+    if (error) {
+      // Handle specific error cases
+      if (error.message.includes("expired") || error.message.includes("invalid")) {
+        setMessage("Reset link is invalid or expired. Please request a new link.");
+      } else if (error.message.includes("Password") || error.message.includes("password")) {
+        setMessage("Password does not meet security requirements.");
+      } else {
+        setMessage("Unable to update password. Please try again later.");
+      }
+      return;
+    }
+
+    // Success - password updated
+    // Check if user has a session (they should after clicking reset link)
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    if (session) {
+      // User is logged in, redirect to dashboard
+      window.location.assign("/app/dashboard");
+    } else {
+      // No session, show success message and let user log in
+      setMessage("Password updated. You can now log in.");
+    }
   }
+
+  const isError =
+    message &&
+    (message.includes("invalid") ||
+      message.includes("expired") ||
+      message.includes("Unable") ||
+      message.includes("requirements"));
 
   return (
     <form onSubmit={onSubmit} className={cn("space-y-4", className)} noValidate>
       {message ? (
-        <Alert className="border-green-600/30 text-green-700 dark:text-green-400">
-          <AlertTitle>Success</AlertTitle>
+        <Alert
+          className={
+            isError
+              ? "border-destructive/30 text-destructive"
+              : "border-green-600/30 text-green-700 dark:text-green-400"
+          }
+        >
+          <AlertTitle>{isError ? "Error" : "Success"}</AlertTitle>
           <AlertDescription>{message}</AlertDescription>
         </Alert>
       ) : null}
@@ -95,8 +144,8 @@ export default function ResetPasswordForm({ className }: Props) {
         ) : null}
       </div>
 
-      <Button type="submit" className="w-full">
-        Set new password
+      <Button type="submit" className="w-full" disabled={isSubmitting}>
+        {isSubmitting ? "Updating password..." : "Set new password"}
       </Button>
 
       <div className="text-center text-sm">
