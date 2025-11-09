@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { navigate } from "astro:transitions/client";
 import { Button } from "@/components/ui/button";
 import { supabaseClient as supabase } from "@/db/supabase.client";
+import { DeleteAccountConfirmationDialog } from "@/components/auth/DeleteAccountConfirmationDialog";
+import { getAuthToken } from "@/lib/auth/get-auth-token";
 
 interface NavBarProps {
   userEmail?: string;
@@ -15,6 +17,9 @@ interface NavBarProps {
 export function NavBar({ userEmail: initialUserEmail, className }: NavBarProps) {
   const [userEmail, setUserEmail] = useState<string | undefined>(initialUserEmail);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   // Check auth state on mount and when it changes
   // Use getUser() to verify the session is authentic
@@ -101,6 +106,61 @@ export function NavBar({ userEmail: initialUserEmail, className }: NavBarProps) 
     }
   }
 
+  async function handleDeleteAccount() {
+    setIsDeletingAccount(true);
+    setDeleteError(null);
+
+    try {
+      const token = await getAuthToken();
+      if (!token) {
+        window.location.href = "/auth/login";
+        return;
+      }
+
+      const response = await fetch("/api/account", {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (response.status === 401) {
+        window.location.href = "/auth/login";
+        return;
+      }
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({
+          error: "Failed to delete account",
+        }));
+        throw new Error(errorData.error || "Failed to delete account");
+      }
+
+      // Success: Sign out and redirect
+      await supabase.auth.signOut();
+      window.location.href = "/";
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "An error occurred. Please try again.";
+      setDeleteError(errorMessage);
+      console.error("Error deleting account:", err);
+    } finally {
+      setIsDeletingAccount(false);
+    }
+  }
+
+  function handleOpenDeleteDialog() {
+    setDeleteError(null);
+    setIsDeleteDialogOpen(true);
+  }
+
+  function handleCloseDeleteDialog() {
+    if (!isDeletingAccount) {
+      setIsDeleteDialogOpen(false);
+      setDeleteError(null);
+    }
+  }
+
   return (
     <nav className={`w-full border-b bg-background shadow-sm ${className || ""}`}>
       <div className="container mx-auto px-4 py-3">
@@ -125,6 +185,16 @@ export function NavBar({ userEmail: initialUserEmail, className }: NavBarProps) 
                 >
                   {userEmail}
                 </span>
+                <Button
+                  variant="ghost"
+                  onClick={handleOpenDeleteDialog}
+                  disabled={isDeletingAccount}
+                  aria-label="Delete account"
+                  size="sm"
+                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                >
+                  Delete Account
+                </Button>
                 <Button variant="ghost" onClick={handleLogout} disabled={isLoggingOut} aria-label="Log out" size="sm">
                   {isLoggingOut ? "Logging out..." : "Log out"}
                 </Button>
@@ -139,6 +209,14 @@ export function NavBar({ userEmail: initialUserEmail, className }: NavBarProps) 
           </div>
         </div>
       </div>
+
+      <DeleteAccountConfirmationDialog
+        open={isDeleteDialogOpen}
+        onClose={handleCloseDeleteDialog}
+        onConfirm={handleDeleteAccount}
+        isDeleting={isDeletingAccount}
+        error={deleteError}
+      />
     </nav>
   );
 }
