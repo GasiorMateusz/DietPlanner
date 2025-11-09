@@ -61,39 +61,6 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
     const response = await next();
 
-    // Additional logging to debug [object Object] issue
-    // eslint-disable-next-line no-console
-    console.log(`[Middleware] Response received for ${pathname}:`, {
-      type: typeof response,
-      constructor: response?.constructor?.name,
-      isResponse: response instanceof Response,
-      isString: typeof response === "string",
-      isObject: typeof response === "object" && response !== null,
-    });
-
-    if (response instanceof Response) {
-      const cloned = response.clone();
-      try {
-        const text = await cloned.text();
-        // eslint-disable-next-line no-console
-        console.log(`[Middleware] Response body preview (first 200 chars):`, text.substring(0, 200));
-        // eslint-disable-next-line no-console
-        console.log(`[Middleware] Response body length:`, text.length);
-        // eslint-disable-next-line no-console
-        console.log(`[Middleware] Response headers:`, Object.fromEntries(response.headers.entries()));
-        // eslint-disable-next-line no-console
-        console.log(`[Middleware] Response status:`, response.status);
-        // eslint-disable-next-line no-console
-        console.log(`[Middleware] Response statusText:`, response.statusText);
-      } catch (error) {
-        // eslint-disable-next-line no-console
-        console.error(`[Middleware] Error reading response body:`, error);
-      }
-    } else {
-      // eslint-disable-next-line no-console
-      console.error(`[Middleware] Response is not a Response object! Type: ${typeof response}, Value:`, response);
-    }
-
     return response;
   } catch (error) {
     // If Supabase client creation fails, log error but continue
