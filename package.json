@@ -4,9 +4,11 @@
   "version": "0.0.1",
   "scripts": {
     "dev": "astro dev",
+    "dev:cloudflare": "cross-env TARGET=cloudflare astro dev",
     "build": "astro build",
-    "build:cloudflare": "TARGET=cloudflare npm run build",
+    "build:cloudflare": "cross-env TARGET=cloudflare npm run build",
     "preview": "astro preview",
+    "preview:cloudflare": "npm run build:cloudflare && wrangler pages dev dist",
     "astro": "astro",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
@@ -64,6 +66,7 @@
     "@vitejs/plugin-react": "^5.1.0",
     "@vitest/coverage-v8": "^4.0.6",
     "@vitest/ui": "^4.0.6",
+    "cross-env": "^10.1.0",
     "dotenv": "^17.2.3",
     "eslint": "9.23.0",
     "eslint-config-prettier": "10.1.1",
@@ -83,7 +86,8 @@
     "supabase": "^2.53.6",
     "supertest": "^7.1.4",
     "typescript-eslint": "8.28.0",
-    "vitest": "^4.0.6"
+    "vitest": "^4.0.6",
+    "wrangler": "^4.46.0"
   },
   "lint-staged": {
     "*.{ts,tsx,astro}": [

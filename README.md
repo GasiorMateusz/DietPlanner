@@ -128,9 +128,12 @@ The `package.json` file includes the following scripts for development and maint
 
 **Development:**
 
-- `npm run dev` - Starts the development server with hot-reloading
-- `npm run build` - Builds the application for production
-- `npm run preview` - Serves the production build locally for testing
+- `npm run dev` - Starts the development server with hot-reloading (Node adapter)
+- `npm run dev:cloudflare` - Starts the development server with Cloudflare adapter
+- `npm run build` - Builds the application for production (Node adapter)
+- `npm run build:cloudflare` - Builds the application for Cloudflare Pages
+- `npm run preview` - Serves the production build locally for testing (Node adapter)
+- `npm run preview:cloudflare` - Builds and serves the Cloudflare build locally with Wrangler
 - `npm run astro` - Accesses the Astro CLI for various commands
 
 **Code Quality:**
