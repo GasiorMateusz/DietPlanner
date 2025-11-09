@@ -200,9 +200,18 @@ export async function createSession(
     },
   ];
 
+  // Validate API key before making request
+  const apiKey = import.meta.env.OPENROUTER_API_KEY;
+  if (!apiKey || apiKey.trim() === "") {
+    throw new OpenRouterError(
+      "OpenRouter API key is not configured. Please set OPENROUTER_API_KEY environment variable.",
+      500
+    );
+  }
+
   // Call OpenRouter API
   const assistantResponse = await OpenRouterService.getChatCompletion(
-    import.meta.env.OPENROUTER_API_KEY,
+    apiKey,
     messagesForOpenRouter
   );
 
@@ -288,8 +297,17 @@ export async function sendMessage(
   // Convert history for OpenRouter (handles [SYSTEM] prefix conversion)
   const messagesForOpenRouter = convertHistoryForOpenRouter(updatedHistory);
 
+  // Validate API key before making request
+  const apiKey = import.meta.env.OPENROUTER_API_KEY;
+  if (!apiKey || apiKey.trim() === "") {
+    throw new OpenRouterError(
+      "OpenRouter API key is not configured. Please set OPENROUTER_API_KEY environment variable.",
+      500
+    );
+  }
+
   const assistantResponse = await OpenRouterService.getChatCompletion(
-    import.meta.env.OPENROUTER_API_KEY,
+    apiKey,
     messagesForOpenRouter
   );
 

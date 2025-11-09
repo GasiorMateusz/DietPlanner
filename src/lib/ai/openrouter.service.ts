@@ -403,6 +403,13 @@ export class OpenRouterService {
         }
       }
 
+      // Provide more helpful error messages for common issues
+      if (response.status === 401) {
+        if (errorMessage.includes("User not found") || errorMessage.includes("Invalid API key")) {
+          errorMessage = "OpenRouter API key is invalid or missing. Please check your OPENROUTER_API_KEY environment variable.";
+        }
+      }
+
       throw new OpenRouterError(errorMessage, response.status);
     }
 
