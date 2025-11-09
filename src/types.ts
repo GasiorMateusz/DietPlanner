@@ -238,3 +238,29 @@ export interface SendAiMessageResponseDto {
   message: AssistantChatMessage;
   prompt_count: Tables<"ai_chat_sessions">["final_prompt_count"];
 }
+
+// --- User Preferences ---
+
+/**
+ * **DTO**: The response for retrieving the user's language preference.
+ * @Endpoint `GET /api/user-preferences`
+ */
+export interface GetLanguagePreferenceResponseDto {
+  language: "en" | "pl";
+}
+
+/**
+ * **Command**: The request payload for updating the user's language preference.
+ * @Endpoint `PUT /api/user-preferences`
+ */
+export interface UpdateLanguagePreferenceCommand {
+  language: "en" | "pl";
+}
+
+/**
+ * **DTO**: The response after updating the user's language preference.
+ * @Endpoint `PUT /api/user-preferences`
+ */
+export interface UpdateLanguagePreferenceResponseDto {
+  language: "en" | "pl";
+}

@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { supabaseClient as supabase } from "@/db/supabase.client";
 import { DeleteAccountConfirmationDialog } from "@/components/auth/DeleteAccountConfirmationDialog";
 import { getAuthToken } from "@/lib/auth/get-auth-token";
+import { LanguageSelector } from "@/components/LanguageSelector";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 interface NavBarProps {
   userEmail?: string;
@@ -15,6 +17,7 @@ interface NavBarProps {
  * Shows different navigation options based on authentication state.
  */
 export function NavBar({ userEmail: initialUserEmail, className }: NavBarProps) {
+  const { t } = useTranslation();
   const [userEmail, setUserEmail] = useState<string | undefined>(initialUserEmail);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -178,6 +181,7 @@ export function NavBar({ userEmail: initialUserEmail, className }: NavBarProps) 
           <div className="flex items-center gap-4">
             {userEmail ? (
               <>
+                <LanguageSelector />
                 <span
                   className="hidden sm:inline-block text-sm text-muted-foreground truncate max-w-[200px]"
                   aria-label="Logged in as"
@@ -189,20 +193,26 @@ export function NavBar({ userEmail: initialUserEmail, className }: NavBarProps) 
                   variant="ghost"
                   onClick={handleOpenDeleteDialog}
                   disabled={isDeletingAccount}
-                  aria-label="Delete account"
+                  aria-label={t("nav.deleteAccount")}
                   size="sm"
                   className="text-destructive hover:text-destructive hover:bg-destructive/10"
                 >
-                  Delete Account
+                  {t("nav.deleteAccount")}
                 </Button>
-                <Button variant="ghost" onClick={handleLogout} disabled={isLoggingOut} aria-label="Log out" size="sm">
-                  {isLoggingOut ? "Logging out..." : "Log out"}
+                <Button
+                  variant="ghost"
+                  onClick={handleLogout}
+                  disabled={isLoggingOut}
+                  aria-label={t("nav.logout")}
+                  size="sm"
+                >
+                  {isLoggingOut ? t("auth.loggingOut") : t("nav.logout")}
                 </Button>
               </>
             ) : (
               <a href="/auth/login">
                 <Button variant="ghost" size="sm">
-                  Log in
+                  {t("nav.login")}
                 </Button>
               </a>
             )}

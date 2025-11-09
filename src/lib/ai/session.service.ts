@@ -9,13 +9,60 @@ import type {
   UserChatMessage,
 } from "../../types.ts";
 import { NotFoundError } from "../../lib/errors.ts";
-import { OpenRouterService } from "./openrouter.service.ts";
+import { OpenRouterService, OpenRouterError } from "./openrouter.service.ts";
+import type { LanguageCode } from "../../lib/i18n/types";
 
 /**
  * Formats the meal plan startup data into a system prompt for the AI.
  * The system prompt defines the AI's role and behavior.
+ * @param language - The language code for the prompt ("en" or "pl")
  */
-function formatSystemPrompt(): string {
+function formatSystemPrompt(language: LanguageCode): string {
+  if (language === "pl") {
+    return `Jesteś pomocnym asystentem dietetyka. Twoim jedynym zadaniem jest generowanie planów żywieniowych na podstawie dostarczonych informacji o pacjencie i wytycznych dietetycznych.
+
+KRYTYCZNE: MUSISZ formatować WSZYSTKIE swoje odpowiedzi używając następującej struktury XML. Każda odpowiedź musi zawierać te tagi XML:
+
+<meal_plan>
+  <daily_summary>
+    <kcal>całkowite kalorie dziennie</kcal>
+    <proteins>całkowite białko w gramach</proteins>
+    <fats>całkowite tłuszcze w gramach</fats>
+    <carbs>całkowite węglowodany w gramach</carbs>
+  </daily_summary>
+  <meals>
+    <meal>
+      <name>Nazwa posiłku (np. Śniadanie, Obiad, Kolacja)</name>
+      <ingredients>Szczegółowa lista składników z ilościami</ingredients>
+      <preparation>Instrukcje przygotowania krok po kroku</preparation>
+      <summary>
+        <kcal>kalorie dla tego posiłku</kcal>
+        <protein>białko w gramach dla tego posiłku</protein>
+        <fat>tłuszcz w gramach dla tego posiłku</fat>
+        <carb>węglowodany w gramach dla tego posiłku</carb>
+      </summary>
+    </meal>
+    <!-- Powtórz tag <meal> dla każdego posiłku -->
+  </meals>
+</meal_plan>
+
+<comments>
+Opcjonalnie: Wszelkie dodatkowe komentarze, wyjaśnienia lub uwagi, które nie są częścią samego planu żywieniowego. Użyj tego tagu do ogólnej rozmowy, wyjaśnień lub dodatkowych informacji, które chcesz udostępnić użytkownikowi. Ta zawartość będzie wyświetlana w konwersacji czatu osobno od planu żywieniowego.
+</comments>
+
+Wymagania:
+1. Utwórz szczegółowy 1-dniowy plan żywieniowy spełniający określone cele żywieniowe
+2. Uwzględnij WSZYSTKIE żądane posiłki ze szczegółowymi składnikami i instrukcjami przygotowania
+3. Szanuj wszystkie wykluczenia dietetyczne i wytyczne
+4. Oblicz i dopasuj docelowy rozkład kalorii i makroskładników jak najdokładniej
+5. Upewnij się, że sumy daily_summary odpowiadają sumie wszystkich podsumowań posiłków
+6. Używaj TYLKO określonych powyżej tagów XML - nie dodawaj dodatkowych tagów ani formatowania
+7. Użyj tagu <comments> do wszelkiej ogólnej rozmowy lub wyjaśnień, które powinny być pokazane w czacie, ale nie są częścią struktury planu żywieniowego
+
+Skoncentruj się wyłącznie na tworzeniu dokładnych, praktycznych planów żywieniowych. Zawsze używaj struktury XML dla każdej odpowiedzi.`;
+  }
+
+  // English version (default)
   return `You are a helpful dietitian assistant. Your only task is to generate meal plans based on the provided patient information and dietary guidelines.
 
 CRITICAL: You MUST format ALL your responses using the following XML structure. Every response must include these XML tags:
@@ -62,52 +109,106 @@ Focus solely on creating accurate, practical meal plans. Always use the XML stru
 /**
  * Formats the meal plan startup data into an initial user prompt.
  * This prompt communicates the patient's requirements to the AI.
+ * @param command - The startup data for the meal plan
+ * @param language - The language code for the prompt ("en" or "pl")
  */
-function formatUserPrompt(command: CreateAiSessionCommand): string {
+function formatUserPrompt(command: CreateAiSessionCommand, language: LanguageCode): string {
   const parts: string[] = [];
 
-  parts.push("Please create a 1-day meal plan with the following specifications:\n");
+  if (language === "pl") {
+    parts.push("Proszę utwórz 1-dniowy plan żywieniowy z następującymi specyfikacjami:\n");
 
-  // Patient demographics
-  if (command.patient_age) {
-    parts.push(`- Patient age: ${command.patient_age} years`);
-  }
-  if (command.patient_weight) {
-    parts.push(`- Patient weight: ${command.patient_weight} kg`);
-  }
-  if (command.patient_height) {
-    parts.push(`- Patient height: ${command.patient_height} cm`);
-  }
+    // Patient demographics
+    if (command.patient_age) {
+      parts.push(`- Wiek pacjenta: ${command.patient_age} lat`);
+    }
+    if (command.patient_weight) {
+      parts.push(`- Waga pacjenta: ${command.patient_weight} kg`);
+    }
+    if (command.patient_height) {
+      parts.push(`- Wzrost pacjenta: ${command.patient_height} cm`);
+    }
 
-  // Activity level
-  if (command.activity_level) {
-    parts.push(`- Activity level: ${command.activity_level}`);
-  }
+    // Activity level
+    if (command.activity_level) {
+      const activityLevels: Record<string, string> = {
+        sedentary: "Siedzący",
+        light: "Lekki",
+        moderate: "Umiarkowany",
+        high: "Wysoki",
+      };
+      parts.push(`- Poziom aktywności: ${activityLevels[command.activity_level] || command.activity_level}`);
+    }
 
-  // Nutritional targets
-  if (command.target_kcal) {
-    parts.push(`- Target calories: ${command.target_kcal} kcal per day`);
-  }
+    // Nutritional targets
+    if (command.target_kcal) {
+      parts.push(`- Docelowe kalorie: ${command.target_kcal} kcal dziennie`);
+    }
 
-  // Macro distribution
-  if (command.target_macro_distribution) {
-    const { p_perc, f_perc, c_perc } = command.target_macro_distribution;
-    parts.push(`- Target macro distribution: Protein ${p_perc}%, Fat ${f_perc}%, Carbohydrates ${c_perc}%`);
-  }
+    // Macro distribution
+    if (command.target_macro_distribution) {
+      const { p_perc, f_perc, c_perc } = command.target_macro_distribution;
+      parts.push(`- Docelowy rozkład makroskładników: Białko ${p_perc}%, Tłuszcz ${f_perc}%, Węglowodany ${c_perc}%`);
+    }
 
-  // Meal names
-  if (command.meal_names) {
-    parts.push(`- Meals to include: ${command.meal_names}`);
-  }
+    // Meal names
+    if (command.meal_names) {
+      parts.push(`- Posiłki do uwzględnienia: ${command.meal_names}`);
+    }
 
-  // Exclusions and guidelines
-  if (command.exclusions_guidelines) {
-    parts.push(`- Dietary exclusions and guidelines: ${command.exclusions_guidelines}`);
-  }
+    // Exclusions and guidelines
+    if (command.exclusions_guidelines) {
+      parts.push(`- Wykluczenia dietetyczne i wytyczne: ${command.exclusions_guidelines}`);
+    }
 
-  parts.push(
-    "\nIMPORTANT: Format your response using the required XML structure with <meal_plan>, <daily_summary>, <meals>, and <meal> tags as specified in the system instructions. Include all nutritional values in the XML tags."
-  );
+    parts.push(
+      "\nWAŻNE: Sformatuj swoją odpowiedź używając wymaganej struktury XML z tagami <meal_plan>, <daily_summary>, <meals> i <meal> zgodnie z instrukcjami systemowymi. Uwzględnij wszystkie wartości odżywcze w tagach XML."
+    );
+  } else {
+    // English version (default)
+    parts.push("Please create a 1-day meal plan with the following specifications:\n");
+
+    // Patient demographics
+    if (command.patient_age) {
+      parts.push(`- Patient age: ${command.patient_age} years`);
+    }
+    if (command.patient_weight) {
+      parts.push(`- Patient weight: ${command.patient_weight} kg`);
+    }
+    if (command.patient_height) {
+      parts.push(`- Patient height: ${command.patient_height} cm`);
+    }
+
+    // Activity level
+    if (command.activity_level) {
+      parts.push(`- Activity level: ${command.activity_level}`);
+    }
+
+    // Nutritional targets
+    if (command.target_kcal) {
+      parts.push(`- Target calories: ${command.target_kcal} kcal per day`);
+    }
+
+    // Macro distribution
+    if (command.target_macro_distribution) {
+      const { p_perc, f_perc, c_perc } = command.target_macro_distribution;
+      parts.push(`- Target macro distribution: Protein ${p_perc}%, Fat ${f_perc}%, Carbohydrates ${c_perc}%`);
+    }
+
+    // Meal names
+    if (command.meal_names) {
+      parts.push(`- Meals to include: ${command.meal_names}`);
+    }
+
+    // Exclusions and guidelines
+    if (command.exclusions_guidelines) {
+      parts.push(`- Dietary exclusions and guidelines: ${command.exclusions_guidelines}`);
+    }
+
+    parts.push(
+      "\nIMPORTANT: Format your response using the required XML structure with <meal_plan>, <daily_summary>, <meals>, and <meal> tags as specified in the system instructions. Include all nutritional values in the XML tags."
+    );
+  }
 
   return parts.join("\n");
 }
@@ -171,6 +272,7 @@ function convertHistoryForOpenRouter(
  * @param command - The startup data for the meal plan generation
  * @param userId - The authenticated user's ID
  * @param supabase - The Supabase client instance
+ * @param language - The user's preferred language ("en" or "pl")
  * @returns The created session response with session ID, message, and prompt count
  * @throws {OpenRouterError} If the OpenRouter API call fails
  * @throws {Error} If the database operation fails
@@ -178,14 +280,15 @@ function convertHistoryForOpenRouter(
 export async function createSession(
   command: CreateAiSessionCommand,
   userId: string,
-  supabase: SupabaseClient<Database>
+  supabase: SupabaseClient<Database>,
+  language: LanguageCode = "en"
 ): Promise<CreateAiSessionResponseDto> {
   // Generate UUID for the new session
   const newSessionId = crypto.randomUUID();
 
-  // Format prompts
-  const systemPromptContent = formatSystemPrompt();
-  const userPromptContent = formatUserPrompt(command);
+  // Format prompts with language support
+  const systemPromptContent = formatSystemPrompt(language);
+  const userPromptContent = formatUserPrompt(command, language);
 
   // Create messages for OpenRouter API
   // OpenRouter supports 'system' role
@@ -260,6 +363,7 @@ export async function createSession(
  * Sends a follow-up message to an existing AI chat session.
  * Retrieves the session, appends the user message, calls OpenRouter,
  * updates the database with the new message history and incremented prompt count.
+ * Note: The system prompt language is determined from the stored session history.
  * @param sessionId - The UUID of the existing AI chat session
  * @param command - The user message to send
  * @param userId - The authenticated user's ID

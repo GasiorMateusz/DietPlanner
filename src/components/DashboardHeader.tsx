@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 interface DashboardHeaderProps {
   onCreateClick: () => void;
@@ -12,6 +13,7 @@ interface DashboardHeaderProps {
  * Contains the "Create new meal plan" button and search input field.
  */
 export function DashboardHeader({ onCreateClick, onSearchChange, searchValue }: DashboardHeaderProps) {
+  const { t } = useTranslation();
   const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     // Trim whitespace and enforce max length (100 chars per API schema)
@@ -22,17 +24,17 @@ export function DashboardHeader({ onCreateClick, onSearchChange, searchValue }: 
   return (
     <div className="flex flex-col sm:flex-row gap-4 mb-6">
       <Button onClick={onCreateClick} className="w-full sm:w-auto" data-testid="dashboard-create-meal-plan-button">
-        Create new meal plan
+        {t("dashboard.createPlan")}
       </Button>
       <div className="flex-1">
         <Input
           type="text"
-          placeholder="Search meal plans..."
+          placeholder={t("dashboard.searchPlaceholder")}
           value={searchValue}
           onChange={handleSearchInputChange}
           maxLength={100}
           className="w-full"
-          aria-label="Search meal plans by name"
+          aria-label={t("dashboard.searchPlaceholder")}
           data-testid="dashboard-search-input"
         />
       </div>

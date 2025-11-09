@@ -7,12 +7,14 @@ import { MealPlanList } from "./MealPlanList";
 import { StartupFormDialog } from "./StartupFormDialog";
 import { DeleteConfirmationDialog } from "./DeleteConfirmationDialog";
 import type { MealPlanStartupData } from "../types";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 /**
  * Main Dashboard component that displays and manages meal plans.
  * Orchestrates the meal plans list, handles API interactions, and manages dialog visibility.
  */
 export default function DashboardView() {
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [isStartupDialogOpen, setIsStartupDialogOpen] = useState<boolean>(false);
   const [deleteDialogState, setDeleteDialogState] = useState<{
@@ -200,7 +202,7 @@ export default function DashboardView() {
   return (
     <div className="container mx-auto p-4 sm:p-8">
       <h1 className="text-3xl font-bold mb-6" data-testid="dashboard-heading">
-        Meal Plans Dashboard
+        {t("dashboard.title")}
       </h1>
 
       <DashboardHeader

@@ -80,6 +80,7 @@ export const POST: APIRoute = async (context) => {
     }
 
     // Send the message to the AI session
+    // Note: Language is determined from the stored session history (system prompt was set when session was created)
     // validation.data matches SendAiMessageCommand
     const responseDto = await AiSessionService.sendMessage(
       sessionId,

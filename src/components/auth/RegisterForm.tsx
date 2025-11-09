@@ -8,12 +8,14 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
 import { registerSchema, type RegisterInput } from "@/lib/validation/auth.schemas";
 import { supabaseClient as supabase } from "@/db/supabase.client";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 interface Props {
   className?: string;
 }
 
 export default function RegisterForm({ className }: Props) {
+  const { t } = useTranslation();
   const emailId = React.useId();
   const passwordId = React.useId();
   const confirmId = React.useId();
@@ -53,11 +55,11 @@ export default function RegisterForm({ className }: Props) {
     if (error) {
       // Handle specific error cases
       if (error.message.includes("already registered") || error.message.includes("already exists")) {
-        form.setError("root", { message: "An account with this email already exists." });
+        form.setError("root", { message: t("auth.emailExists") });
       } else if (error.message.includes("Password") || error.message.includes("password")) {
-        form.setError("root", { message: "Password does not meet security requirements." });
+        form.setError("root", { message: t("auth.passwordRequirements") });
       } else {
-        form.setError("root", { message: "Unable to register right now. Please try again later." });
+        form.setError("root", { message: t("auth.registerFailed") });
       }
       return;
     }
@@ -67,7 +69,7 @@ export default function RegisterForm({ className }: Props) {
     // If session exists, user is automatically logged in
     if (!signUpData.session) {
       // Email confirmation required
-      setSuccess("Account created! Please check your email to confirm your account before signing in.");
+      setSuccess(t("auth.accountCreated"));
     } else {
       // Email confirmation disabled - user is automatically logged in
       // Use full page reload to ensure cookies are synced and middleware can detect session
@@ -79,19 +81,19 @@ export default function RegisterForm({ className }: Props) {
     <form onSubmit={onSubmit} className={cn("space-y-4", className)} noValidate>
       {form.formState.errors.root ? (
         <Alert className="border-destructive/30 text-destructive">
-          <AlertTitle>Unable to register</AlertTitle>
+          <AlertTitle>{t("auth.registerError")}</AlertTitle>
           <AlertDescription>{form.formState.errors.root.message}</AlertDescription>
         </Alert>
       ) : null}
       {success ? (
         <Alert className="border-green-600/30 text-green-700 dark:text-green-400">
-          <AlertTitle>Success</AlertTitle>
+          <AlertTitle>{t("common.success")}</AlertTitle>
           <AlertDescription>{success}</AlertDescription>
         </Alert>
       ) : null}
 
       <div className="grid gap-2">
-        <Label htmlFor={emailId}>Email</Label>
+        <Label htmlFor={emailId}>{t("auth.email")}</Label>
         <Input
           id={emailId}
           type="email"
@@ -110,7 +112,7 @@ export default function RegisterForm({ className }: Props) {
       </div>
 
       <div className="grid gap-2">
-        <Label htmlFor={passwordId}>Password</Label>
+        <Label htmlFor={passwordId}>{t("auth.password")}</Label>
         <Input
           id={passwordId}
           type="password"
@@ -124,12 +126,12 @@ export default function RegisterForm({ className }: Props) {
             {form.formState.errors.password.message}
           </p>
         ) : (
-          <p className="text-sm text-muted-foreground">At least 8 characters with letters and numbers.</p>
+          <p className="text-sm text-muted-foreground">{t("auth.passwordHint")}</p>
         )}
       </div>
 
       <div className="grid gap-2">
-        <Label htmlFor={confirmId}>Confirm password</Label>
+        <Label htmlFor={confirmId}>{t("auth.confirmPassword")}</Label>
         <Input
           id={confirmId}
           type="password"
@@ -156,7 +158,7 @@ export default function RegisterForm({ className }: Props) {
         />
         <div>
           <Label htmlFor={termsId} className="cursor-pointer">
-            I agree to the Terms and Privacy Policy
+            {t("auth.termsAccept")}
           </Label>
           {form.formState.errors.termsAccepted ? (
             <p id={`${termsId}-error`} className="text-sm text-destructive">
@@ -167,13 +169,13 @@ export default function RegisterForm({ className }: Props) {
       </div>
 
       <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-        {form.formState.isSubmitting ? "Creating account..." : "Create account"}
+        {form.formState.isSubmitting ? t("auth.creatingAccount") : t("auth.createAccount")}
       </Button>
 
       <div className="text-center text-sm">
-        <span className="text-muted-foreground">Already have an account? </span>
+        <span className="text-muted-foreground">{t("auth.alreadyHaveAccount")} </span>
         <a className="text-primary underline-offset-4 hover:underline" href="/auth/login">
-          Log in
+          {t("auth.login")}
         </a>
       </div>
     </form>

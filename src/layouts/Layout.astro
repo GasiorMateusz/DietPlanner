@@ -1,6 +1,7 @@
 ---
 import "../styles/global.css";
 import { NavBar } from "@/components/NavBar";
+import { TranslationProvider } from "@/lib/i18n/TranslationProvider";
 // import { createSupabaseServerClient } from "@/db/supabase.server";
 
 interface Props {
@@ -30,10 +31,12 @@ console.log("[Layout] Rendering layout with title:", title);
     <title>{title}</title>
   </head>
   <body>
-    <NavBar client:load />
-    <main>
-      <slot />
-    </main>
+    <TranslationProvider client:load>
+      <NavBar client:load />
+      <main>
+        <slot />
+      </main>
+    </TranslationProvider>
   </body>
 </html>
 

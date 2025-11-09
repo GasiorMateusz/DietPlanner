@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 interface EmptyStateProps {
   onCreateClick?: () => void;
@@ -9,6 +10,7 @@ interface EmptyStateProps {
  * Provides visual guidance to create the first plan.
  */
 export function EmptyState({ onCreateClick }: EmptyStateProps) {
+  const { t } = useTranslation();
   return (
     <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
       <div className="mx-auto max-w-md">
@@ -28,14 +30,11 @@ export function EmptyState({ onCreateClick }: EmptyStateProps) {
             />
           </svg>
         </div>
-        <h2 className="text-xl font-semibold text-foreground mb-2">You don&apos;t have any meal plans yet</h2>
-        <p className="text-muted-foreground mb-6">
-          Create your first meal plan to get started. You can generate personalized meal plans based on patient data and
-          dietary requirements.
-        </p>
+        <h2 className="text-xl font-semibold text-foreground mb-2">{t("dashboard.emptyState.title")}</h2>
+        <p className="text-muted-foreground mb-6">{t("dashboard.emptyState.description")}</p>
         {onCreateClick && (
           <Button onClick={onCreateClick} className="w-full sm:w-auto">
-            Create your first meal plan
+            {t("dashboard.emptyState.createButton")}
           </Button>
         )}
       </div>

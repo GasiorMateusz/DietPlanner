@@ -5,6 +5,7 @@ import { OpenRouterError } from "../../../lib/ai/openrouter.service.ts";
 import { UnauthorizedError } from "../../../lib/errors.ts";
 import type { CreateAiSessionCommand } from "../../../types.ts";
 import { getUserFromRequest } from "@/lib/auth/session.service.js";
+import * as UserPreferenceService from "../../../lib/user-preferences/user-preference.service.ts";
 
 export const prerender = false;
 
@@ -61,12 +62,16 @@ export const POST: APIRoute = async (context) => {
       );
     }
 
+    // Fetch user language preference
+    const languagePreference = await UserPreferenceService.getUserLanguagePreference(user.id, supabase);
+
     // Create the AI session
     // validation.data matches CreateAiSessionCommand (which is MealPlanStartupData)
     const responseDto = await AiSessionService.createSession(
       validation.data as CreateAiSessionCommand,
       user.id,
-      supabase
+      supabase,
+      languagePreference.language
     );
 
     return new Response(JSON.stringify(responseDto), {

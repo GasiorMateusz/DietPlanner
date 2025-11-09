@@ -9,6 +9,7 @@ import { extractCurrentMealPlan, createStateBridge } from "../lib/utils/chat-hel
 import { aiChatApi } from "@/lib/api/ai-chat.client";
 import { useAIChatForm } from "./hooks/useAIChatForm";
 import type { ChatMessage, UserChatMessage, MealPlanStartupData } from "../types";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 /**
  * State structure for managing chat state.
@@ -26,6 +27,7 @@ interface ChatState {
  * displays the conversation history, and provides controls for user input and acceptance.
  */
 export default function AIChatInterface() {
+  const { t } = useTranslation();
   const [chatState, setChatState] = useState<ChatState>({
     messageHistory: [],
     isLoading: false,
@@ -73,7 +75,7 @@ export default function AIChatInterface() {
         ...prev,
         messageHistory: prev.messageHistory.slice(0, -1),
         isLoading: false,
-        error: error instanceof Error ? error.message : "Failed to send message. Please try again.",
+        error: error instanceof Error ? error.message : t("chat.sendError"),
       }));
       form.setValue("message", message);
     }
@@ -89,7 +91,7 @@ export default function AIChatInterface() {
         if (!storedData) {
           setChatState((prev) => ({
             ...prev,
-            error: "No startup data found. Please start from the dashboard.",
+            error: t("chat.noStartupData"),
           }));
           return;
         }
@@ -111,7 +113,7 @@ export default function AIChatInterface() {
         console.error("Failed to initialize chat:", error);
         setChatState((prev) => ({
           ...prev,
-          error: error instanceof Error ? error.message : "Failed to initialize AI chat session. Please try again.",
+          error: error instanceof Error ? error.message : t("chat.initError"),
         }));
       }
     };
@@ -135,7 +137,7 @@ export default function AIChatInterface() {
     if (!sessionId) {
       setChatState((prev) => ({
         ...prev,
-        error: "No active session. Please refresh the page.",
+        error: t("chat.noSession"),
       }));
       return;
     }
@@ -145,7 +147,7 @@ export default function AIChatInterface() {
     if (!bridge) {
       setChatState((prev) => ({
         ...prev,
-        error: "No meal plan available to accept.",
+        error: t("chat.noPlanToAccept"),
       }));
       return;
     }
@@ -178,7 +180,7 @@ export default function AIChatInterface() {
       <div className="container mx-auto p-4 sm:p-8 max-w-4xl">
         <div className="text-center py-20">
           <p className="text-muted-foreground" data-testid="ai-chat-initializing">
-            Initializing AI chat...
+            {t("chat.initializing")}
           </p>
         </div>
       </div>
@@ -189,9 +191,7 @@ export default function AIChatInterface() {
     <div className="container mx-auto p-4 sm:p-8 max-w-4xl" data-testid="ai-chat-interface">
       {/* AI Disclaimer Alert */}
       <Alert className="mb-6">
-        <AlertDescription>
-          This content is AI-generated. Please verify all information before using with patients.
-        </AlertDescription>
+        <AlertDescription>{t("chat.aiDisclaimer")}</AlertDescription>
       </Alert>
 
       {/* Error Alert */}
@@ -204,14 +204,14 @@ export default function AIChatInterface() {
       {/* Current Meal Plan Display - Always visible at the top */}
       {currentMealPlan && (
         <div className="mb-6 space-y-4 border rounded-lg p-6 bg-background">
-          <h2 className="text-2xl font-bold">Current Meal Plan</h2>
+          <h2 className="text-2xl font-bold">{t("chat.currentPlan")}</h2>
 
           {/* Daily Summary */}
           <DailySummaryStaticDisplay summary={currentMealPlan.dailySummary} />
 
           {/* Meals List */}
           <div className="space-y-4">
-            <h3 className="text-xl font-semibold">Meals</h3>
+            <h3 className="text-xl font-semibold">{t("chat.meals")}</h3>
             {currentMealPlan.meals.length > 0 ? (
               <div className="space-y-4">
                 {currentMealPlan.meals.map((meal, index) => (
@@ -219,7 +219,7 @@ export default function AIChatInterface() {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-8 text-muted-foreground">No meals available yet.</div>
+              <div className="text-center py-8 text-muted-foreground">{t("chat.noMeals")}</div>
             )}
           </div>
         </div>
@@ -242,7 +242,7 @@ export default function AIChatInterface() {
           <Textarea
             {...form.register("message")}
             onKeyDown={handleKeyDown}
-            placeholder="Type your message here... (Ctrl/Cmd+Enter to send)"
+            placeholder={t("chat.placeholder")}
             disabled={chatState.isLoading || !sessionId}
             className="min-h-[100px] resize-none"
             maxLength={maxLength}
@@ -252,7 +252,7 @@ export default function AIChatInterface() {
             <p className="text-sm text-destructive">{form.formState.errors.message.message}</p>
           )}
           <div className="flex justify-between items-center text-sm text-muted-foreground">
-            <span>Press Ctrl/Cmd+Enter to send</span>
+            <span>{t("chat.sendHint")}</span>
             <span>
               {form.watch("message").length} / {maxLength}
             </span>
@@ -265,7 +265,7 @@ export default function AIChatInterface() {
             className="flex-1"
             data-testid="ai-chat-send-button"
           >
-            {chatState.isLoading ? "Sending..." : "Send"}
+            {chatState.isLoading ? t("chat.sending") : t("chat.send")}
           </Button>
           <Button
             type="button"
@@ -274,14 +274,16 @@ export default function AIChatInterface() {
             disabled={chatState.isLoading || !sessionId}
             data-testid="ai-chat-accept-button"
           >
-            Accept and edit manually
+            {t("chat.acceptButton")}
           </Button>
         </div>
       </form>
 
       {/* Prompt Count (optional, for transparency) */}
       {chatState.promptCount > 0 && (
-        <div className="mt-4 text-center text-sm text-muted-foreground">Prompts sent: {chatState.promptCount}</div>
+        <div className="mt-4 text-center text-sm text-muted-foreground">
+          {t("chat.promptsSent")} {chatState.promptCount}
+        </div>
       )}
     </div>
   );
