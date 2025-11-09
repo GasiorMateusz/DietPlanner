@@ -37,4 +37,3 @@ export async function deleteUserAccount(
     throw new DatabaseError(`Failed to delete auth user ${userId}`, authDeleteError);
   }
 }
-

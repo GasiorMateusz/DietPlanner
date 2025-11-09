@@ -54,9 +54,7 @@ export function DeleteAccountConfirmationDialog({
               <li>Your account and profile information</li>
               <li>All your meal plans</li>
             </ul>
-            <p className="mt-2">
-              Your conversation history will be preserved for analytical purposes.
-            </p>
+            <p className="mt-2">Your conversation history will be preserved for analytical purposes.</p>
           </AlertDescription>
         </Alert>
 
@@ -84,4 +82,3 @@ export function DeleteAccountConfirmationDialog({
     </Dialog>
   );
 }
-
