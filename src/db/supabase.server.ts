@@ -11,8 +11,14 @@ export const createSupabaseServerClient = (cookies: AstroCookies) => {
     console.error("Missing Supabase credentials:", {
       hasUrl: Boolean(supabaseUrl),
       hasKey: Boolean(supabaseKey),
+      envKeys: Object.keys(import.meta.env).filter((k) => k.includes("SUPABASE")),
     });
-    throw new Error("SUPABASE_URL and SUPABASE_KEY must be set");
+    // Return a more descriptive error that won't serialize as [object Object]
+    const error = new Error(
+      `Missing Supabase credentials: SUPABASE_URL=${Boolean(supabaseUrl)}, SUPABASE_KEY=${Boolean(supabaseKey)}`
+    );
+    error.name = "MissingSupabaseCredentials";
+    throw error;
   }
 
   return createServerClient<Database>(supabaseUrl, supabaseKey, {

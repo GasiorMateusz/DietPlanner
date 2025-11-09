@@ -1,5 +1,10 @@
 {
   "version": 1,
   "include": ["/*"],
-  "exclude": []
+  "exclude": [
+    "/_astro/*",
+    "/favicon.ico",
+    "/favicon.png",
+    "/favicon.svg"
+  ]
 }
