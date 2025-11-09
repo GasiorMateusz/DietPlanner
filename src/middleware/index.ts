@@ -5,7 +5,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
   const pathname = context.url.pathname;
   // eslint-disable-next-line no-console
   console.log(`[Middleware] Processing request: ${pathname}`);
-  
+
   try {
     const supabase = createSupabaseServerClient(context.cookies);
     context.locals.supabase = supabase;
@@ -20,8 +20,9 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
     // Log auth status - distinguish between missing session (expected for public routes) and actual errors
     const isProtectedRoute = pathname.startsWith("/app/");
-    const missingSessionOnly = error?.message === "Auth session missing!" || error?.message === "Invalid Refresh Token: Refresh Token Not Found";
-    
+    const missingSessionOnly =
+      error?.message === "Auth session missing!" || error?.message === "Invalid Refresh Token: Refresh Token Not Found";
+
     if (isProtectedRoute) {
       // Always log for protected routes
       // eslint-disable-next-line no-console
@@ -57,7 +58,43 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
     // eslint-disable-next-line no-console
     console.log(`[Middleware] Continuing to next handler for: ${pathname}`);
-    return next();
+
+    const response = await next();
+
+    // Additional logging to debug [object Object] issue
+    // eslint-disable-next-line no-console
+    console.log(`[Middleware] Response received for ${pathname}:`, {
+      type: typeof response,
+      constructor: response?.constructor?.name,
+      isResponse: response instanceof Response,
+      isString: typeof response === "string",
+      isObject: typeof response === "object" && response !== null,
+    });
+
+    if (response instanceof Response) {
+      const cloned = response.clone();
+      try {
+        const text = await cloned.text();
+        // eslint-disable-next-line no-console
+        console.log(`[Middleware] Response body preview (first 200 chars):`, text.substring(0, 200));
+        // eslint-disable-next-line no-console
+        console.log(`[Middleware] Response body length:`, text.length);
+        // eslint-disable-next-line no-console
+        console.log(`[Middleware] Response headers:`, Object.fromEntries(response.headers.entries()));
+        // eslint-disable-next-line no-console
+        console.log(`[Middleware] Response status:`, response.status);
+        // eslint-disable-next-line no-console
+        console.log(`[Middleware] Response statusText:`, response.statusText);
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.error(`[Middleware] Error reading response body:`, error);
+      }
+    } else {
+      // eslint-disable-next-line no-console
+      console.error(`[Middleware] Response is not a Response object! Type: ${typeof response}, Value:`, response);
+    }
+
+    return response;
   } catch (error) {
     // If Supabase client creation fails, log error but continue
     // Pages will handle their own auth checks

@@ -1,6 +1,8 @@
 # Wrangler configuration for Cloudflare Pages
 # This file is used for both local development and deployment
 
+name = "dietplanner"
+
 compatibility_date = "2025-11-09"
 compatibility_flags = ["nodejs_compat"]
 
