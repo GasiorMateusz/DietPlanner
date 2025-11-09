@@ -107,14 +107,25 @@ To set up and run this project on your local machine, follow these steps.
    # Supabase credentials (server-side)
    SUPABASE_URL=your_supabase_project_url
    SUPABASE_KEY=your_supabase_anon_key
+   SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 
    # Supabase credentials (client-side - must have PUBLIC_ prefix)
    PUBLIC_SUPABASE_URL=your_supabase_project_url
    PUBLIC_SUPABASE_KEY=your_supabase_anon_key
 
+   # Application URL (used for email verification and password reset links)
+   # For production, set this to your production URL WITHOUT trailing slash (e.g., https://yourdomain.com)
+   # For local development, this can be omitted (will use window.location.origin)
+   PUBLIC_APP_URL=https://yourdomain.com
+
    # OpenRouter API Key
    OPENROUTER_API_KEY=your_openrouter_api_key
    ```
+
+   **Important Notes:**
+   - `SUPABASE_SERVICE_ROLE_KEY` is required for account deletion functionality
+   - Find it in Supabase Dashboard → Settings → API → "service_role" key (keep it secret!)
+   - The anon key (`SUPABASE_KEY` / `PUBLIC_SUPABASE_KEY`) is NOT sufficient for admin operations
 
 5. **Run the development server:**
    ```bash
