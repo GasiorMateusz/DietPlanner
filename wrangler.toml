@@ -1,8 +1,11 @@
-# Wrangler configuration for Cloudflare Pages local development
-# This file is used when running `wrangler pages dev` locally
+# Wrangler configuration for Cloudflare Pages
+# This file is used for both local development and deployment
 
 compatibility_date = "2025-11-09"
 compatibility_flags = ["nodejs_compat"]
+
+# Pages build output directory (required for Pages deployment)
+pages_build_output_dir = "dist"
 
 # KV Namespace binding for sessions (if needed)
 # Uncomment and set the namespace ID if you have created a KV namespace in Cloudflare

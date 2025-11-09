@@ -8,6 +8,9 @@ interface Props {
 }
 
 const { title = "Diet Planner" } = Astro.props;
+// eslint-disable-next-line no-console
+console.log("[Layout] Rendering layout with title:", title);
+---
 
 // Verify user session - use getUser() to ensure authenticity
 // const supabase = createSupabaseServerClient(Astro.cookies);
@@ -16,7 +19,6 @@ const { title = "Diet Planner" } = Astro.props;
 // } = await supabase.auth.getUser();
 
 // const userEmail = user?.email;
----
 
 <!doctype html>
 <html lang="en">

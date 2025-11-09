@@ -4,18 +4,33 @@ import LoginForm from "@/components/auth/LoginForm";
 import { createSupabaseServerClient } from "@/db/supabase.server";
 
 let user = null;
+// eslint-disable-next-line no-console
+console.log("[login.astro] Starting page render");
 try {
+  // eslint-disable-next-line no-console
+  console.log("[login.astro] Creating Supabase client");
   const supabase = createSupabaseServerClient(Astro.cookies);
+  // eslint-disable-next-line no-console
+  console.log("[login.astro] Getting user");
   // Verify if user is already authenticated using getUser() to ensure session is valid
   const {
     data: { user: authenticatedUser },
   } = await supabase.auth.getUser();
   user = authenticatedUser;
+  // eslint-disable-next-line no-console
+  console.log("[login.astro] User check result:", { hasUser: !!user });
 } catch (error) {
   // If Supabase client creation fails, continue without auth
   // User will see login form
-  console.error("Failed to initialize Supabase client:", error);
+  // eslint-disable-next-line no-console
+  console.error("[login.astro] Failed to initialize Supabase client:", {
+    error: error instanceof Error ? error.message : String(error),
+    stack: error instanceof Error ? error.stack : undefined,
+    name: error instanceof Error ? error.name : typeof error,
+  });
 }
+// eslint-disable-next-line no-console
+console.log("[login.astro] Continuing with render, user:", !!user);
 
 if (user) {
   return Astro.redirect("/app/dashboard");
