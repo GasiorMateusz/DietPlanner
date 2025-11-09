@@ -1,4 +1,5 @@
 /// <reference types="astro/client" />
+import "../.astro/types.d.ts";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "./db/database.types.ts";
