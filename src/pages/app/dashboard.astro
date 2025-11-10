@@ -1,8 +1,8 @@
 ---
 import PrivateLayout from "../../layouts/PrivateLayout.astro";
-import DashboardView from "../../components/DashboardView";
+import { DashboardViewWrapper } from "../../components/DashboardViewWrapper";
 ---
 
 <PrivateLayout title="Dashboard - Diet Planner">
-  <DashboardView client:load />
+  <DashboardViewWrapper client:load />
 </PrivateLayout>

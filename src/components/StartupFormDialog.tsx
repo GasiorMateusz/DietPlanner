@@ -7,6 +7,7 @@ import { Label } from "./ui/label";
 import { Select } from "./ui/select";
 import { Textarea } from "./ui/textarea";
 import { useStartupForm } from "./hooks/useStartupForm";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 interface StartupFormDialogProps {
   open: boolean;
@@ -19,16 +20,15 @@ interface StartupFormDialogProps {
  * Collects patient data, targets, and guidelines before initiating AI generation.
  */
 export function StartupFormDialog({ open, onClose, onSubmit }: StartupFormDialogProps) {
+  const { t } = useTranslation();
   const { form, handleSubmit, handleClose } = useStartupForm({ onSubmit, onClose });
 
   return (
     <Dialog open={open} onOpenChange={(openState) => !openState && handleClose()}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" data-testid="startup-form-dialog">
         <DialogHeader>
-          <DialogTitle>Create New Meal Plan</DialogTitle>
-          <DialogDescription>
-            Fill in the patient information and dietary requirements to generate a personalized meal plan.
-          </DialogDescription>
+          <DialogTitle>{t("startup.title")}</DialogTitle>
+          <DialogDescription>{t("startup.description")}</DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6" data-testid="startup-form">
@@ -39,7 +39,8 @@ export function StartupFormDialog({ open, onClose, onSubmit }: StartupFormDialog
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label htmlFor="patient_age">
-                Patient Age <span className="text-muted-foreground">(years)</span>
+                {t("startup.patientAge")}{" "}
+                <span className="text-muted-foreground">({t("startup.patientAgeYears")})</span>
               </Label>
               <Controller
                 name="patient_age"
@@ -51,7 +52,7 @@ export function StartupFormDialog({ open, onClose, onSubmit }: StartupFormDialog
                       type="number"
                       min="1"
                       max="150"
-                      placeholder="Age"
+                      placeholder={t("startup.patientAgePlaceholder")}
                       value={field.value ?? ""}
                       onChange={(e) => {
                         const val = e.target.value === "" ? null : parseFloat(e.target.value);
@@ -71,7 +72,8 @@ export function StartupFormDialog({ open, onClose, onSubmit }: StartupFormDialog
 
             <div className="space-y-2">
               <Label htmlFor="patient_weight">
-                Weight <span className="text-muted-foreground">(kg)</span>
+                {t("startup.patientWeight")}{" "}
+                <span className="text-muted-foreground">({t("startup.patientWeightKg")})</span>
               </Label>
               <Controller
                 name="patient_weight"
@@ -84,7 +86,7 @@ export function StartupFormDialog({ open, onClose, onSubmit }: StartupFormDialog
                       min="0"
                       max="1000"
                       step="0.1"
-                      placeholder="Weight"
+                      placeholder={t("startup.patientWeightPlaceholder")}
                       value={field.value ?? ""}
                       onChange={(e) => {
                         const val = e.target.value === "" ? null : parseFloat(e.target.value);
@@ -104,7 +106,8 @@ export function StartupFormDialog({ open, onClose, onSubmit }: StartupFormDialog
 
             <div className="space-y-2">
               <Label htmlFor="patient_height">
-                Height <span className="text-muted-foreground">(cm)</span>
+                {t("startup.patientHeight")}{" "}
+                <span className="text-muted-foreground">({t("startup.patientHeightCm")})</span>
               </Label>
               <Controller
                 name="patient_height"
@@ -117,7 +120,7 @@ export function StartupFormDialog({ open, onClose, onSubmit }: StartupFormDialog
                       min="0"
                       max="300"
                       step="0.1"
-                      placeholder="Height"
+                      placeholder={t("startup.patientHeightPlaceholder")}
                       value={field.value ?? ""}
                       onChange={(e) => {
                         const val = e.target.value === "" ? null : parseFloat(e.target.value);
@@ -137,7 +140,7 @@ export function StartupFormDialog({ open, onClose, onSubmit }: StartupFormDialog
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="activity_level">Activity Level</Label>
+            <Label htmlFor="activity_level">{t("startup.activityLevel")}</Label>
             <Controller
               name="activity_level"
               control={form.control}
@@ -151,11 +154,11 @@ export function StartupFormDialog({ open, onClose, onSubmit }: StartupFormDialog
                     aria-invalid={fieldState.invalid}
                     data-testid="startup-form-activity-level"
                   >
-                    <option value="">Select activity level</option>
-                    <option value="sedentary">Sedentary</option>
-                    <option value="light">Light</option>
-                    <option value="moderate">Moderate</option>
-                    <option value="high">High</option>
+                    <option value="">{t("startup.activityLevelSelect")}</option>
+                    <option value="sedentary">{t("startup.activityLevelSedentary")}</option>
+                    <option value="light">{t("startup.activityLevelLight")}</option>
+                    <option value="moderate">{t("startup.activityLevelModerate")}</option>
+                    <option value="high">{t("startup.activityLevelHigh")}</option>
                   </Select>
                   {fieldState.error && <p className="text-sm text-destructive">{fieldState.error.message}</p>}
                 </>
@@ -165,7 +168,7 @@ export function StartupFormDialog({ open, onClose, onSubmit }: StartupFormDialog
 
           <div className="space-y-2">
             <Label htmlFor="target_kcal">
-              Target Calories <span className="text-muted-foreground">(kcal/day)</span>
+              {t("startup.targetKcal")} <span className="text-muted-foreground">(kcal/day)</span>
             </Label>
             <Controller
               name="target_kcal"
@@ -177,7 +180,7 @@ export function StartupFormDialog({ open, onClose, onSubmit }: StartupFormDialog
                     type="number"
                     min="1"
                     max="10000"
-                    placeholder="Target calories"
+                    placeholder={t("startup.targetKcalPlaceholder")}
                     value={field.value ?? ""}
                     onChange={(e) => {
                       const val = e.target.value === "" ? null : parseFloat(e.target.value);
@@ -196,11 +199,11 @@ export function StartupFormDialog({ open, onClose, onSubmit }: StartupFormDialog
           </div>
 
           <div className="space-y-2">
-            <Label>Target Macro Distribution (%)</Label>
+            <Label>{t("startup.targetMacroDistribution")}</Label>
             <div className="grid grid-cols-3 gap-4">
               <div>
                 <Label htmlFor="p_perc" className="text-xs">
-                  Protein
+                  {t("startup.macroProtein")}
                 </Label>
                 <Controller
                   name="target_macro_distribution.p_perc"
@@ -223,7 +226,7 @@ export function StartupFormDialog({ open, onClose, onSubmit }: StartupFormDialog
                         type="number"
                         min="0"
                         max="100"
-                        placeholder="%"
+                        placeholder={t("startup.macroPercentPlaceholder")}
                         value={field.value ?? ""}
                         onChange={(e) => {
                           const val = e.target.value === "" ? null : parseFloat(e.target.value);
@@ -257,7 +260,7 @@ export function StartupFormDialog({ open, onClose, onSubmit }: StartupFormDialog
               </div>
               <div>
                 <Label htmlFor="f_perc" className="text-xs">
-                  Fat
+                  {t("startup.macroFat")}
                 </Label>
                 <Controller
                   name="target_macro_distribution.f_perc"
@@ -280,7 +283,7 @@ export function StartupFormDialog({ open, onClose, onSubmit }: StartupFormDialog
                         type="number"
                         min="0"
                         max="100"
-                        placeholder="%"
+                        placeholder={t("startup.macroPercentPlaceholder")}
                         value={field.value ?? ""}
                         onChange={(e) => {
                           const val = e.target.value === "" ? null : parseFloat(e.target.value);
@@ -314,7 +317,7 @@ export function StartupFormDialog({ open, onClose, onSubmit }: StartupFormDialog
               </div>
               <div>
                 <Label htmlFor="c_perc" className="text-xs">
-                  Carbs
+                  {t("startup.macroCarbs")}
                 </Label>
                 <Controller
                   name="target_macro_distribution.c_perc"
@@ -337,7 +340,7 @@ export function StartupFormDialog({ open, onClose, onSubmit }: StartupFormDialog
                         type="number"
                         min="0"
                         max="100"
-                        placeholder="%"
+                        placeholder={t("startup.macroPercentPlaceholder")}
                         value={field.value ?? ""}
                         onChange={(e) => {
                           const val = e.target.value === "" ? null : parseFloat(e.target.value);
@@ -373,7 +376,7 @@ export function StartupFormDialog({ open, onClose, onSubmit }: StartupFormDialog
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="meal_names">Meal Names</Label>
+            <Label htmlFor="meal_names">{t("startup.mealTimes")}</Label>
             <Controller
               name="meal_names"
               control={form.control}
@@ -382,7 +385,7 @@ export function StartupFormDialog({ open, onClose, onSubmit }: StartupFormDialog
                   <Input
                     id="meal_names"
                     type="text"
-                    placeholder="e.g., Breakfast, Lunch, Dinner, Snack"
+                    placeholder={t("startup.mealTimesPlaceholder")}
                     maxLength={500}
                     {...field}
                     value={field.value ?? ""}
@@ -395,7 +398,7 @@ export function StartupFormDialog({ open, onClose, onSubmit }: StartupFormDialog
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="exclusions_guidelines">Exclusions / Guidelines</Label>
+            <Label htmlFor="exclusions_guidelines">{t("startup.dietaryRestrictions")}</Label>
             <Controller
               name="exclusions_guidelines"
               control={form.control}
@@ -403,7 +406,7 @@ export function StartupFormDialog({ open, onClose, onSubmit }: StartupFormDialog
                 <>
                   <Textarea
                     id="exclusions_guidelines"
-                    placeholder="Dietary restrictions, allergies, preferences, etc."
+                    placeholder={t("startup.dietaryRestrictionsPlaceholder")}
                     maxLength={2000}
                     rows={4}
                     {...field}
@@ -424,10 +427,10 @@ export function StartupFormDialog({ open, onClose, onSubmit }: StartupFormDialog
               disabled={form.formState.isSubmitting}
               data-testid="startup-form-cancel-button"
             >
-              Cancel
+              {t("common.cancel")}
             </Button>
             <Button type="submit" disabled={form.formState.isSubmitting} data-testid="startup-form-generate-button">
-              {form.formState.isSubmitting ? "Generating..." : "Generate"}
+              {form.formState.isSubmitting ? t("common.loading") : t("dashboard.createPlan")}
             </Button>
           </DialogFooter>
         </form>

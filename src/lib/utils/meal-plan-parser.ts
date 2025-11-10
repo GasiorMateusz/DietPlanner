@@ -55,7 +55,32 @@ export function parseXmlMealPlan(message: string): {
       const extractMealTag = (tagName: string): string => {
         const regex = new RegExp(`<${tagName}>([\\s\\S]*?)<\\/${tagName}>`, "i");
         const match = mealContent.match(regex);
-        return match ? match[1].trim() : "";
+        if (!match) return "";
+
+        let content = match[1].trim();
+
+        // Remove YAML-like tags from ingredients and preparation
+        if (tagName === "ingredients") {
+          // Remove <item> and </item> tags
+          content = content.replace(/<item>/gi, "").replace(/<\/item>/g, "");
+          // Clean up leading whitespace on each line
+          content = content
+            .split("\n")
+            .map((line) => line.trim())
+            .filter((line) => line.length > 0)
+            .join("\n");
+        } else if (tagName === "preparation") {
+          // Remove <step> and </step> tags
+          content = content.replace(/<step>/gi, "").replace(/<\/step>/g, "");
+          // Clean up leading whitespace on each line
+          content = content
+            .split("\n")
+            .map((line) => line.trim())
+            .filter((line) => line.length > 0)
+            .join("\n");
+        }
+
+        return content;
       };
 
       const extractSummaryTag = (tagName: string): number => {

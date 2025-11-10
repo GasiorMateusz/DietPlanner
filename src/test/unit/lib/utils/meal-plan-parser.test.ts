@@ -768,6 +768,78 @@ Add butter</preparation>
         // The parser should handle the unclosed meal tag and continue
         expect(result.meals.length).toBeGreaterThan(0);
       });
+
+      it("should remove YAML-like item tags from ingredients", () => {
+        const message = `
+          <daily_summary>
+            <kcal>2000</kcal>
+            <proteins>150</proteins>
+            <fats>65</fats>
+            <carbs>250</carbs>
+          </daily_summary>
+          <meals>
+            <meal>
+              <name>Breakfast</name>
+              <ingredients>
+                <item>Owsianka z płatków owsianych - 50g</item>
+                <item>Mleko półtłuste - 200ml</item>
+                <item>Jabłko - 150g</item>
+              </ingredients>
+              <preparation>Cook</preparation>
+              <summary>
+                <kcal>500</kcal>
+                <protein>30</protein>
+                <fat>20</fat>
+                <carb>50</carb>
+              </summary>
+            </meal>
+          </meals>
+        `;
+
+        const result = parseXmlMealPlan(message);
+
+        expect(result.meals[0].ingredients).toBe(
+          "Owsianka z płatków owsianych - 50g\nMleko półtłuste - 200ml\nJabłko - 150g"
+        );
+        expect(result.meals[0].ingredients).not.toContain("<item>");
+        expect(result.meals[0].ingredients).not.toContain("</item>");
+      });
+
+      it("should remove YAML-like step tags from preparation", () => {
+        const message = `
+          <daily_summary>
+            <kcal>2000</kcal>
+            <proteins>150</proteins>
+            <fats>65</fats>
+            <carbs>250</carbs>
+          </daily_summary>
+          <meals>
+            <meal>
+              <name>Breakfast</name>
+              <ingredients>Eggs</ingredients>
+              <preparation>
+                <step>Podgrzej mleko do wrzenia.</step>
+                <step>Dodaj płatki owsiane i gotuj na małym ogniu przez około 5 minut.</step>
+                <step>Pokrój jabłko na kawałki i dodaj do owsianki.</step>
+              </preparation>
+              <summary>
+                <kcal>500</kcal>
+                <protein>30</protein>
+                <fat>20</fat>
+                <carb>50</carb>
+              </summary>
+            </meal>
+          </meals>
+        `;
+
+        const result = parseXmlMealPlan(message);
+
+        expect(result.meals[0].preparation).toBe(
+          "Podgrzej mleko do wrzenia.\nDodaj płatki owsiane i gotuj na małym ogniu przez około 5 minut.\nPokrój jabłko na kawałki i dodaj do owsianki."
+        );
+        expect(result.meals[0].preparation).not.toContain("<step>");
+        expect(result.meals[0].preparation).not.toContain("</step>");
+      });
     });
   });
 

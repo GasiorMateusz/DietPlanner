@@ -8,12 +8,14 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
 import { loginSchema, type LoginInput } from "@/lib/validation/auth.schemas";
 import { supabaseClient as supabase } from "@/db/supabase.client";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 interface Props {
   className?: string;
 }
 
 export default function LoginForm({ className }: Props) {
+  const { t } = useTranslation();
   const emailId = React.useId();
   const passwordId = React.useId();
   const formRef = React.useRef<HTMLFormElement | null>(null);
@@ -34,7 +36,7 @@ export default function LoginForm({ className }: Props) {
     });
 
     if (error) {
-      form.setError("root", { message: "Invalid email or password." });
+      form.setError("root", { message: t("auth.invalidCredentials") });
       return;
     }
 
@@ -56,13 +58,13 @@ export default function LoginForm({ className }: Props) {
     <form ref={formRef} onSubmit={onSubmit} className={cn("space-y-4", className)} noValidate data-testid="login-form">
       {form.formState.errors.root ? (
         <Alert className="border-destructive/30 text-destructive">
-          <AlertTitle>Unable to log in</AlertTitle>
+          <AlertTitle>{t("auth.loginError")}</AlertTitle>
           <AlertDescription>{form.formState.errors.root.message}</AlertDescription>
         </Alert>
       ) : null}
 
       <div className="grid gap-2">
-        <Label htmlFor={emailId}>Email</Label>
+        <Label htmlFor={emailId}>{t("auth.email")}</Label>
         <Input
           id={emailId}
           type="email"
@@ -82,7 +84,7 @@ export default function LoginForm({ className }: Props) {
       </div>
 
       <div className="grid gap-2">
-        <Label htmlFor={passwordId}>Password</Label>
+        <Label htmlFor={passwordId}>{t("auth.password")}</Label>
         <Input
           id={passwordId}
           type="password"
@@ -100,15 +102,15 @@ export default function LoginForm({ className }: Props) {
       </div>
 
       <Button type="submit" className="w-full" disabled={form.formState.isSubmitting} data-testid="login-submit-button">
-        {form.formState.isSubmitting ? "Logging in..." : "Log in"}
+        {form.formState.isSubmitting ? t("auth.loggingIn") : t("auth.login")}
       </Button>
 
       <div className="flex items-center justify-between text-sm">
         <a className="text-primary underline-offset-4 hover:underline" href="/auth/forgot-password">
-          Forgot password?
+          {t("auth.forgotPassword")}
         </a>
         <a className="text-primary underline-offset-4 hover:underline" href="/auth/register">
-          Create account
+          {t("auth.createAccount")}
         </a>
       </div>
     </form>

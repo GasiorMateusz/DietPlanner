@@ -118,8 +118,9 @@ using (false);
 -- this prevents search_path manipulation attacks by setting an immutable search_path
 -- the function will always use the specified schema, regardless of caller's search_path
 
--- drop trigger first (it depends on the function)
+-- drop all triggers that depend on the function first
 drop trigger if exists "on_meal_plan_update" on "public"."meal_plans";
+drop trigger if exists "on_user_preferences_update" on "public"."user_preferences";
 
 -- drop and recreate function with secure settings
 drop function if exists "public"."handle_updated_at"();
@@ -136,9 +137,14 @@ begin
 end;
 $$;
 
--- recreate the trigger with the secure function
+-- recreate the triggers with the secure function
 create trigger "on_meal_plan_update"
 before update on "public"."meal_plans"
+for each row
+execute procedure "public"."handle_updated_at"();
+
+create trigger "on_user_preferences_update"
+before update on "public"."user_preferences"
 for each row
 execute procedure "public"."handle_updated_at"();
 

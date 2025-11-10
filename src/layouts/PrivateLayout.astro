@@ -1,6 +1,6 @@
 ---
 import "../styles/global.css";
-import { NavBar } from "@/components/NavBar";
+import { AppWithTranslations } from "@/components/AppWithTranslations";
 import { createSupabaseServerClient } from "@/db/supabase.server";
 
 interface Props {
@@ -30,10 +30,9 @@ const userEmail = user?.email;
     <title>{title}</title>
   </head>
   <body>
-    <NavBar userEmail={userEmail} client:load />
-    <main>
+    <AppWithTranslations userEmail={userEmail} client:load>
       <slot />
-    </main>
+    </AppWithTranslations>
   </body>
 </html>
 

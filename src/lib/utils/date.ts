@@ -24,13 +24,14 @@ export function formatDate(isoString: string): string {
  * Formats an ISO timestamp string to a relative time format.
  *
  * @param isoString - ISO 8601 timestamp string
+ * @param t - Translation function (optional, for i18n support)
  * @returns Relative time string (e.g., "2 days ago", "1 week ago")
  */
-export function formatRelativeTime(isoString: string): string {
+export function formatRelativeTime(isoString: string, t?: (key: string) => string): string {
   try {
     const date = new Date(isoString);
     if (isNaN(date.getTime())) {
-      return "Invalid date";
+      return t ? t("time.invalidDate") : "Invalid date";
     }
 
     const now = new Date();
@@ -42,27 +43,51 @@ export function formatRelativeTime(isoString: string): string {
     const diffWeeks = Math.floor(diffDays / 7);
     const diffMonths = Math.floor(diffDays / 30);
 
+    if (!t) {
+      // Fallback to English if no translation function provided
+      if (diffSecs < 60) {
+        return "just now";
+      }
+      if (diffMins < 60) {
+        return `${diffMins} ${diffMins === 1 ? "minute" : "minutes"} ago`;
+      }
+      if (diffHours < 24) {
+        return `${diffHours} ${diffHours === 1 ? "hour" : "hours"} ago`;
+      }
+      if (diffDays < 7) {
+        return `${diffDays} ${diffDays === 1 ? "day" : "days"} ago`;
+      }
+      if (diffWeeks < 4) {
+        return `${diffWeeks} ${diffWeeks === 1 ? "week" : "weeks"} ago`;
+      }
+      if (diffMonths < 12) {
+        return `${diffMonths} ${diffMonths === 1 ? "month" : "months"} ago`;
+      }
+      return formatDate(isoString);
+    }
+
+    // Use translations
     if (diffSecs < 60) {
-      return "just now";
+      return t("time.justNow");
     }
     if (diffMins < 60) {
-      return `${diffMins} ${diffMins === 1 ? "minute" : "minutes"} ago`;
+      return `${diffMins} ${diffMins === 1 ? t("time.minuteAgo") : t("time.minutesAgo")}`;
     }
     if (diffHours < 24) {
-      return `${diffHours} ${diffHours === 1 ? "hour" : "hours"} ago`;
+      return `${diffHours} ${diffHours === 1 ? t("time.hourAgo") : t("time.hoursAgo")}`;
     }
     if (diffDays < 7) {
-      return `${diffDays} ${diffDays === 1 ? "day" : "days"} ago`;
+      return `${diffDays} ${diffDays === 1 ? t("time.dayAgo") : t("time.daysAgo")}`;
     }
     if (diffWeeks < 4) {
-      return `${diffWeeks} ${diffWeeks === 1 ? "week" : "weeks"} ago`;
+      return `${diffWeeks} ${diffWeeks === 1 ? t("time.weekAgo") : t("time.weeksAgo")}`;
     }
     if (diffMonths < 12) {
-      return `${diffMonths} ${diffMonths === 1 ? "month" : "months"} ago`;
+      return `${diffMonths} ${diffMonths === 1 ? t("time.monthAgo") : t("time.monthsAgo")}`;
     }
 
     return formatDate(isoString);
   } catch {
-    return "Invalid date";
+    return t ? t("time.invalidDate") : "Invalid date";
   }
 }

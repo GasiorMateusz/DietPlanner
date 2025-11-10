@@ -1,5 +1,6 @@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "./ui/dialog";
 import { Button } from "./ui/button";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 interface DeleteConfirmationDialogProps {
   open: boolean;
@@ -22,6 +23,7 @@ export function DeleteConfirmationDialog({
   onConfirm,
   isDeleting = false,
 }: DeleteConfirmationDialogProps) {
+  const { t } = useTranslation();
   const handleConfirm = () => {
     if (mealPlanId && !isDeleting) {
       onConfirm(mealPlanId);
@@ -32,24 +34,21 @@ export function DeleteConfirmationDialog({
     <Dialog open={open} onOpenChange={(openState) => !openState && onClose()}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Delete Meal Plan</DialogTitle>
+          <DialogTitle>{t("dialog.deleteMealPlan.title")}</DialogTitle>
           <DialogDescription>
             {mealPlanName ? (
-              <>
-                Are you sure you want to delete <strong>&quot;{mealPlanName}&quot;</strong>? This action cannot be
-                undone.
-              </>
+              <>{t("dialog.deleteMealPlan.descriptionWithName").replace("{name}", mealPlanName)}</>
             ) : (
-              "Are you sure you want to delete this meal plan? This action cannot be undone."
+              t("dialog.deleteMealPlan.description")
             )}
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <Button type="button" variant="outline" onClick={onClose} disabled={isDeleting}>
-            Cancel
+            {t("common.cancel")}
           </Button>
           <Button type="button" variant="destructive" onClick={handleConfirm} disabled={!mealPlanId || isDeleting}>
-            {isDeleting ? "Deleting..." : "Delete"}
+            {isDeleting ? t("common.deleting") : t("common.delete")}
           </Button>
         </DialogFooter>
       </DialogContent>
