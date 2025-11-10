@@ -55,6 +55,7 @@
   "chat.acceptButton": "Zaakceptuj i edytuj ręcznie",
   "chat.noPlanToAccept": "Brak dostępnego planu żywieniowego do zaakceptowania.",
   "chat.promptsSent": "Wysłane prompty:",
+  "chat.goToDashboard": "Przejdź do panelu",
   "editor.title.create": "Utwórz plan żywieniowy",
   "editor.title.edit": "Edytuj plan żywieniowy",
   "editor.planName": "Nazwa planu żywieniowego",

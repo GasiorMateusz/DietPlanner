@@ -55,6 +55,7 @@
   "chat.acceptButton": "Accept and edit manually",
   "chat.noPlanToAccept": "No meal plan available to accept.",
   "chat.promptsSent": "Prompts sent:",
+  "chat.goToDashboard": "Go to Dashboard",
   "editor.title.create": "Create Meal Plan",
   "editor.title.edit": "Edit Meal Plan",
   "editor.planName": "Meal Plan Name",

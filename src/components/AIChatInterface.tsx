@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { Alert, AlertDescription } from "./ui/alert";
 import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
@@ -37,6 +37,7 @@ export default function AIChatInterface() {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [startupData, setStartupData] = useState<MealPlanStartupData | null>(null);
   const messageEndRef = useRef<HTMLDivElement>(null);
+  const initializationAttemptedRef = useRef(false);
 
   const { form, handleSubmit, maxLength } = useAIChatForm(async (message) => {
     if (!sessionId) {
@@ -70,13 +71,24 @@ export default function AIChatInterface() {
         isLoading: false,
       }));
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error("Error sending message:", error);
+      const errorMessage = error instanceof Error ? error.message : t("chat.sendError");
+
+      // Check if it's a 404 error (session not found)
+      // In this case, clear the sessionId so user can't send more messages
+      if (errorMessage.includes("Session not found") || errorMessage.includes("not found")) {
+        setSessionId(null);
+      }
+
+      // Keep the user's message visible, just show the error
       setChatState((prev) => ({
         ...prev,
-        messageHistory: prev.messageHistory.slice(0, -1),
         isLoading: false,
-        error: error instanceof Error ? error.message : t("chat.sendError"),
+        error: errorMessage,
       }));
+
+      // Restore the message in the form so user can retry if they want
       form.setValue("message", message);
     }
   });
@@ -84,42 +96,52 @@ export default function AIChatInterface() {
   /**
    * Initialize chat session from startup data stored in sessionStorage.
    */
-  useEffect(() => {
-    const initializeChat = async () => {
-      try {
-        const storedData = sessionStorage.getItem("mealPlanStartupData");
-        if (!storedData) {
-          setChatState((prev) => ({
-            ...prev,
-            error: t("chat.noStartupData"),
-          }));
-          return;
-        }
+  const initializeChat = useCallback(async () => {
+    // Prevent multiple initialization attempts
+    if (initializationAttemptedRef.current || sessionId !== null) {
+      return;
+    }
 
-        const data: MealPlanStartupData = JSON.parse(storedData);
-        setStartupData(data);
+    initializationAttemptedRef.current = true;
 
-        const response = await aiChatApi.createSession(data);
-        setSessionId(response.session_id);
-
+    try {
+      const storedData = sessionStorage.getItem("mealPlanStartupData");
+      if (!storedData) {
         setChatState((prev) => ({
           ...prev,
-          messageHistory: [response.message],
-          promptCount: response.prompt_count,
+          error: t("chat.noStartupData"),
         }));
-
-        sessionStorage.removeItem("mealPlanStartupData");
-      } catch (error) {
-        console.error("Failed to initialize chat:", error);
-        setChatState((prev) => ({
-          ...prev,
-          error: error instanceof Error ? error.message : t("chat.initError"),
-        }));
+        return;
       }
-    };
 
+      const data: MealPlanStartupData = JSON.parse(storedData);
+      setStartupData(data);
+
+      const response = await aiChatApi.createSession(data);
+      setSessionId(response.session_id);
+
+      setChatState((prev) => ({
+        ...prev,
+        messageHistory: [response.message],
+        promptCount: response.prompt_count,
+      }));
+
+      sessionStorage.removeItem("mealPlanStartupData");
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error("Failed to initialize chat:", error);
+      setChatState((prev) => ({
+        ...prev,
+        error: error instanceof Error ? error.message : t("chat.initError"),
+      }));
+      // Reset the ref on error so user can retry if needed
+      initializationAttemptedRef.current = false;
+    }
+  }, [sessionId, t]);
+
+  useEffect(() => {
     initializeChat();
-  }, [t]);
+  }, [initializeChat]);
 
   /**
    * Auto-scroll to bottom when new messages arrive.
@@ -197,7 +219,20 @@ export default function AIChatInterface() {
       {/* Error Alert */}
       {chatState.error && (
         <Alert className="mb-6 border-destructive bg-destructive/10 text-destructive">
-          <AlertDescription>{chatState.error}</AlertDescription>
+          <AlertDescription className="flex items-center justify-between gap-4">
+            <span>{chatState.error}</span>
+            {(!sessionId || chatState.error.includes("Session not found") || chatState.error.includes("not found")) && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  window.location.href = "/app/dashboard";
+                }}
+              >
+                {t("chat.goToDashboard")}
+              </Button>
+            )}
+          </AlertDescription>
         </Alert>
       )}
 
