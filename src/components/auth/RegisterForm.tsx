@@ -73,11 +73,30 @@ export default function RegisterForm({ className }: Props) {
       setSuccess(t("auth.accountCreated"));
     } else {
       // Email confirmation disabled - user is automatically logged in
-      // Wait a brief moment for cookies to sync, then redirect
+      // Verify session is established and wait for cookies to be set
       // This prevents redirect loops when middleware checks before cookies are available
-      await new Promise((resolve) => setTimeout(resolve, 100));
-      // Use full page reload to ensure cookies are synced and middleware can detect session
-      window.location.href = "/app/dashboard";
+      let sessionConfirmed = false;
+      for (let i = 0; i < 10; i++) {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+        if (session?.access_token) {
+          sessionConfirmed = true;
+          break;
+        }
+        // Wait 50ms between checks
+        await new Promise((resolve) => setTimeout(resolve, 50));
+      }
+
+      if (sessionConfirmed) {
+        // Use full page reload to ensure cookies are synced and middleware can detect session
+        // eslint-disable-next-line react-compiler/react-compiler
+        window.location.href = "/app/dashboard";
+      } else {
+        // If session not confirmed, show success message but don't redirect
+        // User can manually navigate or try again
+        setSuccess(t("auth.accountCreated"));
+      }
     }
   });
 

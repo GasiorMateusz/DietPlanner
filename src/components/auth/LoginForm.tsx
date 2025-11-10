@@ -50,13 +50,32 @@ export default function LoginForm({ className }: Props) {
         return;
       }
 
-      // Wait a brief moment for cookies to sync before redirecting
+      // Verify session is established and wait for cookies to be set
       // This prevents redirect loops when middleware checks before cookies are available
-      await new Promise((resolve) => setTimeout(resolve, 100));
-      
+      let sessionConfirmed = false;
+      for (let i = 0; i < 10; i++) {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+        if (session?.access_token) {
+          sessionConfirmed = true;
+          break;
+        }
+        // Wait 50ms between checks
+        await new Promise((resolve) => setTimeout(resolve, 50));
+      }
+
+      if (!sessionConfirmed) {
+        // If session still not confirmed after retries, show error
+        isSubmittingRef.current = false;
+        form.setError("root", { message: t("auth.invalidCredentials") });
+        return;
+      }
+
       // Use full page reload to ensure cookies are synced and middleware can detect session
+      // eslint-disable-next-line react-compiler/react-compiler
       window.location.href = "/app/dashboard";
-    } catch (error) {
+    } catch {
       isSubmittingRef.current = false;
       form.setError("root", { message: t("auth.invalidCredentials") });
     }
