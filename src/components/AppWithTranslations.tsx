@@ -19,4 +19,3 @@ export function AppWithTranslations({ children, userEmail }: AppWithTranslations
     </TranslationProvider>
   );
 }
-

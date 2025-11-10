@@ -23,7 +23,9 @@ export function MealCard({ mealIndex, control, isRemoveable, onRemove }: MealCar
   return (
     <div className="border rounded-lg p-4 space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold">{t("editor.meal")} {mealIndex + 1}</h3>
+        <h3 className="text-lg font-semibold">
+          {t("editor.meal")} {mealIndex + 1}
+        </h3>
         {isRemoveable && (
           <Button type="button" variant="destructive" size="sm" onClick={() => onRemove(mealIndex)}>
             {t("editor.remove")}

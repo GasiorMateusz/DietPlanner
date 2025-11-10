@@ -40,10 +40,7 @@ export function TranslationProvider({ children, initialLanguage = "en" }: Transl
   const [isLoading, setIsLoading] = useState(true);
 
   // Load translations based on current language - memoized to prevent unnecessary recalculations
-  const translations: Translations = useMemo(
-    () => (language === "pl" ? plTranslations : enTranslations),
-    [language]
-  );
+  const translations: Translations = useMemo(() => (language === "pl" ? plTranslations : enTranslations), [language]);
 
   /**
    * Updates the language state and persists to database.

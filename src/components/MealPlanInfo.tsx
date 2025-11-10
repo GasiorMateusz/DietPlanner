@@ -19,8 +19,14 @@ export function MealPlanInfo({ name, createdAt, updatedAt, dailySummary }: MealP
     <div className="flex-1 min-w-0">
       <h3 className="text-lg font-semibold text-foreground mb-1 truncate">{name}</h3>
       <div className="text-sm text-muted-foreground space-y-1">
-        <div>{t("time.updated")} {formatRelativeTime(updatedAt, t)}</div>
-        {createdAt !== updatedAt && <div>{t("time.created")} {formatRelativeTime(createdAt, t)}</div>}
+        <div>
+          {t("time.updated")} {formatRelativeTime(updatedAt, t)}
+        </div>
+        {createdAt !== updatedAt && (
+          <div>
+            {t("time.created")} {formatRelativeTime(createdAt, t)}
+          </div>
+        )}
       </div>
       {dailySummary && (
         <div className="mt-3 flex flex-wrap gap-4 text-sm">

@@ -89,7 +89,9 @@ export default function MealPlanEditor({ mealPlanId }: MealPlanEditorProps) {
   // Main form UI
   return (
     <div className="container mx-auto p-4 sm:p-8 max-w-4xl">
-      <h1 className="text-3xl font-bold mb-6">{mode === "create" ? t("editor.title.create") : t("editor.title.edit")}</h1>
+      <h1 className="text-3xl font-bold mb-6">
+        {mode === "create" ? t("editor.title.create") : t("editor.title.edit")}
+      </h1>
 
       {/* Error Alert */}
       {error && (
@@ -142,9 +144,7 @@ export default function MealPlanEditor({ mealPlanId }: MealPlanEditorProps) {
           </div>
 
           {fields.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              {t("editor.noMeals")}
-            </div>
+            <div className="text-center py-8 text-muted-foreground">{t("editor.noMeals")}</div>
           ) : (
             <div className="space-y-4">
               {fields.map((field, index) => (

@@ -42,16 +42,18 @@ export function LanguageSelector({ className }: LanguageSelectorProps) {
     setIsUpdating(true);
 
     // Update language preference asynchronously
-    setLanguage(newLanguage).catch((err) => {
-      // Revert local state on error
-      setLocalLanguage(language);
-      const errorMessage = err instanceof Error ? err.message : t("common.error");
-      setError(errorMessage);
-      // eslint-disable-next-line no-console
-      console.error("Error updating language preference:", err);
-    }).finally(() => {
-      setIsUpdating(false);
-    });
+    setLanguage(newLanguage)
+      .catch((err) => {
+        // Revert local state on error
+        setLocalLanguage(language);
+        const errorMessage = err instanceof Error ? err.message : t("common.error");
+        setError(errorMessage);
+        // eslint-disable-next-line no-console
+        console.error("Error updating language preference:", err);
+      })
+      .finally(() => {
+        setIsUpdating(false);
+      });
   };
 
   return (

@@ -17,4 +17,3 @@ export function MealPlanEditorWrapper({ mealPlanId }: MealPlanEditorWrapperProps
     </TranslationProvider>
   );
 }
-

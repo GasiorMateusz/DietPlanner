@@ -28,9 +28,7 @@ export function StartupFormDialog({ open, onClose, onSubmit }: StartupFormDialog
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" data-testid="startup-form-dialog">
         <DialogHeader>
           <DialogTitle>{t("startup.title")}</DialogTitle>
-          <DialogDescription>
-            {t("startup.description")}
-          </DialogDescription>
+          <DialogDescription>{t("startup.description")}</DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6" data-testid="startup-form">
@@ -41,7 +39,8 @@ export function StartupFormDialog({ open, onClose, onSubmit }: StartupFormDialog
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label htmlFor="patient_age">
-                {t("startup.patientAge")} <span className="text-muted-foreground">({t("startup.patientAgeYears")})</span>
+                {t("startup.patientAge")}{" "}
+                <span className="text-muted-foreground">({t("startup.patientAgeYears")})</span>
               </Label>
               <Controller
                 name="patient_age"
@@ -73,7 +72,8 @@ export function StartupFormDialog({ open, onClose, onSubmit }: StartupFormDialog
 
             <div className="space-y-2">
               <Label htmlFor="patient_weight">
-                {t("startup.patientWeight")} <span className="text-muted-foreground">({t("startup.patientWeightKg")})</span>
+                {t("startup.patientWeight")}{" "}
+                <span className="text-muted-foreground">({t("startup.patientWeightKg")})</span>
               </Label>
               <Controller
                 name="patient_weight"
@@ -106,7 +106,8 @@ export function StartupFormDialog({ open, onClose, onSubmit }: StartupFormDialog
 
             <div className="space-y-2">
               <Label htmlFor="patient_height">
-                {t("startup.patientHeight")} <span className="text-muted-foreground">({t("startup.patientHeightCm")})</span>
+                {t("startup.patientHeight")}{" "}
+                <span className="text-muted-foreground">({t("startup.patientHeightCm")})</span>
               </Label>
               <Controller
                 name="patient_height"
