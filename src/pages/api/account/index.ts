@@ -28,7 +28,23 @@ export const DELETE: APIRoute = async (context) => {
     const userId = user.id;
 
     // Create admin client for deleting auth user
-    const adminSupabase = createSupabaseAdminClient();
+    let adminSupabase;
+    try {
+      adminSupabase = createSupabaseAdminClient();
+    } catch (adminClientError) {
+      // eslint-disable-next-line no-console
+      console.error("Failed to create admin client:", adminClientError);
+      return new Response(
+        JSON.stringify({
+          error: "Server configuration error",
+          details: "Unable to delete account. Please contact support.",
+        }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    }
 
     // Delete user account (meal plans + auth user)
     // Note: ai_chat_sessions are preserved
@@ -56,7 +72,14 @@ export const DELETE: APIRoute = async (context) => {
     // Handle DatabaseError (from deleteUserAccount)
     if (error instanceof DatabaseError) {
       // eslint-disable-next-line no-console
-      console.error("Database error during account deletion:", error.message, error.originalError);
+      console.error("Database error during account deletion:", {
+        message: error.message,
+        originalError: error.originalError,
+        userId: error.originalError && typeof error.originalError === "object" && "code" in error.originalError
+          ? (error.originalError as { code?: string }).code
+          : undefined,
+        errorDetails: error.originalError,
+      });
       return new Response(
         JSON.stringify({
           error: "Failed to delete account",
@@ -71,11 +94,16 @@ export const DELETE: APIRoute = async (context) => {
 
     // Handle unexpected errors
     // eslint-disable-next-line no-console
-    console.error("Unexpected error during account deletion:", error);
+    console.error("Unexpected error during account deletion:", {
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      name: error instanceof Error ? error.name : typeof error,
+      errorObject: error,
+    });
     return new Response(
       JSON.stringify({
         error: "An internal error occurred",
-        details: error instanceof Error ? error.message : "Unknown error",
+        details: "An unexpected error occurred. Please try again later.",
       }),
       {
         status: 500,

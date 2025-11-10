@@ -6,6 +6,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
 import { forgotPasswordSchema, type ForgotPasswordInput } from "@/lib/validation/auth.schemas";
 import { supabaseClient as supabase } from "@/db/supabase.client";
+import { getAuthRedirectUrl } from "@/lib/utils/get-app-url";
 
 interface Props {
   className?: string;
@@ -53,9 +54,9 @@ export default function ForgotPasswordForm({ className }: Props) {
 
     setIsSubmitting(true);
 
-    // Get the base URL for the redirect - use PUBLIC_APP_URL if available, otherwise use window.location.origin
-    const baseUrl = import.meta.env.PUBLIC_APP_URL || (typeof window !== "undefined" ? window.location.origin : "");
-    const redirectTo = `${baseUrl}/auth/reset-password`;
+    // Get the full redirect URL for password reset
+    // This ensures we always use the correct production URL, not localhost
+    const redirectTo = getAuthRedirectUrl("/auth/reset-password");
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(values.email, {
