@@ -5,6 +5,7 @@ import { supabaseClient as supabase } from "@/db/supabase.client";
 import { DeleteAccountConfirmationDialog } from "@/components/auth/DeleteAccountConfirmationDialog";
 import { getAuthToken } from "@/lib/auth/get-auth-token";
 import { LanguageSelector } from "@/components/LanguageSelector";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 
 interface NavBarProps {
@@ -171,16 +172,18 @@ export function NavBar({ userEmail: initialUserEmail, className }: NavBarProps) 
           {/* Logo/Brand */}
           <a
             href="/app/dashboard"
-            className="text-xl font-bold text-foreground hover:opacity-80 transition-opacity"
+            className="flex items-center gap-2 text-xl font-bold text-foreground hover:opacity-80 transition-opacity"
             aria-label="Diet Planner Home"
           >
-            Diet Planner
+            <img src="/favicon.png" alt="Diet Planner" className="h-6 w-6" />
+            <span>Diet Planner</span>
           </a>
 
           {/* User Menu */}
           <div className="flex items-center gap-4">
             {userEmail ? (
               <>
+                <ThemeToggle />
                 <LanguageSelector />
                 <span
                   className="hidden sm:inline-block text-sm text-muted-foreground truncate max-w-[200px]"
@@ -195,7 +198,7 @@ export function NavBar({ userEmail: initialUserEmail, className }: NavBarProps) 
                   disabled={isDeletingAccount}
                   aria-label={t("nav.deleteAccount")}
                   size="sm"
-                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                  className="text-destructive hover:text-destructive hover:bg-destructive/10 min-w-[120px]"
                 >
                   {t("nav.deleteAccount")}
                 </Button>
@@ -205,13 +208,14 @@ export function NavBar({ userEmail: initialUserEmail, className }: NavBarProps) 
                   disabled={isLoggingOut}
                   aria-label={t("nav.logout")}
                   size="sm"
+                  className="min-w-[100px]"
                 >
                   {isLoggingOut ? t("auth.loggingOut") : t("nav.logout")}
                 </Button>
               </>
             ) : (
               <a href="/auth/login">
-                <Button variant="ghost" size="sm">
+                <Button variant="ghost" size="sm" className="min-w-[100px]">
                   {t("nav.login")}
                 </Button>
               </a>

@@ -6,16 +6,34 @@ interface Props {
 }
 
 const { title = "Diet Planner - AI-Powered Meal Planning for Dietitians" } = Astro.props;
+
+// Default theme - blocking script will check localStorage
+const initialTheme = "light";
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang="en" class={initialTheme === "dark" ? "dark" : ""}>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width" />
     <link rel="icon" type="image/png" href="/favicon.png" />
     <meta name="generator" content={Astro.generator} />
     <title>{title}</title>
+    {/* Blocking script to apply theme before first paint to prevent flash */}
+    <script is:inline define:vars={{ initialTheme }}>
+      (function () {
+        // Get theme from localStorage or use server-provided initial theme
+        const storedTheme = localStorage.getItem("app-theme");
+        const theme = storedTheme && (storedTheme === "light" || storedTheme === "dark") ? storedTheme : initialTheme;
+
+        // Apply theme class immediately
+        if (theme === "dark") {
+          document.documentElement.classList.add("dark");
+        } else {
+          document.documentElement.classList.remove("dark");
+        }
+      })();
+    </script>
   </head>
   <body>
     <main>

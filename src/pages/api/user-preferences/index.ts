@@ -2,8 +2,8 @@ import type { APIRoute } from "astro";
 import { DatabaseError, UnauthorizedError, ValidationError } from "../../../lib/errors.ts";
 import * as UserPreferenceService from "../../../lib/user-preferences/user-preference.service.ts";
 import {
-  getLanguagePreferenceResponseSchema,
-  updateLanguagePreferenceSchema,
+  getAllPreferencesResponseSchema,
+  updatePreferencesSchema,
 } from "../../../lib/validation/user-preferences.schemas.ts";
 import { getUserFromRequest } from "@/lib/auth/session.service.js";
 
@@ -12,10 +12,10 @@ export const prerender = false;
 /**
  * GET /api/user-preferences
  *
- * Retrieves the authenticated user's language preference.
- * Returns default "en" if no preference exists.
+ * Retrieves the authenticated user's preferences (language and theme).
+ * Returns defaults ("en" and "light") if no preference exists.
  *
- * @returns 200 OK with language preference
+ * @returns 200 OK with user preferences (language and theme)
  * @returns 401 Unauthorized if authentication fails
  * @returns 500 Internal Server Error for database failures
  */
@@ -25,14 +25,14 @@ export const GET: APIRoute = async (context) => {
     const supabase = locals.supabase;
     const user = await getUserFromRequest(context);
 
-    // Call service to get language preference
-    const preference = await UserPreferenceService.getUserLanguagePreference(user.id, supabase);
+    // Call service to get all preferences
+    const preferences = await UserPreferenceService.getAllUserPreferences(user.id, supabase);
 
     // Validate response
-    const validation = getLanguagePreferenceResponseSchema.safeParse(preference);
+    const validation = getAllPreferencesResponseSchema.safeParse(preferences);
     if (!validation.success) {
       // eslint-disable-next-line no-console
-      console.error("Invalid language preference format:", validation.error);
+      console.error("Invalid preferences format:", validation.error);
       return new Response(
         JSON.stringify({
           error: "An internal error occurred",
@@ -95,13 +95,16 @@ export const GET: APIRoute = async (context) => {
 /**
  * PUT /api/user-preferences
  *
- * Updates the authenticated user's language preference.
+ * Updates the authenticated user's preferences (language and/or theme).
  * Creates a new preference record if one doesn't exist.
+ * Accepts partial updates - only provided fields are updated.
  *
  * Request Body:
- * - language (required): Language code ("en" or "pl")
+ * - language (optional): Language code ("en" or "pl")
+ * - theme (optional): Theme ("light" or "dark")
+ * At least one field must be provided.
  *
- * @returns 200 OK with updated language preference
+ * @returns 200 OK with updated preferences (language and theme)
  * @returns 400 Bad Request if request body fails validation
  * @returns 401 Unauthorized if authentication fails
  * @returns 500 Internal Server Error for database failures
@@ -130,7 +133,7 @@ export const PUT: APIRoute = async (context) => {
     }
 
     // Validate request body
-    const validation = updateLanguagePreferenceSchema.safeParse(body);
+    const validation = updatePreferencesSchema.safeParse(body);
     if (!validation.success) {
       return new Response(
         JSON.stringify({
@@ -144,18 +147,14 @@ export const PUT: APIRoute = async (context) => {
       );
     }
 
-    // Call service to update language preference
-    const preference = await UserPreferenceService.updateUserLanguagePreference(
-      user.id,
-      validation.data.language,
-      supabase
-    );
+    // Call service to update preferences
+    const preferences = await UserPreferenceService.updateUserPreferences(user.id, validation.data, supabase);
 
     // Validate response
-    const responseValidation = getLanguagePreferenceResponseSchema.safeParse(preference);
+    const responseValidation = getAllPreferencesResponseSchema.safeParse(preferences);
     if (!responseValidation.success) {
       // eslint-disable-next-line no-console
-      console.error("Invalid language preference format:", responseValidation.error);
+      console.error("Invalid preferences format:", responseValidation.error);
       return new Response(
         JSON.stringify({
           error: "An internal error occurred",
