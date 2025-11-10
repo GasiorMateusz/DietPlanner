@@ -20,7 +20,6 @@ export default function LoginForm({ className }: Props) {
   const passwordId = React.useId();
   const formRef = React.useRef<HTMLFormElement | null>(null);
   const isSubmittingRef = React.useRef(false);
-  const isHydratedRef = React.useRef(false);
 
   const form = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
@@ -34,11 +33,6 @@ export default function LoginForm({ className }: Props) {
   const onSubmit = form.handleSubmit(async (data) => {
     // Prevent double submission (can happen with autofill)
     if (isSubmittingRef.current) {
-      return;
-    }
-
-    // Prevent submission if form hasn't hydrated yet
-    if (!isHydratedRef.current) {
       return;
     }
 
@@ -61,7 +55,6 @@ export default function LoginForm({ className }: Props) {
       await new Promise((resolve) => setTimeout(resolve, 100));
       
       // Use full page reload to ensure cookies are synced and middleware can detect session
-      // eslint-disable-next-line react-compiler/react-compiler
       window.location.href = "/app/dashboard";
     } catch (error) {
       isSubmittingRef.current = false;
@@ -71,29 +64,10 @@ export default function LoginForm({ className }: Props) {
 
   React.useEffect(() => {
     // Mark the form as hydrated on the client so E2E tests can wait for JS handlers
-    // Also prevents autofill from triggering submissions before React is ready
     try {
       formRef.current?.setAttribute("data-hydrated", "true");
-      isHydratedRef.current = true;
     } catch {
       // ignore — best-effort for tests only
-    }
-
-    // Prevent native form submission (which can be triggered by autofill)
-    const handleNativeSubmit = (e: Event) => {
-      e.preventDefault();
-      // Only allow submission if form is hydrated and not already submitting
-      if (isHydratedRef.current && !isSubmittingRef.current) {
-        onSubmit(e as unknown as React.FormEvent);
-      }
-    };
-
-    const formElement = formRef.current;
-    if (formElement) {
-      formElement.addEventListener("submit", handleNativeSubmit);
-      return () => {
-        formElement.removeEventListener("submit", handleNativeSubmit);
-      };
     }
   }, []);
 

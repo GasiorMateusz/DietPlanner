@@ -49,20 +49,15 @@ export const onRequest = defineMiddleware(async (context, next) => {
       // Only redirect if we're CERTAIN the user is authenticated
       // Don't redirect if there's any error, even if user exists (could be stale session)
       if (!error && user) {
-        // For /auth/login specifically, be extra cautious to prevent redirect loops
-        // Only redirect if we have both a user AND a valid session
-        if (pathname === "/auth/login") {
-          const session = await supabase.auth.getSession();
-          // Only redirect if we have a valid session with access token
-          // This ensures cookies are properly synced
-          if (session.data.session?.access_token) {
-            return context.redirect("/app/dashboard", 307);
-          }
-          // If no valid session, allow access to login page (prevents loops)
-          return await next();
+        // For all auth pages, be extra cautious to prevent redirect loops
+        // Only redirect if we have both a user AND a valid session with access token
+        // This ensures cookies are properly synced
+        const session = await supabase.auth.getSession();
+        if (session.data.session?.access_token) {
+          return context.redirect("/app/dashboard", 307);
         }
-        // For other auth pages, redirect if user exists
-        return context.redirect("/app/dashboard", 307);
+        // If no valid session, allow access to auth pages (prevents loops)
+        return await next();
       }
     }
 
