@@ -39,10 +39,10 @@ export function DeleteAccountConfirmationDialog({
 
   return (
     <Dialog open={open} onOpenChange={(openState) => !openState && !isDeleting && onClose()}>
-      <DialogContent aria-describedby="delete-account-description">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>Delete Account</DialogTitle>
-          <DialogDescription id="delete-account-description">
+          <DialogDescription>
             Are you sure you want to delete your account? This action is permanent and cannot be undone.
           </DialogDescription>
         </DialogHeader>

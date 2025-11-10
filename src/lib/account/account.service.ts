@@ -24,6 +24,14 @@ export async function deleteUserAccount(
   const { error: mealPlansError } = await supabase.from("meal_plans").delete().eq("user_id", userId);
 
   if (mealPlansError) {
+    // eslint-disable-next-line no-console
+    console.error(`Failed to delete meal plans for user ${userId}:`, {
+      error: mealPlansError,
+      code: mealPlansError.code,
+      message: mealPlansError.message,
+      details: mealPlansError.details,
+      hint: mealPlansError.hint,
+    });
     throw new DatabaseError(`Failed to delete meal plans for user ${userId}`, mealPlansError);
   }
 
@@ -34,6 +42,13 @@ export async function deleteUserAccount(
   const { error: authDeleteError } = await adminSupabase.auth.admin.deleteUser(userId);
 
   if (authDeleteError) {
+    // eslint-disable-next-line no-console
+    console.error(`Failed to delete auth user ${userId}:`, {
+      error: authDeleteError,
+      code: authDeleteError.code,
+      message: authDeleteError.message,
+      status: authDeleteError.status,
+    });
     throw new DatabaseError(`Failed to delete auth user ${userId}`, authDeleteError);
   }
 }

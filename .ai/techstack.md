@@ -2,15 +2,17 @@ Project Technology Stack
 
 Frontend - Astro with React for interactive components
 
-Astro 5 allows for the creation of fast, performant websites and applications with minimal JavaScript.
+Astro 4 allows for the creation of fast, performant websites and applications with minimal JavaScript.
 
-React 19 will provide interactivity where it's needed.
+React 19 provides interactivity where it's needed.
 
 TypeScript 5 for static code typing and better IDE support.
 
 Tailwind 4 enables convenient application styling.
 
 Shadcn/ui provides a library of accessible React components upon which we will base the UI.
+
+React Hook Form provides efficient form state management and validation.
 
 Backend - Supabase as a comprehensive backend solution
 

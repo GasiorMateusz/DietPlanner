@@ -35,7 +35,7 @@ Diet Planner aims to solve this problem by offering a tool that, based on AI, dr
 - Login to existing account
 - "Forgot password" functionality enabling password reset via email
 - "My Account" panel available after login, containing options:
-  - Change password
+  - Change password (⚠️ **Note:** Currently not implemented in MVP - planned for future release)
   - Permanent account deletion along with all data
 
 ### 3.2. Dashboard (Main Panel)
@@ -154,11 +154,11 @@ The following functionalities are deliberately NOT included in the MVP version:
 **Description:** As a logged-in user, I want to have access to "My Account" panel where I can change password or delete my account.
 **Acceptance Criteria:**
 
-- "My Account" section is available in the application
-- This section contains a password change form ("Old password", "New password", "Repeat new password")
-- There is also a "Delete account" button
-- Clicking "Delete account" displays a modal window asking for confirmation of this operation
-- After confirmation, my account and all associated data (meal plans) are permanently deleted from the system
+- "My Account" section is available in the application (⚠️ **Note:** Currently only account deletion is implemented via NavBar; password change is planned for future release)
+- This section contains a password change form ("Old password", "New password", "Repeat new password") (⚠️ **Not yet implemented**)
+- There is also a "Delete account" button (✅ **Implemented** - available in NavBar)
+- Clicking "Delete account" displays a modal window asking for confirmation of this operation (✅ **Implemented**)
+- After confirmation, my account and all associated data (meal plans) are permanently deleted from the system (✅ **Implemented**)
 
 ### Module: Dashboard and Meal Plan Management
 

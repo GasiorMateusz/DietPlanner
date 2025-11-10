@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { registerSchema, type RegisterInput } from "@/lib/validation/auth.schemas";
 import { supabaseClient as supabase } from "@/db/supabase.client";
 import { useTranslation } from "@/lib/i18n/useTranslation";
+import { getAuthRedirectUrl } from "@/lib/utils/get-app-url";
 
 interface Props {
   className?: string;
@@ -40,9 +41,9 @@ export default function RegisterForm({ className }: Props) {
     setSuccess(null);
     form.clearErrors("root");
 
-    // Get the base URL for the redirect - use PUBLIC_APP_URL if available, otherwise use window.location.origin
-    const baseUrl = import.meta.env.PUBLIC_APP_URL || (typeof window !== "undefined" ? window.location.origin : "");
-    const redirectTo = `${baseUrl}/auth/login`;
+    // Get the full redirect URL for email confirmation
+    // This ensures we always use the correct production URL, not localhost
+    const redirectTo = getAuthRedirectUrl("/auth/login");
 
     const { data: signUpData, error } = await supabase.auth.signUp({
       email: data.email,

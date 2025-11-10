@@ -6,6 +6,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
 import { resetPasswordSchema, type ResetPasswordInput } from "@/lib/validation/auth.schemas";
 import { supabaseClient as supabase } from "@/db/supabase.client";
+import { getAuthRedirectUrl } from "@/lib/utils/get-app-url";
 
 interface Props {
   className?: string;
@@ -16,16 +17,22 @@ export default function ResetPasswordForm({ className }: Props) {
   const [errors, setErrors] = React.useState<Partial<Record<keyof ResetPasswordInput, string>>>({});
   const [message, setMessage] = React.useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [showResendLink, setShowResendLink] = React.useState(false);
+  const [resendEmail, setResendEmail] = React.useState("");
+  const [resendMessage, setResendMessage] = React.useState<string | null>(null);
+  const [isResending, setIsResending] = React.useState(false);
   const newPassId = React.useId();
   const confirmId = React.useId();
+  const resendEmailId = React.useId();
 
   // Check for error parameters in URL hash on mount and verify session
   React.useEffect(() => {
     if (typeof window === "undefined") return;
 
     const hash = window.location.hash;
+    const searchParams = new URLSearchParams(window.location.search);
 
-    // Parse hash parameters (format: #error=...&error_code=...&error_description=...)
+    // Step 1: Check for explicit errors in URL (expired token, access denied, etc.)
     if (hash) {
       const params = new URLSearchParams(hash.substring(1));
       const error = params.get("error");
@@ -36,142 +43,131 @@ export default function ResetPasswordForm({ className }: Props) {
         // Decode the error description
         const decodedDescription = errorDescription ? decodeURIComponent(errorDescription.replace(/\+/g, " ")) : null;
 
-        // Set appropriate error message
+        // Set appropriate error message and show resend link option
         if (errorCode === "otp_expired" || error?.includes("expired")) {
           setMessage("Reset link is invalid or expired. Please request a new link.");
+          setShowResendLink(true);
         } else if (decodedDescription) {
           setMessage(decodedDescription);
+          if (decodedDescription.includes("expired") || decodedDescription.includes("invalid")) {
+            setShowResendLink(true);
+          }
         } else if (error === "access_denied") {
           setMessage("Reset link is invalid or expired. Please request a new link.");
+          setShowResendLink(true);
         } else {
           setMessage("An error occurred with the reset link. Please request a new one.");
+          setShowResendLink(true);
         }
 
         // Clean up the URL hash
         window.history.replaceState(null, "", window.location.pathname + window.location.search);
-        return;
+        return; // Exit early - we have an explicit error
       }
     }
 
-    // Check if hash contains recovery token (type=recovery or access_token)
+    // Step 2: Check if recovery token exists in URL
     const hasRecoveryToken = hash && (hash.includes("type=recovery") || hash.includes("access_token"));
-
-    // Also check search params (sometimes tokens are in query string instead of hash)
-    const searchParams = new URLSearchParams(window.location.search);
     const hasTokenInSearch = searchParams.has("access_token") || searchParams.has("type");
 
-    // Wait for Supabase to process the hash and establish a session
-    // Use onAuthStateChange to detect when session is ready
-    let sessionCheckTimeout: NodeJS.Timeout;
+    // Step 3: Set up auth state listener (always needed to detect when session is established)
     let authStateSubscription: {
       unsubscribe?: () => void;
       data?: { subscription?: { unsubscribe?: () => void } };
     } | null = null;
-    let hasShownError = false;
 
-    const checkSession = async () => {
-      const {
-        data: { session },
-        error,
-      } = await supabase.auth.getSession();
-
-      if (error) {
-        if (!hasShownError) {
-          hasShownError = true;
-          setMessage("Error checking session. Please try submitting the form.");
-        }
-      } else if (session) {
-        // Session exists, user can proceed - clear any error message
-        if (hasShownError) {
+    const subscriptionResult = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN") {
+        if (session) {
+          // Session established successfully - clear any error messages
           setMessage(null);
+          setShowResendLink(false);
         }
+      } else if (event === "TOKEN_REFRESHED" && session) {
+        setMessage(null);
+        setShowResendLink(false);
+      }
+    });
+
+    authStateSubscription = subscriptionResult as typeof authStateSubscription;
+
+    // Step 4: Handle two scenarios
+    if (hasRecoveryToken || hasTokenInSearch) {
+      // Scenario A: Recovery token exists in URL
+      // Don't show any errors - Supabase will process the token
+      // User can submit the form even if session isn't detected yet
+      // The form submission will trigger Supabase to process the token from the URL
+
+      // Just clean up on unmount
+      return () => {
         if (authStateSubscription) {
-          // Handle different return types from onAuthStateChange
           if (typeof authStateSubscription.unsubscribe === "function") {
             authStateSubscription.unsubscribe();
           } else if (authStateSubscription.data?.subscription?.unsubscribe) {
             authStateSubscription.data.subscription.unsubscribe();
           }
         }
-        if (sessionCheckTimeout) {
-          clearTimeout(sessionCheckTimeout);
-        }
-      } else {
-        // If we have a recovery token in the hash or search params, wait longer for Supabase to process it
-        if (hasRecoveryToken || hasTokenInSearch) {
-          // Don't show error yet - wait for auth state change
-          // Increase timeout if we have tokens
+      };
+    } else {
+      // Scenario B: No recovery token in URL
+      // This might be an invalid/expired link, but wait a bit to be sure
+      // Sometimes Supabase processes tokens asynchronously
+      let sessionCheckTimeout: NodeJS.Timeout;
+      let hasShownError = false;
+
+      const checkSession = async () => {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+
+        if (session) {
+          // Session exists - clear any errors and stop checking
+          if (hasShownError) {
+            setMessage(null);
+            setShowResendLink(false);
+          }
           if (sessionCheckTimeout) {
             clearTimeout(sessionCheckTimeout);
           }
-          sessionCheckTimeout = setTimeout(() => {
-            if (!hasShownError) {
-              hasShownError = true;
-              setMessage(
-                "Session not established. The reset link may be invalid. Please try submitting the form or request a new link."
-              );
-            }
-          }, 5000); // Wait 5 seconds if we have tokens
         } else if (!hasShownError) {
-          // No recovery token and no session - show error after delay
-          sessionCheckTimeout = setTimeout(() => {
-            if (!hasShownError) {
+          // No session yet - wait longer before showing error
+          // This gives Supabase time to process any tokens
+          sessionCheckTimeout = setTimeout(async () => {
+            // Final check before showing error
+            const {
+              data: { session: finalSession },
+            } = await supabase.auth.getSession();
+
+            if (!finalSession && !hasShownError) {
               hasShownError = true;
               setMessage(
                 "No valid reset session found. The link may have expired or already been used. Please request a new link."
               );
+              setShowResendLink(true);
             }
-          }, 3000); // Wait 3 seconds for Supabase to process the hash
+          }, 8000); // Wait 8 seconds - gives plenty of time for Supabase to process
         }
-      }
-    };
+      };
 
-    // Listen for auth state changes (when Supabase processes the hash)
-    const subscriptionResult = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN") {
-        if (session) {
-          hasShownError = false;
-          setMessage(null); // Clear any error message
-          if (sessionCheckTimeout) {
-            clearTimeout(sessionCheckTimeout);
-          }
-          if (authStateSubscription) {
-            // Handle different return types from onAuthStateChange
-            if (typeof authStateSubscription.unsubscribe === "function") {
-              authStateSubscription.unsubscribe();
-            } else if (authStateSubscription.data?.subscription?.unsubscribe) {
-              authStateSubscription.data.subscription.unsubscribe();
-            }
+      // Start checking after a short delay
+      setTimeout(() => {
+        checkSession();
+      }, 2000); // Wait 2 seconds before first check
+
+      // Cleanup
+      return () => {
+        if (sessionCheckTimeout) {
+          clearTimeout(sessionCheckTimeout);
+        }
+        if (authStateSubscription) {
+          if (typeof authStateSubscription.unsubscribe === "function") {
+            authStateSubscription.unsubscribe();
+          } else if (authStateSubscription.data?.subscription?.unsubscribe) {
+            authStateSubscription.data.subscription.unsubscribe();
           }
         }
-      } else if (event === "TOKEN_REFRESHED" && session) {
-        hasShownError = false;
-        setMessage(null);
-      }
-    });
-
-    // Store subscription - handle different return types
-    authStateSubscription = subscriptionResult as typeof authStateSubscription;
-
-    // Initial session check - wait a bit for Supabase to process hash
-    setTimeout(() => {
-      checkSession();
-    }, 500); // Small delay to let Supabase process the hash
-
-    // Cleanup
-    return () => {
-      if (sessionCheckTimeout) {
-        clearTimeout(sessionCheckTimeout);
-      }
-      if (authStateSubscription) {
-        // Handle different return types from onAuthStateChange
-        if (typeof authStateSubscription.unsubscribe === "function") {
-          authStateSubscription.unsubscribe();
-        } else if (authStateSubscription.data?.subscription?.unsubscribe) {
-          authStateSubscription.data.subscription.unsubscribe();
-        }
-      }
-    };
+      };
+    }
   }, []);
 
   function handleChange<K extends keyof ResetPasswordInput>(key: K) {
@@ -198,22 +194,27 @@ export default function ResetPasswordForm({ className }: Props) {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setMessage(null);
+    setShowResendLink(false);
     if (!validate(values)) return;
 
     setIsSubmitting(true);
 
-    // Update password using Supabase Auth
-    // When user arrives via password reset link, Supabase creates a temporary session
+    // First, try to get the session - if there's a token in the URL, Supabase should process it
+    // Even if we haven't detected a session yet, the token in the URL should work
+    await supabase.auth.getSession();
+
+    // If no session yet but we're on the reset page, Supabase might still process the URL token
+    // Try to update the password anyway - Supabase will use the token from the URL if present
     const { error } = await supabase.auth.updateUser({
       password: values.newPassword,
     });
 
-    setIsSubmitting(false);
-
     if (error) {
+      setIsSubmitting(false);
       // Handle specific error cases
-      if (error.message.includes("expired") || error.message.includes("invalid")) {
+      if (error.message.includes("expired") || error.message.includes("invalid") || error.message.includes("token")) {
         setMessage("Reset link is invalid or expired. Please request a new link.");
+        setShowResendLink(true);
       } else if (error.message.includes("Password") || error.message.includes("password")) {
         setMessage("Password does not meet security requirements.");
       } else {
@@ -223,17 +224,17 @@ export default function ResetPasswordForm({ className }: Props) {
     }
 
     // Success - password updated
-    // Check if user has a session (they should after clicking reset link)
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
+    // Check session again (it might have been established during updateUser)
+    const sessionCheck = await supabase.auth.getSession();
 
-    if (session) {
+    setIsSubmitting(false);
+
+    if (sessionCheck.data.session) {
       // User is logged in, redirect to dashboard
       window.location.assign("/app/dashboard");
     } else {
       // No session, show success message and let user log in
-      setMessage("Password updated. You can now log in.");
+      setMessage("Password updated successfully. You can now log in.");
     }
   }
 
@@ -244,8 +245,73 @@ export default function ResetPasswordForm({ className }: Props) {
       message.includes("Unable") ||
       message.includes("requirements"));
 
+  function getPasswordResetSuccessMessage(): string {
+    // Check if using local Supabase (Inbucket) by checking the Supabase URL
+    const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL || "";
+    const isUsingLocalSupabase = supabaseUrl.includes("localhost") || supabaseUrl.includes("127.0.0.1");
+    return isUsingLocalSupabase
+      ? "If an account exists for this email, we sent a password reset link. Check Inbucket at http://127.0.0.1:54324 for local emails."
+      : "If an account exists for this email, we sent a password reset link.";
+  }
+
+  async function handleResendLink(e: React.FormEvent) {
+    e.preventDefault();
+    setResendMessage(null);
+
+    if (!resendEmail || !resendEmail.includes("@")) {
+      setResendMessage("Please enter a valid email address.");
+      return;
+    }
+
+    setIsResending(true);
+
+    // Get the full redirect URL for password reset
+    const redirectTo = getAuthRedirectUrl("/auth/reset-password");
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(resendEmail, {
+        redirectTo,
+      });
+
+      setIsResending(false);
+
+      if (error) {
+        // Check if we're in development mode to show more detailed errors
+        const isLocalDev =
+          import.meta.env.DEV ||
+          (typeof window !== "undefined" &&
+            (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"));
+
+        // In development, show ALL errors to help debug
+        // Also show errors if using cloud Supabase (not local)
+        const isUsingCloudSupabase =
+          !import.meta.env.PUBLIC_SUPABASE_URL?.includes("localhost") &&
+          !import.meta.env.PUBLIC_SUPABASE_URL?.includes("127.0.0.1");
+
+        if (error && (isLocalDev || isUsingCloudSupabase)) {
+          const errorMessage = error.message || "";
+          const errorCode = (error as { code?: string }).code;
+          setResendMessage(`Error: ${errorMessage}${errorCode ? ` (Code: ${errorCode})` : ""}.`);
+          return;
+        }
+      }
+
+      // Success - show success message (security best practice to not reveal if email exists)
+      setResendMessage(getPasswordResetSuccessMessage());
+      setShowResendLink(false);
+      // Clear the email field after successful send
+      setResendEmail("");
+    } catch {
+      setIsResending(false);
+      // Still show success message (security best practice)
+      setResendMessage(getPasswordResetSuccessMessage());
+      setShowResendLink(false);
+      setResendEmail("");
+    }
+  }
+
   return (
-    <form onSubmit={onSubmit} className={cn("space-y-4", className)} noValidate>
+    <div className={cn("space-y-4", className)}>
       {message ? (
         <Alert
           className={
@@ -259,55 +325,114 @@ export default function ResetPasswordForm({ className }: Props) {
         </Alert>
       ) : null}
 
-      <div className="grid gap-2">
-        <Label htmlFor={newPassId}>New password</Label>
-        <Input
-          id={newPassId}
-          type="password"
-          autoComplete="new-password"
-          value={values.newPassword}
-          onChange={handleChange("newPassword")}
-          aria-invalid={Boolean(errors.newPassword) || undefined}
-          aria-describedby={errors.newPassword ? `${newPassId}-error` : undefined}
-          required
-        />
-        {errors.newPassword ? (
-          <p id={`${newPassId}-error`} className="text-sm text-destructive">
-            {errors.newPassword}
-          </p>
-        ) : (
-          <p className="text-sm text-muted-foreground">At least 8 characters with letters and numbers.</p>
-        )}
-      </div>
+      {showResendLink && !resendMessage ? (
+        <div className="space-y-4 rounded-lg border border-destructive/20 bg-destructive/5 p-4">
+          <div>
+            <h3 className="text-sm font-semibold mb-1">Request a new reset link</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              Enter your email address and we&apos;ll send you a new password reset link.
+            </p>
+          </div>
+          <form onSubmit={handleResendLink} className="space-y-3">
+            <div className="grid gap-2">
+              <Label htmlFor={resendEmailId}>Email address</Label>
+              <Input
+                id={resendEmailId}
+                type="email"
+                inputMode="email"
+                autoComplete="email"
+                placeholder="you@example.com"
+                value={resendEmail}
+                onChange={(e) => setResendEmail(e.target.value)}
+                required
+              />
+            </div>
+            <Button type="submit" variant="outline" className="w-full" disabled={isResending}>
+              {isResending ? "Sending..." : "Send new reset link"}
+            </Button>
+          </form>
+        </div>
+      ) : null}
 
-      <div className="grid gap-2">
-        <Label htmlFor={confirmId}>Confirm password</Label>
-        <Input
-          id={confirmId}
-          type="password"
-          autoComplete="new-password"
-          value={values.confirmPassword}
-          onChange={handleChange("confirmPassword")}
-          aria-invalid={Boolean(errors.confirmPassword) || undefined}
-          aria-describedby={errors.confirmPassword ? `${confirmId}-error` : undefined}
-          required
-        />
-        {errors.confirmPassword ? (
-          <p id={`${confirmId}-error`} className="text-sm text-destructive">
-            {errors.confirmPassword}
-          </p>
-        ) : null}
-      </div>
+      {resendMessage ? (
+        <Alert
+          className={
+            resendMessage.startsWith("Error:")
+              ? "border-destructive/30 text-destructive"
+              : "border-green-600/30 text-green-700 dark:text-green-400"
+          }
+        >
+          <AlertTitle>{resendMessage.startsWith("Error:") ? "Error" : "Check your email"}</AlertTitle>
+          <AlertDescription>{resendMessage}</AlertDescription>
+        </Alert>
+      ) : null}
 
-      <Button type="submit" className="w-full" disabled={isSubmitting}>
-        {isSubmitting ? "Updating password..." : "Set new password"}
-      </Button>
+      {!showResendLink && !resendMessage ? (
+        <form onSubmit={onSubmit} className="space-y-4" noValidate>
+          <div className="grid gap-2">
+            <Label htmlFor={newPassId}>New password</Label>
+            <Input
+              id={newPassId}
+              type="password"
+              autoComplete="new-password"
+              value={values.newPassword}
+              onChange={handleChange("newPassword")}
+              aria-invalid={Boolean(errors.newPassword) || undefined}
+              aria-describedby={errors.newPassword ? `${newPassId}-error` : undefined}
+              required
+            />
+            {errors.newPassword ? (
+              <p id={`${newPassId}-error`} className="text-sm text-destructive">
+                {errors.newPassword}
+              </p>
+            ) : (
+              <p className="text-sm text-muted-foreground">At least 8 characters with letters and numbers.</p>
+            )}
+          </div>
 
-      <div className="text-center text-sm">
-        <a className="text-primary underline-offset-4 hover:underline" href="/auth/login">
-          Back to login
-        </a>
-      </div>
-    </form>
+          <div className="grid gap-2">
+            <Label htmlFor={confirmId}>Confirm password</Label>
+            <Input
+              id={confirmId}
+              type="password"
+              autoComplete="new-password"
+              value={values.confirmPassword}
+              onChange={handleChange("confirmPassword")}
+              aria-invalid={Boolean(errors.confirmPassword) || undefined}
+              aria-describedby={errors.confirmPassword ? `${confirmId}-error` : undefined}
+              required
+            />
+            {errors.confirmPassword ? (
+              <p id={`${confirmId}-error`} className="text-sm text-destructive">
+                {errors.confirmPassword}
+              </p>
+            ) : null}
+          </div>
+
+          <Button type="submit" className="w-full" disabled={isSubmitting}>
+            {isSubmitting ? "Updating password..." : "Set new password"}
+          </Button>
+
+          <div className="text-center text-sm space-y-2">
+            <div>
+              <a className="text-primary underline-offset-4 hover:underline" href="/auth/forgot-password">
+                Need a new reset link?
+              </a>
+            </div>
+            <div>
+              <a className="text-primary underline-offset-4 hover:underline" href="/auth/login">
+                Back to login
+              </a>
+            </div>
+          </div>
+        </form>
+      ) : (
+        <div className="text-center text-sm">
+          <a className="text-primary underline-offset-4 hover:underline" href="/auth/login">
+            Back to login
+          </a>
+        </div>
+      )}
+    </div>
   );
 }
