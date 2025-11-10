@@ -1,5 +1,10 @@
-import { useState, useEffect, useRef } from "react";
-import { getAuthToken } from "../lib/auth/get-auth-token";
+import { useState, useEffect, useRef, useCallback } from "react";
+import {
+  getAuthHeaders,
+  getAuthHeadersWithoutContentType,
+  handleApiBlobResponse,
+  handleApiResponse,
+} from "@/lib/api/base.client";
 import { useMealPlansList } from "./hooks/useMealPlansList";
 import { useDebounce } from "./hooks/useDebounce";
 import { DashboardHeader } from "./DashboardHeader";
@@ -55,52 +60,32 @@ export default function DashboardView() {
    * Handles search input changes.
    * The actual API call will be triggered by the debounced effect.
    */
-  const handleSearchChange = (query: string) => {
+  const handleSearchChange = useCallback((query: string) => {
     setSearchQuery(query);
-  };
+  }, []);
 
   /**
    * Handles create button click - opens startup form dialog.
    */
-  const handleCreateClick = () => {
+  const handleCreateClick = useCallback(() => {
     setIsStartupDialogOpen(true);
-  };
+  }, []);
 
   /**
    * Handles edit/view button click - navigates to editor.
    */
-  const handleEdit = (id: string) => {
+  const handleEdit = useCallback((id: string) => {
     window.location.href = `/app/editor/${id}`;
-  };
+  }, []);
 
   /**
    * Handles export link click - downloads the meal plan as a .doc file.
    */
-  const handleExport = async (id: string) => {
+  const handleExport = useCallback(async (id: string) => {
     try {
-      const token = await getAuthToken();
-      if (!token) {
-        window.location.href = "/auth/login";
-        return;
-      }
-
-      const response = await fetch(`/api/meal-plans/${id}/export`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (response.status === 401) {
-        window.location.href = "/auth/login";
-        return;
-      }
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({
-          error: "Failed to export meal plan",
-        }));
-        throw new Error(errorData.error || "Failed to export meal plan");
-      }
+      const headers = await getAuthHeadersWithoutContentType();
+      const response = await fetch(`/api/meal-plans/${id}/export`, { headers });
+      const blob = await handleApiBlobResponse(response);
 
       // Get the filename from Content-Disposition header or use a default
       const contentDisposition = response.headers.get("Content-Disposition");
@@ -113,7 +98,6 @@ export default function DashboardView() {
       }
 
       // Create blob and download
-      const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -123,81 +107,64 @@ export default function DashboardView() {
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     } catch (error) {
-      console.error("Error exporting meal plan:", error);
       alert(error instanceof Error ? error.message : "Failed to export meal plan");
     }
-  };
+  }, []);
 
   /**
    * Handles delete button click - opens confirmation dialog.
    */
-  const handleDelete = (id: string, name: string) => {
+  const handleDelete = useCallback((id: string, name: string) => {
     setDeleteDialogState({
       isOpen: true,
       mealPlanId: id,
       mealPlanName: name,
     });
-  };
+  }, []);
 
   /**
    * Handles delete confirmation - deletes meal plan and refreshes list.
    */
-  const handleDeleteConfirm = async (id: string) => {
-    setIsDeleting(true);
-    setDeleteError(null);
+  const handleDeleteConfirm = useCallback(
+    async (id: string) => {
+      setIsDeleting(true);
+      setDeleteError(null);
 
-    try {
-      const token = await getAuthToken();
-      if (!token) {
-        window.location.href = "/auth/login";
-        return;
+      try {
+        const headers = await getAuthHeaders();
+        const response = await fetch(`/api/meal-plans/${id}`, {
+          method: "DELETE",
+          headers,
+        });
+
+        await handleApiResponse(response);
+
+        // Close dialog and refresh list
+        setDeleteDialogState({
+          isOpen: false,
+          mealPlanId: null,
+          mealPlanName: null,
+        });
+        await refetch();
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : "An error occurred. Please try again.";
+        setDeleteError(errorMessage);
+      } finally {
+        setIsDeleting(false);
       }
-
-      const response = await fetch(`/api/meal-plans/${id}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (response.status === 401) {
-        window.location.href = "/auth/login";
-        return;
-      }
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({
-          error: "Failed to delete meal plan",
-        }));
-        throw new Error(errorData.error || "Failed to delete meal plan");
-      }
-
-      // Close dialog and refresh list
-      setDeleteDialogState({
-        isOpen: false,
-        mealPlanId: null,
-        mealPlanName: null,
-      });
-      await refetch();
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "An error occurred. Please try again.";
-      setDeleteError(errorMessage);
-      console.error("Error deleting meal plan:", err);
-    } finally {
-      setIsDeleting(false);
-    }
-  };
+    },
+    [refetch]
+  );
 
   /**
    * Handles startup form submission - navigates to create page.
    */
-  const handleStartupFormSubmit = (data: MealPlanStartupData) => {
+  const handleStartupFormSubmit = useCallback((data: MealPlanStartupData) => {
     // Store startup data in sessionStorage (read by AIChatInterface to initiate AI session)
     sessionStorage.setItem("mealPlanStartupData", JSON.stringify(data));
     setIsStartupDialogOpen(false);
     window.location.href = "/app/create";
-  };
+  }, []);
 
   return (
     <div className="container mx-auto p-4 sm:p-8">

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { navigate } from "astro:transitions/client";
 import { Button } from "@/components/ui/button";
 import { supabaseClient as supabase } from "@/db/supabase.client";
@@ -7,6 +7,7 @@ import { getAuthToken } from "@/lib/auth/get-auth-token";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useTranslation } from "@/lib/i18n/useTranslation";
+import { isRefreshTokenNotFoundError } from "@/lib/auth/auth-error.utils";
 
 interface NavBarProps {
   userEmail?: string;
@@ -36,7 +37,7 @@ export function NavBar({ userEmail: initialUserEmail, className }: NavBarProps) 
         } = await supabase.auth.getSession();
 
         // Ignore refresh token errors - they're harmless if user can still authenticate
-        if (error && (error as { code?: string }).code === "refresh_token_not_found") {
+        if (error && isRefreshTokenNotFoundError(error)) {
           setUserEmail(undefined);
           return;
         }
@@ -51,12 +52,10 @@ export function NavBar({ userEmail: initialUserEmail, className }: NavBarProps) 
         }
       } catch (error) {
         // Ignore refresh token errors silently
-        if (error && typeof error === "object" && "code" in error && error.code === "refresh_token_not_found") {
+        if (isRefreshTokenNotFoundError(error)) {
           setUserEmail(undefined);
           return;
         }
-        // Only log unexpected errors
-        console.error("Error checking session:", error);
         setUserEmail(undefined);
       }
     };
@@ -78,12 +77,10 @@ export function NavBar({ userEmail: initialUserEmail, className }: NavBarProps) 
         }
       } catch (error) {
         // Ignore refresh token errors silently
-        if (error && typeof error === "object" && "code" in error && error.code === "refresh_token_not_found") {
+        if (isRefreshTokenNotFoundError(error)) {
           setUserEmail(undefined);
           return;
         }
-        // Only log unexpected errors
-        console.error("Error in auth state change:", error);
         setUserEmail(undefined);
       }
     });
@@ -91,24 +88,18 @@ export function NavBar({ userEmail: initialUserEmail, className }: NavBarProps) 
     return () => subscription.unsubscribe();
   }, []);
 
-  async function handleLogout() {
+  const handleLogout = useCallback(async () => {
     setIsLoggingOut(true);
 
     try {
-      const { error } = await supabase.auth.signOut();
-
-      if (error) {
-        console.error("Error signing out:", error);
-      }
-
+      await supabase.auth.signOut();
       navigate("/");
-    } catch (error) {
-      console.error("Error during logout:", error);
+    } catch {
       navigate("/");
     } finally {
       setIsLoggingOut(false);
     }
-  }
+  }, []);
 
   async function handleDeleteAccount() {
     setIsDeletingAccount(true);
@@ -147,23 +138,22 @@ export function NavBar({ userEmail: initialUserEmail, className }: NavBarProps) 
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "An error occurred. Please try again.";
       setDeleteError(errorMessage);
-      console.error("Error deleting account:", err);
     } finally {
       setIsDeletingAccount(false);
     }
   }
 
-  function handleOpenDeleteDialog() {
+  const handleOpenDeleteDialog = useCallback(() => {
     setDeleteError(null);
     setIsDeleteDialogOpen(true);
-  }
+  }, []);
 
-  function handleCloseDeleteDialog() {
+  const handleCloseDeleteDialog = useCallback(() => {
     if (!isDeletingAccount) {
       setIsDeleteDialogOpen(false);
       setDeleteError(null);
     }
-  }
+  }, [isDeletingAccount]);
 
   return (
     <nav className={`w-full border-b bg-background shadow-sm ${className || ""}`}>
