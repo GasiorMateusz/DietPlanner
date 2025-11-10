@@ -22,11 +22,7 @@ export function useTranslation() {
     };
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const setLanguage = async (_language: "en" | "pl"): Promise<void> => {
-      // No-op: provider not available yet, will be handled once provider loads
-      if (import.meta.env.DEV) {
-        // eslint-disable-next-line no-console
-        console.warn("setLanguage called but TranslationProvider not available yet");
-      }
+      // No-op: provider not available yet
     };
     return { t, language: "en" as const, setLanguage };
   }

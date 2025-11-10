@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Select } from "@/components/ui/select";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import type { LanguageCode } from "@/lib/i18n/types";
@@ -15,9 +15,15 @@ export function LanguageSelector({ className }: LanguageSelectorProps) {
   const { language, setLanguage, t } = useTranslation();
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [localLanguage, setLocalLanguage] = useState<LanguageCode>(language);
+
+  // Sync local language with context language
+  useEffect(() => {
+    setLocalLanguage(language);
+  }, [language]);
 
   // Handle language change
-  const handleLanguageChange = async (event: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleLanguageChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const newLanguage = event.target.value as LanguageCode;
 
     // Validate language code
@@ -26,28 +32,32 @@ export function LanguageSelector({ className }: LanguageSelectorProps) {
       return;
     }
 
-    if (newLanguage === language) return;
+    if (newLanguage === localLanguage) {
+      return;
+    }
 
+    // Update local state immediately for instant UI feedback
+    setLocalLanguage(newLanguage);
     setError(null);
     setIsUpdating(true);
 
-    try {
-      // setLanguage handles persistence and optimistic updates
-      await setLanguage(newLanguage);
-    } catch (err) {
+    // Update language preference asynchronously
+    setLanguage(newLanguage).catch((err) => {
+      // Revert local state on error
+      setLocalLanguage(language);
       const errorMessage = err instanceof Error ? err.message : t("common.error");
       setError(errorMessage);
       // eslint-disable-next-line no-console
       console.error("Error updating language preference:", err);
-    } finally {
+    }).finally(() => {
       setIsUpdating(false);
-    }
+    });
   };
 
   return (
     <div className={className}>
       <Select
-        value={language}
+        value={localLanguage}
         onChange={handleLanguageChange}
         disabled={isUpdating}
         aria-label={t("nav.language")}
