@@ -34,7 +34,7 @@ The project uses the following technologies:
 
 ### Frontend
 
-- **Astro 5** - Fast, performant static site generation with minimal JavaScript
+- **Astro 4** - Fast, performant static site generation with minimal JavaScript
 - **React 19** - Interactive components (e.g., chat, editor)
 - **React Hook Form** - Efficient form state management and validation
 - **TypeScript 5** - Static type checking
@@ -131,7 +131,7 @@ To set up and run this project on your local machine, follow these steps.
    ```bash
    npm run dev
    ```
-   The application will be available at `http://localhost:4321` (default Astro port).
+   The application will be available at `http://localhost:3000` (as configured in astro.config.mjs).
 
 ### Available Scripts
 
@@ -166,20 +166,6 @@ The `package.json` file includes the following scripts for development and maint
 - `npm run test:e2e:debug` - Runs E2E tests in debug mode
 - `npm run test:e2e:headed` - Runs E2E tests in headed mode (visible browser)
 - `npm run test:all` - Runs all test suites (unit, integration, and E2E)
-
-**Testing:**
-
-- `npm run test`: Runs all tests in watch mode.
-- `npm run test:unit`: Runs unit tests.
-- `npm run test:integration`: Runs integration tests.
-- `npm run test:watch`: Runs tests in watch mode.
-- `npm run test:ui`: Opens Vitest UI for test debugging.
-- `npm run test:coverage`: Runs tests with coverage reporting.
-- `npm run test:e2e`: Runs end-to-end tests with Playwright.
-- `npm run test:e2e:ui`: Opens Playwright UI for E2E test debugging.
-- `npm run test:e2e:debug`: Runs E2E tests in debug mode.
-- `npm run test:e2e:headed`: Runs E2E tests in headed mode (visible browser).
-- `npm run test:all`: Runs all test suites (unit, integration, and E2E).
 
 ## Project Scope
 
