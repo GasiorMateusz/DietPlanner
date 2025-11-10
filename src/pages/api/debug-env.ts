@@ -7,8 +7,6 @@ export const GET: APIRoute = async () => {
       supabaseKey: !!import.meta.env.SUPABASE_KEY,
       publicSupabaseUrl: !!import.meta.env.PUBLIC_SUPABASE_URL,
       publicSupabaseKey: !!import.meta.env.PUBLIC_SUPABASE_KEY,
-      publicAppUrl: import.meta.env.PUBLIC_APP_URL || "NOT SET",
-      publicAppUrlSet: !!import.meta.env.PUBLIC_APP_URL,
     }),
     {
       status: 200,

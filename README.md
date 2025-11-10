@@ -117,7 +117,6 @@ To set up and run this project on your local machine, follow these steps.
    # ⚠️ REQUIRED for production: Set this to your production URL WITHOUT trailing slash (e.g., https://yourdomain.com)
    # For local development, this can be omitted (will use window.location.origin)
    # IMPORTANT: Without this, auth redirect links may point to localhost in production!
-   # Also ensure Supabase Dashboard → Authentication → URL Configuration is set correctly (see .ai/PRODUCTION_AUTH_SETUP.md)
    PUBLIC_APP_URL=https://yourdomain.com
 
    # OpenRouter API Key

@@ -260,10 +260,6 @@ export default function ResetPasswordForm({ className }: Props) {
     // Get the full redirect URL for password reset
     const redirectTo = getAuthRedirectUrl("/auth/reset-password");
 
-    // Log the redirect URL being sent to Supabase for debugging
-    console.log("🔐 [Password Reset Resend] Sending redirectTo to Supabase:", redirectTo);
-    console.log("🔐 [Password Reset Resend] PUBLIC_APP_URL:", import.meta.env.PUBLIC_APP_URL || "NOT SET");
-
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(resendEmail, {
         redirectTo,

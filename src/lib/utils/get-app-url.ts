@@ -21,26 +21,28 @@ export function getAppUrl(): string {
     // Validate it's a proper URL
     try {
       const urlObj = new URL(url);
-      // Check for localhost in production
+      // Validate URL is not localhost in production
       if (isProduction && (urlObj.hostname === "localhost" || urlObj.hostname === "127.0.0.1")) {
-        console.error(
-          `❌ PUBLIC_APP_URL is set to localhost (${url}) but you're in production! ` +
-            `This will cause email links to point to localhost. ` +
+        throw new Error(
+          `PUBLIC_APP_URL is set to localhost (${url}) but you're in production. ` +
             `Please set PUBLIC_APP_URL to your production URL (e.g., https://yourdomain.com)`
         );
       }
       // PUBLIC_APP_URL is set and valid - use it
       return url;
     } catch (error) {
-      // If invalid URL, log error
-      console.error(`PUBLIC_APP_URL is set but invalid: "${envUrl}". Error: ${error}`);
+      // Re-throw if it's our validation error
+      if (error instanceof Error && error.message.includes("PUBLIC_APP_URL is set to localhost")) {
+        throw error;
+      }
+      // If invalid URL, throw error in production
       if (isProduction) {
         throw new Error(
           `PUBLIC_APP_URL is set but invalid: "${envUrl}". ` +
             `Please set it to a valid URL (e.g., https://yourdomain.com)`
         );
       }
-      // In development, fall through to window.location.origin
+      // In development, fall through to window.location.origin for invalid URLs
     }
   }
 
@@ -50,15 +52,11 @@ export function getAppUrl(): string {
     
     if (isProduction) {
       // In production, PUBLIC_APP_URL is REQUIRED
-      console.error(
-        `❌ PUBLIC_APP_URL is not set in production! ` +
-          `Current origin: ${origin}. ` +
-          `Please set PUBLIC_APP_URL environment variable to your production URL (e.g., https://yourdomain.com). ` +
-          `Without this, email confirmation links may point to incorrect URLs. ` +
-          `Falling back to ${origin} but this may cause issues.`
+      // Throw error instead of silently falling back
+      throw new Error(
+        `PUBLIC_APP_URL is not set in production. ` +
+          `Please set PUBLIC_APP_URL environment variable to your production URL (e.g., https://yourdomain.com).`
       );
-      // Still return origin as fallback to avoid breaking the app
-      return origin;
     }
     
     // Development: allow window.location.origin fallback
@@ -75,9 +73,6 @@ export function getAppUrl(): string {
 
 /**
  * Gets the full redirect URL for authentication flows.
- * 
- * Uses PUBLIC_APP_URL for all redirect URLs to ensure consistency.
- * In production, PUBLIC_APP_URL must be set or an error will be logged.
  *
  * @param path - The path to redirect to (e.g., "/auth/reset-password" or "/auth/login")
  * @returns The full URL (e.g., "https://example.com/auth/reset-password")
@@ -86,24 +81,5 @@ export function getAuthRedirectUrl(path: string): string {
   const baseUrl = getAppUrl();
   // Ensure path starts with /
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
-  const fullUrl = `${baseUrl}${normalizedPath}`;
-
-  // Log the redirect URL being used (helpful for debugging)
-  if (typeof window !== "undefined") {
-    const isDevelopment = window.location.hostname.includes("localhost") ||
-      window.location.hostname.includes("127.0.0.1");
-    const usingPublicAppUrl = import.meta.env.PUBLIC_APP_URL;
-    
-    // Always log in production if PUBLIC_APP_URL is used (for debugging)
-    if (!isDevelopment && usingPublicAppUrl) {
-      console.log(`🔗 Auth redirect URL: ${fullUrl} (using PUBLIC_APP_URL: ${usingPublicAppUrl})`);
-    }
-    
-    // Log in development
-    if (isDevelopment) {
-      console.log(`🔗 Auth redirect URL: ${fullUrl} (using ${usingPublicAppUrl ? `PUBLIC_APP_URL: ${usingPublicAppUrl}` : "window.location.origin"})`);
-    }
-  }
-
-  return fullUrl;
+  return `${baseUrl}${normalizedPath}`;
 }
