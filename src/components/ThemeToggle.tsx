@@ -18,10 +18,12 @@ export function ThemeToggle({ className }: ThemeToggleProps) {
   const { t } = useTranslation();
   const [isToggling, setIsToggling] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [localTheme, setLocalTheme] = useState<Theme>(theme);
+  const [localTheme, setLocalTheme] = useState<Theme>("light");
+  const [hasHydrated, setHasHydrated] = useState(false);
 
-  // Sync local theme with context theme
+  // Sync local theme with context theme after hydration
   useEffect(() => {
+    setHasHydrated(true);
     setLocalTheme(theme);
   }, [theme]);
 
@@ -31,7 +33,9 @@ export function ThemeToggle({ className }: ThemeToggleProps) {
       return;
     }
 
-    const newTheme: Theme = localTheme === "light" ? "dark" : "light";
+    // Use displayTheme to determine current theme
+    const currentTheme = hasHydrated ? theme : localTheme;
+    const newTheme: Theme = currentTheme === "light" ? "dark" : "light";
 
     // Update local state immediately for instant UI feedback
     setLocalTheme(newTheme);
@@ -43,7 +47,7 @@ export function ThemeToggle({ className }: ThemeToggleProps) {
       await toggleTheme();
     } catch (err) {
       // Revert local state on error
-      setLocalTheme(theme);
+      setLocalTheme(currentTheme);
       const errorMessage = err instanceof Error ? err.message : "Failed to toggle theme";
       setError(errorMessage);
       // eslint-disable-next-line no-console
@@ -56,8 +60,10 @@ export function ThemeToggle({ className }: ThemeToggleProps) {
   // Determine icon and aria label based on current theme
   // When in dark mode, show sun icon (clicking switches to light)
   // When in light mode, show moon icon (clicking switches to dark)
-  const Icon = localTheme === "dark" ? Sun : Moon;
-  const ariaLabel = localTheme === "dark" ? t("nav.theme.switchToLight") : t("nav.theme.switchToDark");
+  // Use theme from context if hydrated, otherwise use localTheme (which defaults to "light" for SSR)
+  const displayTheme = hasHydrated ? theme : localTheme;
+  const Icon = displayTheme === "dark" ? Sun : Moon;
+  const ariaLabel = displayTheme === "dark" ? t("nav.theme.switchToLight") : t("nav.theme.switchToDark");
 
   return (
     <div className={className}>

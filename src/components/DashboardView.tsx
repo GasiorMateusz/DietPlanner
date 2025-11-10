@@ -1,16 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import {
-  getAuthHeaders,
-  getAuthHeadersWithoutContentType,
-  handleApiBlobResponse,
-  handleApiResponse,
-} from "@/lib/api/base.client";
+import { getAuthHeaders, handleApiResponse } from "@/lib/api/base.client";
 import { useMealPlansList } from "./hooks/useMealPlansList";
 import { useDebounce } from "./hooks/useDebounce";
 import { DashboardHeader } from "./DashboardHeader";
 import { MealPlanList } from "./MealPlanList";
 import { StartupFormDialog } from "./StartupFormDialog";
 import { DeleteConfirmationDialog } from "./DeleteConfirmationDialog";
+import { ExportOptionsModal } from "./ExportOptionsModal";
 import type { MealPlanStartupData } from "../types";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 
@@ -33,6 +29,8 @@ export default function DashboardView() {
   });
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [isExportModalOpen, setIsExportModalOpen] = useState<boolean>(false);
+  const [selectedMealPlanId, setSelectedMealPlanId] = useState<string | null>(null);
   const hasInitiallyFetched = useRef<boolean>(false);
 
   // Use custom hook for meal plans list management
@@ -79,36 +77,11 @@ export default function DashboardView() {
   }, []);
 
   /**
-   * Handles export link click - downloads the meal plan as a .doc file.
+   * Handles export link click - opens export options modal.
    */
-  const handleExport = useCallback(async (id: string) => {
-    try {
-      const headers = await getAuthHeadersWithoutContentType();
-      const response = await fetch(`/api/meal-plans/${id}/export`, { headers });
-      const blob = await handleApiBlobResponse(response);
-
-      // Get the filename from Content-Disposition header or use a default
-      const contentDisposition = response.headers.get("Content-Disposition");
-      let filename = "meal-plan.doc";
-      if (contentDisposition) {
-        const filenameMatch = contentDisposition.match(/filename="(.+)"/);
-        if (filenameMatch) {
-          filename = filenameMatch[1];
-        }
-      }
-
-      // Create blob and download
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-    } catch (error) {
-      alert(error instanceof Error ? error.message : "Failed to export meal plan");
-    }
+  const handleExport = useCallback((id: string) => {
+    setSelectedMealPlanId(id);
+    setIsExportModalOpen(true);
   }, []);
 
   /**
@@ -213,6 +186,18 @@ export default function DashboardView() {
         onConfirm={handleDeleteConfirm}
         isDeleting={isDeleting}
       />
+
+      {/* Export Options Modal */}
+      {selectedMealPlanId && (
+        <ExportOptionsModal
+          isOpen={isExportModalOpen}
+          mealPlanId={selectedMealPlanId}
+          onClose={() => {
+            setIsExportModalOpen(false);
+            setSelectedMealPlanId(null);
+          }}
+        />
+      )}
     </div>
   );
 }

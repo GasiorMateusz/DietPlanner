@@ -106,3 +106,14 @@ export const mealPlanIdParamSchema = z.object({
  * Alias for consistency across endpoints.
  */
 export const mealPlanIdPathParamSchema = mealPlanIdParamSchema;
+
+/**
+ * Schema for validating query parameters for GET /api/meal-plans/{id}/export.
+ */
+export const exportMealPlanQuerySchema = z.object({
+  dailySummary: z.enum(["true", "false"]).optional().default("true"),
+  mealsSummary: z.enum(["true", "false"]).optional().default("true"),
+  ingredients: z.enum(["true", "false"]).optional().default("true"),
+  preparation: z.enum(["true", "false"]).optional().default("true"),
+  format: z.enum(["doc", "html"]),
+});

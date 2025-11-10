@@ -10,12 +10,18 @@ import {
   TableRow,
   TableCell,
 } from "docx";
-import type { TypedMealPlanRow, MealPlanMeal } from "../../types.ts";
+import type { TypedMealPlanRow, MealPlanMeal, ExportContentOptions } from "../../types.ts";
+import type { LanguageCode } from "../i18n/types.ts";
+import { getExportTranslations } from "../i18n/export-translations.ts";
 
 /**
  * Generates all document children (paragraphs and tables) from meal plan data.
+ * @param mealPlan - The complete meal plan row from database
+ * @param options - Export content options
+ * @param language - Language code for translations
  */
-function generateDocumentChildren(mealPlan: TypedMealPlanRow): (Paragraph | Table)[] {
+function generateDocumentChildren(mealPlan: TypedMealPlanRow, options: ExportContentOptions, language: LanguageCode): (Paragraph | Table)[] {
+  const t = getExportTranslations(language);
   const children: (Paragraph | Table)[] = [];
 
   // Title
@@ -29,24 +35,28 @@ function generateDocumentChildren(mealPlan: TypedMealPlanRow): (Paragraph | Tabl
   );
 
   // Startup Data Section
-  children.push(...formatStartupData(mealPlan));
+  children.push(...formatStartupData(mealPlan, t));
 
-  // Daily Summary Section
-  children.push(...formatDailySummary(mealPlan));
+  // Daily Summary Section (if enabled)
+  if (options.dailySummary) {
+    children.push(...formatDailySummary(mealPlan, t));
+  }
 
   // Meals Section
-  children.push(...formatMeals(mealPlan.plan_content.meals));
+  children.push(...formatMeals(mealPlan.plan_content.meals, options, t));
 
   return children;
 }
 
 /**
- * Generates a .doc file from meal plan data.
+ * Generates a .doc file from meal plan data with specified options.
  * @param mealPlan - The complete meal plan row from database
+ * @param options - Export content options
+ * @param language - Language code for translations (default: "en")
  * @returns Buffer containing the .doc file data
  */
-export async function generateDoc(mealPlan: TypedMealPlanRow): Promise<Buffer> {
-  const children = generateDocumentChildren(mealPlan);
+export async function generateDoc(mealPlan: TypedMealPlanRow, options: ExportContentOptions, language: LanguageCode = "en"): Promise<Buffer> {
+  const children = generateDocumentChildren(mealPlan, options, language);
   const doc = new Document({
     sections: [
       {
@@ -61,8 +71,10 @@ export async function generateDoc(mealPlan: TypedMealPlanRow): Promise<Buffer> {
 
 /**
  * Formats the startup data section.
+ * @param mealPlan - The complete meal plan row from database
+ * @param t - Translation function (not used for startup data, but kept for consistency)
  */
-function formatStartupData(mealPlan: TypedMealPlanRow): (Paragraph | Table)[] {
+function formatStartupData(mealPlan: TypedMealPlanRow, t: ReturnType<typeof getExportTranslations>): (Paragraph | Table)[] {
   const paragraphs: (Paragraph | Table)[] = [];
 
   paragraphs.push(
@@ -159,14 +171,16 @@ function formatStartupData(mealPlan: TypedMealPlanRow): (Paragraph | Table)[] {
 
 /**
  * Formats the daily summary section.
+ * @param mealPlan - The complete meal plan row from database
+ * @param t - Translation function
  */
-function formatDailySummary(mealPlan: TypedMealPlanRow): (Paragraph | Table)[] {
+function formatDailySummary(mealPlan: TypedMealPlanRow, t: ReturnType<typeof getExportTranslations>): (Paragraph | Table)[] {
   const paragraphs: (Paragraph | Table)[] = [];
   const summary = mealPlan.plan_content.daily_summary;
 
   paragraphs.push(
     new Paragraph({
-      text: "Daily Nutritional Summary",
+      text: t["summary.dailySummary"],
       heading: HeadingLevel.HEADING_2,
       spacing: { before: 400, after: 200 },
     })
@@ -177,19 +191,19 @@ function formatDailySummary(mealPlan: TypedMealPlanRow): (Paragraph | Table)[] {
     new TableRow({
       children: [
         new TableCell({
-          children: [new Paragraph({ children: [new TextRun({ text: "Total Kcal", bold: true })] })],
+          children: [new Paragraph({ children: [new TextRun({ text: t["summary.totalKcal"], bold: true })] })],
           width: { size: 25, type: WidthType.PERCENTAGE },
         }),
         new TableCell({
-          children: [new Paragraph({ children: [new TextRun({ text: "Proteins", bold: true })] })],
+          children: [new Paragraph({ children: [new TextRun({ text: t["summary.proteins"], bold: true })] })],
           width: { size: 25, type: WidthType.PERCENTAGE },
         }),
         new TableCell({
-          children: [new Paragraph({ children: [new TextRun({ text: "Fats", bold: true })] })],
+          children: [new Paragraph({ children: [new TextRun({ text: t["summary.fats"], bold: true })] })],
           width: { size: 25, type: WidthType.PERCENTAGE },
         }),
         new TableCell({
-          children: [new Paragraph({ children: [new TextRun({ text: "Carbs", bold: true })] })],
+          children: [new Paragraph({ children: [new TextRun({ text: t["summary.carbs"], bold: true })] })],
           width: { size: 25, type: WidthType.PERCENTAGE },
         }),
       ],
@@ -231,13 +245,16 @@ function formatDailySummary(mealPlan: TypedMealPlanRow): (Paragraph | Table)[] {
 
 /**
  * Formats the meals section.
+ * @param meals - Array of meals
+ * @param options - Export content options
+ * @param t - Translation function
  */
-function formatMeals(meals: MealPlanMeal[]): Paragraph[] {
+function formatMeals(meals: MealPlanMeal[], options: ExportContentOptions, t: ReturnType<typeof getExportTranslations>): Paragraph[] {
   const paragraphs: Paragraph[] = [];
 
   paragraphs.push(
     new Paragraph({
-      text: "Meals",
+      text: t["editor.meals"],
       heading: HeadingLevel.HEADING_2,
       spacing: { before: 400, after: 300 },
     })
@@ -249,40 +266,55 @@ function formatMeals(meals: MealPlanMeal[]): Paragraph[] {
     // Meal heading
     paragraphs.push(
       new Paragraph({
-        text: `Meal ${mealNumber}: ${meal.name}`,
+        text: `${t["editor.meal"]} ${mealNumber}: ${meal.name}`,
         heading: HeadingLevel.HEADING_3,
         spacing: { before: mealNumber === 1 ? 0 : 300, after: 100 },
       })
     );
 
-    // Ingredients
-    paragraphs.push(
-      new Paragraph({
-        children: [new TextRun({ text: "Ingredients: ", bold: true }), new TextRun({ text: meal.ingredients })],
-        spacing: { after: 200 },
-      })
-    );
+    // Meals Summary (if enabled)
+    if (options.mealsSummary) {
+      paragraphs.push(
+        new Paragraph({
+          children: [
+            new TextRun({ text: `${t["editor.mealSummary"]}: `, bold: true }),
+            new TextRun({
+              text: `${meal.summary.kcal} ${t["summary.kcal"]} | ${t["summary.proteins"]}: ${meal.summary.p}g | ${t["summary.fats"]}: ${meal.summary.f}g | ${t["summary.carbs"]}: ${meal.summary.c}g`,
+            }),
+          ],
+          spacing: { after: 200 },
+        })
+      );
+    }
 
-    // Preparation
-    paragraphs.push(
-      new Paragraph({
-        children: [new TextRun({ text: "Preparation: ", bold: true }), new TextRun({ text: meal.preparation })],
-        spacing: { after: 200 },
-      })
-    );
+    // Ingredients (if enabled)
+    if (options.ingredients) {
+      paragraphs.push(
+        new Paragraph({
+          children: [new TextRun({ text: `${t["editor.ingredients"]}: `, bold: true }), new TextRun({ text: meal.ingredients })],
+          spacing: { after: 200 },
+        })
+      );
+    }
 
-    // Nutrition summary
-    paragraphs.push(
-      new Paragraph({
-        children: [
-          new TextRun({ text: "Nutrition: ", bold: true }),
-          new TextRun({
-            text: `${meal.summary.kcal} kcal | P: ${meal.summary.p}g | F: ${meal.summary.f}g | C: ${meal.summary.c}g`,
-          }),
-        ],
-        spacing: { after: 300 },
-      })
-    );
+    // Preparation (if enabled)
+    if (options.preparation) {
+      paragraphs.push(
+        new Paragraph({
+          children: [new TextRun({ text: `${t["editor.preparation"]}: `, bold: true }), new TextRun({ text: meal.preparation })],
+          spacing: { after: 200 },
+        })
+      );
+    }
+
+    // Add spacing after meal if not the last one
+    if (index < meals.length - 1) {
+      paragraphs.push(
+        new Paragraph({
+          spacing: { after: 300 },
+        })
+      );
+    }
   });
 
   return paragraphs;

@@ -5,6 +5,7 @@ import type {
   CreateMealPlanResponseDto,
   UpdateMealPlanCommand,
   UpdateMealPlanResponseDto,
+  ExportOptions,
 } from "@/types";
 import {
   getAuthHeaders,
@@ -103,13 +104,22 @@ export const mealPlansApi = {
   },
 
   /**
-   * Exports a meal plan as a Word document.
+   * Exports a meal plan with specified options.
    * @param id - Meal plan ID
-   * @returns Blob containing the exported document
+   * @param options - Export options (content and format)
+   * @returns Blob containing the exported file
    */
-  async export(id: string): Promise<Blob> {
+  async export(id: string, options: ExportOptions): Promise<Blob> {
     const headers = await getAuthHeadersWithoutContentType();
-    const response = await fetch(`/api/meal-plans/${id}/export`, {
+    const queryParams = new URLSearchParams({
+      dailySummary: options.content.dailySummary.toString(),
+      mealsSummary: options.content.mealsSummary.toString(),
+      ingredients: options.content.ingredients.toString(),
+      preparation: options.content.preparation.toString(),
+      format: options.format,
+    });
+
+    const response = await fetch(`/api/meal-plans/${id}/export?${queryParams.toString()}`, {
       headers,
     });
 
