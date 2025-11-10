@@ -107,10 +107,6 @@ export function TranslationProvider({ children, initialLanguage = "en" }: Transl
       const storedLanguage = localStorage.getItem("app-language") as LanguageCode | null;
       if (storedLanguage && (storedLanguage === "en" || storedLanguage === "pl")) {
         if (storedLanguage !== languageRef.current) {
-          if (import.meta.env.DEV) {
-            // eslint-disable-next-line no-console
-            console.log("[TranslationProvider] Polling detected language change:", storedLanguage);
-          }
           languageRef.current = storedLanguage;
           setLanguageState(storedLanguage);
         }
@@ -143,10 +139,6 @@ export function TranslationProvider({ children, initialLanguage = "en" }: Transl
     const handleLanguageChange = (e: CustomEvent<LanguageCode>) => {
       const newLanguage = e.detail;
       if (newLanguage && (newLanguage === "en" || newLanguage === "pl") && newLanguage !== languageRef.current) {
-        if (import.meta.env.DEV) {
-          // eslint-disable-next-line no-console
-          console.log("[TranslationProvider] Language change event received:", newLanguage);
-        }
         // Update immediately for instant UI feedback
         languageRef.current = newLanguage;
         setLanguageState(newLanguage);
@@ -214,10 +206,6 @@ export function TranslationProvider({ children, initialLanguage = "en" }: Transl
 
   // Memoize context value to ensure React detects changes and triggers re-renders
   const contextValue: TranslationContextValue = useMemo(() => {
-    if (import.meta.env.DEV) {
-      // eslint-disable-next-line no-console
-      console.log("[TranslationProvider] Context value updated, language:", language);
-    }
     return {
       language,
       translations,
