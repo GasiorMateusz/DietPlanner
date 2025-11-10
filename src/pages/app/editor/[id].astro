@@ -1,6 +1,6 @@
 ---
 import PrivateLayout from "../../../layouts/PrivateLayout.astro";
-import MealPlanEditor from "../../../components/MealPlanEditor";
+import { MealPlanEditorWrapper } from "../../../components/MealPlanEditorWrapper";
 
 // Edit Mode: ID parameter from URL
 const { id } = Astro.params;
@@ -12,5 +12,5 @@ if (!id) {
 ---
 
 <PrivateLayout title="Editor - Diet Planner">
-  <MealPlanEditor client:load mealPlanId={id} />
+  <MealPlanEditorWrapper client:load mealPlanId={id} />
 </PrivateLayout>

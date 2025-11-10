@@ -1,6 +1,6 @@
 ---
 import PrivateLayout from "../../layouts/PrivateLayout.astro";
-import AIChatInterface from "../../components/AIChatInterface";
+import { AIChatInterfaceWrapper } from "../../components/AIChatInterfaceWrapper";
 
 // Read startup data from sessionStorage (set by Dashboard after form submission)
 // and initiate the AI session. The actual session creation happens client-side
@@ -8,5 +8,5 @@ import AIChatInterface from "../../components/AIChatInterface";
 ---
 
 <PrivateLayout title="Create Meal Plan - Diet Planner">
-  <AIChatInterface client:load />
+  <AIChatInterfaceWrapper client:load />
 </PrivateLayout>

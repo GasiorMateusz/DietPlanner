@@ -7,6 +7,7 @@ import { Button } from "./ui/button";
 import { DailySummaryStaticDisplay } from "./DailySummaryStaticDisplay";
 import { MealCard } from "./MealCard";
 import { useMealPlanEditor } from "./hooks/useMealPlanEditor";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 interface MealPlanEditorProps {
   /** Optional meal plan ID for Edit Mode */
@@ -18,6 +19,7 @@ interface MealPlanEditorProps {
  * Supports both Create Mode (from AI chat) and Edit Mode (existing meal plan).
  */
 export default function MealPlanEditor({ mealPlanId }: MealPlanEditorProps) {
+  const { t } = useTranslation();
   const { form, fields, append, remove, isLoading, error, dailySummary, mode, handleSave, handleExport } =
     useMealPlanEditor({ mealPlanId });
 
@@ -87,7 +89,7 @@ export default function MealPlanEditor({ mealPlanId }: MealPlanEditorProps) {
   // Main form UI
   return (
     <div className="container mx-auto p-4 sm:p-8 max-w-4xl">
-      <h1 className="text-3xl font-bold mb-6">{mode === "create" ? "Create Meal Plan" : "Edit Meal Plan"}</h1>
+      <h1 className="text-3xl font-bold mb-6">{mode === "create" ? t("editor.title.create") : t("editor.title.edit")}</h1>
 
       {/* Error Alert */}
       {error && (
@@ -107,7 +109,7 @@ export default function MealPlanEditor({ mealPlanId }: MealPlanEditorProps) {
         {/* Plan Name Input */}
         <div className="space-y-2">
           <Label htmlFor="plan-name">
-            Meal Plan Name <span className="text-destructive">*</span>
+            {t("editor.planName")} <span className="text-destructive">*</span>
           </Label>
           <Controller
             name="planName"
@@ -117,7 +119,7 @@ export default function MealPlanEditor({ mealPlanId }: MealPlanEditorProps) {
                 <Input
                   id="plan-name"
                   {...field}
-                  placeholder="Enter meal plan name..."
+                  placeholder={t("editor.planNamePlaceholder")}
                   aria-invalid={fieldState.invalid}
                   data-testid="meal-plan-editor-plan-name-input"
                 />
@@ -133,15 +135,15 @@ export default function MealPlanEditor({ mealPlanId }: MealPlanEditorProps) {
         {/* Meals List */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold">Meals</h2>
+            <h2 className="text-xl font-semibold">{t("editor.meals")}</h2>
             <Button type="button" variant="outline" onClick={handleMealAdd}>
-              Add Meal
+              {t("editor.addMeal")}
             </Button>
           </div>
 
           {fields.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              No meals added yet. Click &quot;Add Meal&quot; to get started.
+              {t("editor.noMeals")}
             </div>
           ) : (
             <div className="space-y-4">
@@ -164,17 +166,17 @@ export default function MealPlanEditor({ mealPlanId }: MealPlanEditorProps) {
         {/* Form Actions */}
         <div className="flex gap-4 pt-4 border-t">
           <Button type="submit" variant="default" disabled={!isFormReady()} data-testid="meal-plan-editor-save-button">
-            {isLoading ? "Saving..." : "Save changes"}
+            {isLoading ? t("editor.saving") : t("editor.saveChanges")}
           </Button>
 
           {mode === "edit" && (
             <Button type="button" variant="outline" onClick={handleExport}>
-              Export to .doc
+              {t("editor.exportToDoc")}
             </Button>
           )}
 
           <Button type="button" variant="ghost" onClick={handleCancel}>
-            Cancel
+            {t("common.cancel")}
           </Button>
         </div>
       </form>

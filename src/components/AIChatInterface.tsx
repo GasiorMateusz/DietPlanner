@@ -42,7 +42,7 @@ export default function AIChatInterface() {
     if (!sessionId) {
       setChatState((prev) => ({
         ...prev,
-        error: "No active session. Please refresh the page.",
+        error: t("chat.noSession"),
       }));
       return;
     }
