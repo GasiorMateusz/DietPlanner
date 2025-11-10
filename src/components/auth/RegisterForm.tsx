@@ -73,8 +73,11 @@ export default function RegisterForm({ className }: Props) {
       setSuccess(t("auth.accountCreated"));
     } else {
       // Email confirmation disabled - user is automatically logged in
+      // Wait a brief moment for cookies to sync, then redirect
+      // This prevents redirect loops when middleware checks before cookies are available
+      await new Promise((resolve) => setTimeout(resolve, 100));
       // Use full page reload to ensure cookies are synced and middleware can detect session
-      window.location.assign("/app/dashboard");
+      window.location.href = "/app/dashboard";
     }
   });
 
