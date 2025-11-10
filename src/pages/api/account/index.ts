@@ -75,9 +75,10 @@ export const DELETE: APIRoute = async (context) => {
       console.error("Database error during account deletion:", {
         message: error.message,
         originalError: error.originalError,
-        userId: error.originalError && typeof error.originalError === "object" && "code" in error.originalError
-          ? (error.originalError as { code?: string }).code
-          : undefined,
+        userId:
+          error.originalError && typeof error.originalError === "object" && "code" in error.originalError
+            ? (error.originalError as { code?: string }).code
+            : undefined,
         errorDetails: error.originalError,
       });
       return new Response(

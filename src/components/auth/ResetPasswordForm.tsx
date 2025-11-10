@@ -97,7 +97,7 @@ export default function ResetPasswordForm({ className }: Props) {
       // Don't show any errors - Supabase will process the token
       // User can submit the form even if session isn't detected yet
       // The form submission will trigger Supabase to process the token from the URL
-      
+
       // Just clean up on unmount
       return () => {
         if (authStateSubscription) {
@@ -137,7 +137,7 @@ export default function ResetPasswordForm({ className }: Props) {
             const {
               data: { session: finalSession },
             } = await supabase.auth.getSession();
-            
+
             if (!finalSession && !hasShownError) {
               hasShownError = true;
               setMessage(
@@ -201,9 +201,7 @@ export default function ResetPasswordForm({ className }: Props) {
 
     // First, try to get the session - if there's a token in the URL, Supabase should process it
     // Even if we haven't detected a session yet, the token in the URL should work
-    let {
-      data: { session },
-    } = await supabase.auth.getSession();
+    await supabase.auth.getSession();
 
     // If no session yet but we're on the reset page, Supabase might still process the URL token
     // Try to update the password anyway - Supabase will use the token from the URL if present
@@ -303,7 +301,7 @@ export default function ResetPasswordForm({ className }: Props) {
       setShowResendLink(false);
       // Clear the email field after successful send
       setResendEmail("");
-    } catch (error) {
+    } catch {
       setIsResending(false);
       // Still show success message (security best practice)
       setResendMessage(getPasswordResetSuccessMessage());
@@ -332,7 +330,7 @@ export default function ResetPasswordForm({ className }: Props) {
           <div>
             <h3 className="text-sm font-semibold mb-1">Request a new reset link</h3>
             <p className="text-sm text-muted-foreground mb-4">
-              Enter your email address and we'll send you a new password reset link.
+              Enter your email address and we&apos;ll send you a new password reset link.
             </p>
           </div>
           <form onSubmit={handleResendLink} className="space-y-3">
