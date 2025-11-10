@@ -85,13 +85,15 @@ export default function LoginForm({ className }: Props) {
     <form ref={formRef} onSubmit={onSubmit} className={cn("space-y-4", className)} noValidate data-testid="login-form">
       {form.formState.errors.root ? (
         <Alert className="border-destructive/30 text-destructive">
-          <AlertTitle>{t("auth.loginError")}</AlertTitle>
+          <AlertTitle suppressHydrationWarning>{t("auth.loginError")}</AlertTitle>
           <AlertDescription>{form.formState.errors.root.message}</AlertDescription>
         </Alert>
       ) : null}
 
       <div className="grid gap-2">
-        <Label htmlFor={emailId}>{t("auth.email")}</Label>
+        <Label htmlFor={emailId} suppressHydrationWarning>
+          {t("auth.email")}
+        </Label>
         <Input
           id={emailId}
           type="email"
@@ -111,7 +113,9 @@ export default function LoginForm({ className }: Props) {
       </div>
 
       <div className="grid gap-2">
-        <Label htmlFor={passwordId}>{t("auth.password")}</Label>
+        <Label htmlFor={passwordId} suppressHydrationWarning>
+          {t("auth.password")}
+        </Label>
         <Input
           id={passwordId}
           type="password"
@@ -128,15 +132,25 @@ export default function LoginForm({ className }: Props) {
         ) : null}
       </div>
 
-      <Button type="submit" className="w-full" disabled={form.formState.isSubmitting} data-testid="login-submit-button">
+      <Button
+        type="submit"
+        className="w-full"
+        disabled={form.formState.isSubmitting}
+        data-testid="login-submit-button"
+        suppressHydrationWarning
+      >
         {form.formState.isSubmitting ? t("auth.loggingIn") : t("auth.login")}
       </Button>
 
       <div className="flex items-center justify-between text-sm">
-        <a className="text-primary underline-offset-4 hover:underline" href="/auth/forgot-password">
+        <a
+          className="text-primary underline-offset-4 hover:underline"
+          href="/auth/forgot-password"
+          suppressHydrationWarning
+        >
           {t("auth.forgotPassword")}
         </a>
-        <a className="text-primary underline-offset-4 hover:underline" href="/auth/register">
+        <a className="text-primary underline-offset-4 hover:underline" href="/auth/register" suppressHydrationWarning>
           {t("auth.createAccount")}
         </a>
       </div>

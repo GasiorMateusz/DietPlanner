@@ -12,10 +12,16 @@ export const prerender = false;
 /**
  * GET /api/user-preferences
  *
- * Retrieves the authenticated user's preferences (language and theme).
- * Returns defaults ("en" and "light") if no preference exists.
+ * Retrieves the authenticated user's preferences (language, theme, and terms acceptance).
+ * Returns defaults ("en", "light", and terms_accepted: false) if no preference exists.
  *
- * @returns 200 OK with user preferences (language and theme)
+ * Response includes:
+ * - language: Language code ("en" or "pl")
+ * - theme: Theme preference ("light" or "dark")
+ * - terms_accepted: Boolean indicating if user has accepted Terms and Privacy Policy
+ * - terms_accepted_at: Timestamp when user accepted terms (null if not accepted)
+ *
+ * @returns 200 OK with user preferences (language, theme, terms_accepted, terms_accepted_at)
  * @returns 401 Unauthorized if authentication fails
  * @returns 500 Internal Server Error for database failures
  */
@@ -95,16 +101,28 @@ export const GET: APIRoute = async (context) => {
 /**
  * PUT /api/user-preferences
  *
- * Updates the authenticated user's preferences (language and/or theme).
+ * Updates the authenticated user's preferences (language, theme, and/or terms acceptance).
  * Creates a new preference record if one doesn't exist.
  * Accepts partial updates - only provided fields are updated.
  *
  * Request Body:
  * - language (optional): Language code ("en" or "pl")
  * - theme (optional): Theme ("light" or "dark")
+ * - terms_accepted (optional): Boolean indicating acceptance of Terms and Privacy Policy
  * At least one field must be provided.
  *
- * @returns 200 OK with updated preferences (language and theme)
+ * Notes:
+ * - When terms_accepted is set to true, terms_accepted_at is automatically set by database trigger
+ * - When terms_accepted is set to false, terms_accepted_at is automatically cleared by database trigger
+ * - terms_accepted_at cannot be set directly via API - it's managed by the database trigger
+ *
+ * Response includes:
+ * - language: Language code ("en" or "pl")
+ * - theme: Theme preference ("light" or "dark")
+ * - terms_accepted: Boolean indicating if user has accepted Terms and Privacy Policy
+ * - terms_accepted_at: Timestamp when user accepted terms (null if not accepted, set automatically)
+ *
+ * @returns 200 OK with updated preferences (language, theme, terms_accepted, terms_accepted_at)
  * @returns 400 Bad Request if request body fails validation
  * @returns 401 Unauthorized if authentication fails
  * @returns 500 Internal Server Error for database failures

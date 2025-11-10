@@ -1,4 +1,4 @@
-import React, { createContext, useEffect, useState, useMemo, useCallback, type ReactNode } from "react";
+import React, { createContext, useEffect, useState, useMemo, useCallback, useRef, type ReactNode } from "react";
 import type { LanguageCode, Translations } from "./types";
 import enTranslations from "./translations/en.json";
 import plTranslations from "./translations/pl.json";
@@ -38,6 +38,7 @@ interface TranslationProviderProps {
 export function TranslationProvider({ children, initialLanguage = "en" }: TranslationProviderProps) {
   const [language, setLanguageState] = useState<LanguageCode>(initialLanguage);
   const [isLoading, setIsLoading] = useState(true);
+  const languageRef = useRef<LanguageCode>(initialLanguage);
 
   // Load translations based on current language - memoized to prevent unnecessary recalculations
   const translations: Translations = useMemo(() => (language === "pl" ? plTranslations : enTranslations), [language]);
@@ -61,6 +62,8 @@ export function TranslationProvider({ children, initialLanguage = "en" }: Transl
 
         // Store in localStorage for cross-island sync
         localStorage.setItem("app-language", newLanguage);
+        // Update ref immediately
+        languageRef.current = newLanguage;
         // Dispatch custom event for same-tab sync
         window.dispatchEvent(new CustomEvent("languagechange", { detail: newLanguage }));
 
@@ -71,26 +74,44 @@ export function TranslationProvider({ children, initialLanguage = "en" }: Transl
       // Only save if language actually changed
       if (previousLanguage !== null && previousLanguage !== newLanguage) {
         try {
-          await userPreferencesApi.updateLanguagePreference({ language: newLanguage });
-        } catch (error) {
-          // Revert on error
-          if (import.meta.env.DEV) {
-            console.error("Failed to persist language preference, reverting:", error);
+          // Check if user is authenticated before calling API to avoid redirect
+          const { getAuthToken } = await import("@/lib/auth/get-auth-token");
+          const token = await getAuthToken();
+          // Only call API if user is authenticated
+          if (token) {
+            await userPreferencesApi.updateLanguagePreference({ language: newLanguage });
           }
-          setLanguageState(previousLanguage);
-          localStorage.setItem("app-language", previousLanguage);
+          // If no token, that's fine - language is stored in localStorage for the session
+        } catch (error) {
+          // Ignore all errors - language change is stored in localStorage anyway
+          // This prevents redirects on auth pages
+          // The error might be from getAuthToken or the API call, but we don't want to redirect
+          if (import.meta.env.DEV) {
+            // eslint-disable-next-line no-console
+            console.warn("Failed to persist language preference (stored in localStorage only):", error);
+          }
         }
       }
     },
     [] // No dependencies - uses functional update
   );
 
+  // Update ref when language state changes
+  useEffect(() => {
+    languageRef.current = language;
+  }, [language]);
+
   // Sync language state with localStorage and other provider instances
   useEffect(() => {
     const syncLanguage = () => {
       const storedLanguage = localStorage.getItem("app-language") as LanguageCode | null;
       if (storedLanguage && (storedLanguage === "en" || storedLanguage === "pl")) {
-        if (storedLanguage !== language) {
+        if (storedLanguage !== languageRef.current) {
+          if (import.meta.env.DEV) {
+            // eslint-disable-next-line no-console
+            console.log("[TranslationProvider] Polling detected language change:", storedLanguage);
+          }
+          languageRef.current = storedLanguage;
           setLanguageState(storedLanguage);
         }
       }
@@ -99,20 +120,38 @@ export function TranslationProvider({ children, initialLanguage = "en" }: Transl
     // Check localStorage on mount
     syncLanguage();
 
-    // Listen for language changes from other provider instances
+    // Poll localStorage periodically to catch same-tab changes
+    // (storage events only fire for cross-tab changes)
+    // Use a faster interval for better responsiveness
+    const pollInterval = setInterval(() => {
+      syncLanguage();
+    }, 100); // Check every 100ms for better responsiveness
+
+    // Listen for language changes from other provider instances (cross-tab)
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === "app-language") {
         const newLanguage = e.newValue as LanguageCode | null;
-        if (newLanguage && (newLanguage === "en" || newLanguage === "pl") && newLanguage !== language) {
+        if (newLanguage && (newLanguage === "en" || newLanguage === "pl") && newLanguage !== languageRef.current) {
           setLanguageState(newLanguage);
+          languageRef.current = newLanguage;
         }
       }
     };
 
     // Listen for custom language change events (for same-tab sync)
+    // Use ref to avoid dependency on language state
     const handleLanguageChange = (e: CustomEvent<LanguageCode>) => {
-      if (e.detail !== language) {
-        setLanguageState(e.detail);
+      const newLanguage = e.detail;
+      if (newLanguage && (newLanguage === "en" || newLanguage === "pl") && newLanguage !== languageRef.current) {
+        if (import.meta.env.DEV) {
+          // eslint-disable-next-line no-console
+          console.log("[TranslationProvider] Language change event received:", newLanguage);
+        }
+        // Update immediately for instant UI feedback
+        languageRef.current = newLanguage;
+        setLanguageState(newLanguage);
+        // Also update localStorage to keep in sync
+        localStorage.setItem("app-language", newLanguage);
       }
     };
 
@@ -120,28 +159,50 @@ export function TranslationProvider({ children, initialLanguage = "en" }: Transl
     window.addEventListener("languagechange", handleLanguageChange as EventListener);
 
     return () => {
+      clearInterval(pollInterval);
       window.removeEventListener("storage", handleStorageChange);
       window.removeEventListener("languagechange", handleLanguageChange as EventListener);
     };
-  }, [language]);
+  }, []); // Empty deps - use refs to avoid recreating listeners
 
   // Fetch user language preference on mount
+  // Priority: localStorage > API > initialLanguage
   useEffect(() => {
     const fetchLanguagePreference = async () => {
       try {
         setIsLoading(true);
-        const preference = await userPreferencesApi.getLanguagePreference();
-        setLanguageState(preference.language);
-        // Store in localStorage for cross-island sync
-        localStorage.setItem("app-language", preference.language);
+        // Check localStorage first (for unauthenticated users or quick language switching)
+        const storedLanguage = localStorage.getItem("app-language") as LanguageCode | null;
+        if (storedLanguage && (storedLanguage === "en" || storedLanguage === "pl")) {
+          // Use localStorage value immediately
+          setLanguageState(storedLanguage);
+        }
+
+        // Try to fetch from API (for authenticated users)
+        try {
+          const preference = await userPreferencesApi.getLanguagePreference();
+          // Only update if different from localStorage (API is source of truth for authenticated users)
+          if (preference.language !== storedLanguage) {
+            setLanguageState(preference.language);
+            localStorage.setItem("app-language", preference.language);
+          }
+        } catch {
+          // API call failed (user not authenticated or network error)
+          // If we have a storedLanguage, keep it (user might be unauthenticated but had a preference)
+          if (!storedLanguage) {
+            // No stored language and API failed - use initialLanguage
+            setLanguageState(initialLanguage);
+            localStorage.setItem("app-language", initialLanguage);
+          }
+          // If we have storedLanguage, we already set it above, so no need to override
+        }
       } catch (error) {
-        // If API call fails (e.g., user not authenticated, network error),
-        // fall back to default language
+        // Fallback to initialLanguage if everything fails
         if (import.meta.env.DEV) {
           // eslint-disable-next-line no-console
-          console.warn("Failed to fetch language preference, using default:", error);
+          console.warn("Failed to initialize language preference, using default:", error);
         }
-        // Keep default language (already set to initialLanguage)
+        setLanguageState(initialLanguage);
         localStorage.setItem("app-language", initialLanguage);
       } finally {
         setIsLoading(false);
@@ -152,15 +213,18 @@ export function TranslationProvider({ children, initialLanguage = "en" }: Transl
   }, [initialLanguage]);
 
   // Memoize context value to ensure React detects changes and triggers re-renders
-  const contextValue: TranslationContextValue = useMemo(
-    () => ({
+  const contextValue: TranslationContextValue = useMemo(() => {
+    if (import.meta.env.DEV) {
+      // eslint-disable-next-line no-console
+      console.log("[TranslationProvider] Context value updated, language:", language);
+    }
+    return {
       language,
       translations,
       setLanguage,
       isLoading,
-    }),
-    [language, translations, setLanguage, isLoading]
-  );
+    };
+  }, [language, translations, setLanguage, isLoading]);
 
   return <TranslationContext.Provider value={contextValue}>{children}</TranslationContext.Provider>;
 }

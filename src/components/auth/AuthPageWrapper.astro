@@ -1,0 +1,36 @@
+---
+import { LanguageSelector } from "@/components/LanguageSelector";
+import { AuthPageHeader } from "@/components/auth/AuthPageHeader";
+
+interface Props {
+  titleKey:
+    | "auth.welcomeBack"
+    | "auth.startPlanning"
+    | "auth.createAccountTitle"
+    | "auth.forgotPasswordTitle"
+    | "auth.resetPasswordTitle";
+  subtitleKey?: "auth.loginToAccount" | "auth.forgotPasswordSubtitle" | "auth.resetPasswordSubtitle";
+}
+
+const { titleKey, subtitleKey } = Astro.props;
+---
+
+<div class="w-full max-w-md">
+  <div class="text-center mb-8">
+    <div class="flex justify-center mb-4">
+      <img src="/favicon.png" alt="Diet Planner logo" class="h-16 w-16" />
+    </div>
+    <h1 class="text-3xl font-bold mb-2">Diet Planner</h1>
+    <p class="text-muted-foreground">AI-Powered Meal Planning for Dietitians</p>
+    <div class="flex justify-center mt-4">
+      <LanguageSelector client:load />
+    </div>
+  </div>
+  <section
+    class="w-full rounded-xl border bg-card text-card-foreground shadow-sm p-6"
+    aria-labelledby="auth-page-title"
+  >
+    <AuthPageHeader client:load titleKey={titleKey} subtitleKey={subtitleKey} />
+    <slot />
+  </section>
+</div>

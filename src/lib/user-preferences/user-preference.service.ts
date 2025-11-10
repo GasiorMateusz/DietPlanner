@@ -145,20 +145,20 @@ export async function updateUserThemePreference(
 }
 
 /**
- * Gets all user preferences (language and theme) from the database.
+ * Gets all user preferences (language, theme, and terms acceptance) from the database.
  * Returns defaults if no preference exists.
  * @param userId - The authenticated user's ID
  * @param supabase - The Supabase client instance
- * @returns All user preferences (defaults to "en" and "light" if not set)
+ * @returns All user preferences (defaults to "en", "light", and terms_accepted: false if not set)
  * @throws {DatabaseError} If the database query fails
  */
 export async function getAllUserPreferences(
   userId: string,
   supabase: SupabaseClient<Database>
-): Promise<{ language: LanguageCode; theme: Theme }> {
+): Promise<{ language: LanguageCode; theme: Theme; terms_accepted: boolean; terms_accepted_at: string | null }> {
   const { data, error } = await supabase
     .from("user_preferences")
-    .select("language, theme")
+    .select("language, theme, terms_accepted, terms_accepted_at")
     .eq("user_id", userId)
     .maybeSingle();
 
@@ -171,38 +171,42 @@ export async function getAllUserPreferences(
 
   // If no preference exists, return defaults
   if (!data) {
-    return { language: "en", theme: "light" };
+    return { language: "en", theme: "light", terms_accepted: false, terms_accepted_at: null };
   }
 
   return {
     language: data.language as LanguageCode,
     theme: data.theme as Theme,
+    terms_accepted: (data.terms_accepted as boolean) ?? false,
+    terms_accepted_at: (data.terms_accepted_at as string | null) ?? null,
   };
 }
 
 /**
- * Updates or creates user preferences (language and/or theme) in the database.
+ * Updates or creates user preferences (language, theme, and/or terms acceptance) in the database.
  * Uses upsert to handle both insert and update cases.
  * Accepts partial updates - only provided fields are updated.
  * @param userId - The authenticated user's ID
- * @param preferences - Partial preferences object (language and/or theme)
+ * @param preferences - Partial preferences object (language, theme, and/or terms_accepted)
  * @param supabase - The Supabase client instance
- * @returns Updated preferences (includes both language and theme)
+ * @returns Updated preferences (includes language, theme, terms_accepted, and terms_accepted_at)
  * @throws {DatabaseError} If the database operation fails
  */
 export async function updateUserPreferences(
   userId: string,
-  preferences: { language?: LanguageCode; theme?: Theme },
+  preferences: { language?: LanguageCode; theme?: Theme; terms_accepted?: boolean },
   supabase: SupabaseClient<Database>
-): Promise<{ language: LanguageCode; theme: Theme }> {
+): Promise<{ language: LanguageCode; theme: Theme; terms_accepted: boolean; terms_accepted_at: string | null }> {
   // First, get current preferences to preserve values not being updated
   const current = await getAllUserPreferences(userId, supabase);
 
   // Merge current preferences with new ones
+  // Note: terms_accepted_at is set automatically by database trigger when terms_accepted changes to true
   const updatedPreferences = {
     user_id: userId,
     language: preferences.language ?? current.language,
     theme: preferences.theme ?? current.theme,
+    terms_accepted: preferences.terms_accepted ?? current.terms_accepted,
     updated_at: new Date().toISOString(),
   };
 
@@ -211,7 +215,7 @@ export async function updateUserPreferences(
     .upsert(updatedPreferences, {
       onConflict: "user_id",
     })
-    .select("language, theme")
+    .select("language, theme, terms_accepted, terms_accepted_at")
     .single();
 
   if (error) {
@@ -224,5 +228,7 @@ export async function updateUserPreferences(
   return {
     language: data.language as LanguageCode,
     theme: data.theme as Theme,
+    terms_accepted: (data.terms_accepted as boolean) ?? false,
+    terms_accepted_at: (data.terms_accepted_at as string | null) ?? null,
   };
 }

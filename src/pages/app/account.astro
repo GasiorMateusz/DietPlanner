@@ -1,0 +1,42 @@
+---
+import PrivateLayout from "../../layouts/PrivateLayout.astro";
+import { AccountProfile } from "../../components/account/AccountProfile";
+import { createSupabaseServerClient } from "@/db/supabase.server";
+import * as UserPreferenceService from "@/lib/user-preferences/user-preference.service";
+
+// Authentication is handled by middleware for /app/* routes
+// If user is not authenticated, middleware will redirect to /auth/login
+const supabase = createSupabaseServerClient(Astro.cookies);
+const {
+  data: { user },
+} = await supabase.auth.getUser();
+
+// Get user email
+const userEmail = user?.email || "";
+
+// Get user preferences including terms acceptance
+let termsAccepted = false;
+let termsAcceptedAt: string | null = null;
+
+if (user?.id) {
+  try {
+    const preferences = await UserPreferenceService.getAllUserPreferences(user.id, supabase);
+    termsAccepted = preferences.terms_accepted;
+    termsAcceptedAt = preferences.terms_accepted_at;
+  } catch (error) {
+    // If fetching preferences fails, log error but continue
+    // Terms acceptance will show as "not accepted" in the UI
+    if (import.meta.env.DEV) {
+      console.error("Failed to fetch user preferences:", error);
+    }
+  }
+}
+
+const title = "My Account - Diet Planner";
+---
+
+<PrivateLayout title={title}>
+  <main class="container mx-auto px-4 py-8 max-w-4xl">
+    <AccountProfile client:load userEmail={userEmail} termsAccepted={termsAccepted} termsAcceptedAt={termsAcceptedAt} />
+  </main>
+</PrivateLayout>
