@@ -10,7 +10,9 @@
  */
 export function getAppUrl(): string {
   const envUrl = import.meta.env.PUBLIC_APP_URL;
-  const isProduction = typeof window !== "undefined" && window.location &&
+  const isProduction =
+    typeof window !== "undefined" &&
+    window.location &&
     !window.location.hostname.includes("localhost") &&
     !window.location.hostname.includes("127.0.0.1");
 
@@ -49,7 +51,7 @@ export function getAppUrl(): string {
   // PRIORITY 2: Fallback to window.location.origin (only allowed in development)
   if (typeof window !== "undefined" && window.location) {
     const origin = window.location.origin;
-    
+
     if (isProduction) {
       // In production, PUBLIC_APP_URL is REQUIRED
       // Throw error instead of silently falling back
@@ -58,7 +60,7 @@ export function getAppUrl(): string {
           `Please set PUBLIC_APP_URL environment variable to your production URL (e.g., https://yourdomain.com).`
       );
     }
-    
+
     // Development: allow window.location.origin fallback
     return origin;
   }
