@@ -213,7 +213,7 @@ describe("resolveDailySummary", () => {
       expect(result.kcal).not.toBe(mockStartupData.target_kcal);
     });
 
-    it("should use parsed summary with zero macros if kcal > 0", () => {
+    it("should use calculated values when parsed summary has zero macros even if kcal > 0", () => {
       const parsedSummary: MealPlanContentDailySummary = {
         kcal: 2000,
         proteins: 0,
@@ -223,7 +223,11 @@ describe("resolveDailySummary", () => {
 
       const result = resolveDailySummary(parsedSummary, mockStartupData);
 
-      expect(result).toEqual(parsedSummary);
+      // Should use calculated values since parsed summary has invalid macros (zeros)
+      expect(result.kcal).toBe(2000);
+      expect(result.proteins).toBe(150); // (2000 * 30) / 100 / 4
+      expect(result.fats).toBe(56); // (2000 * 25) / 100 / 9
+      expect(result.carbs).toBe(225); // (2000 * 45) / 100 / 4
     });
   });
 
@@ -244,14 +248,15 @@ describe("resolveDailySummary", () => {
       expect(result.carbs).toBe(225); // (2000 * 45) / 100 / 4
     });
 
-    it("should return zeros when startup data is null, undefined, or missing required fields", () => {
+    it("should return minimum values when startup data is null, undefined, or missing required fields", () => {
       const parsedSummary: MealPlanContentDailySummary = {
         kcal: 0,
         proteins: 0,
         fats: 0,
         carbs: 0,
       };
-      const zeroResult = { kcal: 0, proteins: 0, fats: 0, carbs: 0 };
+      // New logic ensures minimum values (1) to pass validation when data is missing
+      const minimumResult = { kcal: 1, proteins: 1, fats: 1, carbs: 1 };
 
       const startupDataWithoutMacros: MealPlanStartupData = {
         ...mockStartupData,
@@ -263,15 +268,15 @@ describe("resolveDailySummary", () => {
         target_kcal: null,
       };
 
-      expect(resolveDailySummary(parsedSummary, null)).toEqual(zeroResult);
-      expect(resolveDailySummary(parsedSummary, undefined)).toEqual(zeroResult);
-      expect(resolveDailySummary(parsedSummary, startupDataWithoutMacros)).toEqual(zeroResult);
-      expect(resolveDailySummary(parsedSummary, startupDataWithoutKcal)).toEqual(zeroResult);
+      expect(resolveDailySummary(parsedSummary, null)).toEqual(minimumResult);
+      expect(resolveDailySummary(parsedSummary, undefined)).toEqual(minimumResult);
+      expect(resolveDailySummary(parsedSummary, startupDataWithoutMacros)).toEqual(minimumResult);
+      expect(resolveDailySummary(parsedSummary, startupDataWithoutKcal)).toEqual(minimumResult);
     });
   });
 
   describe("edge cases", () => {
-    it("should handle parsed summary with kcal = 1 (borderline case)", () => {
+    it("should use calculated values when parsed summary has kcal = 1 but zero macros", () => {
       const parsedSummary: MealPlanContentDailySummary = {
         kcal: 1,
         proteins: 0,
@@ -281,8 +286,11 @@ describe("resolveDailySummary", () => {
 
       const result = resolveDailySummary(parsedSummary, mockStartupData);
 
-      // Should use parsed summary since kcal > 0
-      expect(result).toEqual(parsedSummary);
+      // Should use calculated values since parsed summary has invalid macros (zeros)
+      expect(result.kcal).toBe(2000);
+      expect(result.proteins).toBe(150); // (2000 * 30) / 100 / 4
+      expect(result.fats).toBe(56); // (2000 * 25) / 100 / 9
+      expect(result.carbs).toBe(225); // (2000 * 45) / 100 / 4
     });
 
     it("should handle negative kcal in parsed summary", () => {

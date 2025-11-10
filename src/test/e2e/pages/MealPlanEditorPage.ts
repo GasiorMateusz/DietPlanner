@@ -28,6 +28,8 @@ export class MealPlanEditorPage {
    */
   async fillPlanName(name: string): Promise<void> {
     await this.planNameInput.fill(name);
+    // Wait a bit for form validation to complete
+    await this.page.waitForTimeout(100);
   }
 
   /**
@@ -44,6 +46,8 @@ export class MealPlanEditorPage {
     const mealNameInput = this.getMealNameInput(mealIndex);
     await mealNameInput.waitFor({ state: "visible" });
     await mealNameInput.fill(name);
+    // Wait a bit for form validation to complete
+    await this.page.waitForTimeout(100);
   }
 
   /**
@@ -78,10 +82,81 @@ export class MealPlanEditorPage {
 
   /**
    * Performs the complete save flow.
+   * Uses Promise.all to wait for both click and navigation simultaneously,
+   * similar to LoginPage.login() to avoid race conditions.
    */
   async saveAndWaitForDashboard(): Promise<void> {
-    await this.save();
-    await this.waitForNavigationToDashboard();
+    // Wait for button to be visible and enabled before clicking
+    await this.saveButton.waitFor({ state: "visible", timeout: 5000 });
+    await this.saveButton.waitFor({ state: "attached" });
+
+    // Ensure button is enabled (not disabled)
+    await this.page.waitForFunction(
+      (testId) => {
+        const button = document.querySelector(`[data-testid="${testId}"]`) as HTMLButtonElement;
+        return button && !button.disabled;
+      },
+      "meal-plan-editor-save-button",
+      { timeout: 10000 }
+    );
+
+    // Verify form values before saving
+    const planName = await this.getPlanName();
+    if (!planName || planName.trim() === "") {
+      throw new Error("Plan name is empty. Cannot save without plan name.");
+    }
+
+    // Check for any existing error messages before saving
+    const errorAlert = this.page.locator('[role="alert"]').first();
+    const hasError = await errorAlert.isVisible().catch(() => false);
+    if (hasError) {
+      const errorText = await errorAlert.textContent();
+      throw new Error(`Form has validation errors before save: ${errorText}`);
+    }
+
+    // Wait a bit more to ensure form state is stable
+    await this.page.waitForTimeout(200);
+
+    // Use Promise.all to wait for both click and navigation simultaneously
+    // Wait for URL change AND dashboard elements to appear (more reliable)
+    try {
+      await Promise.all([
+        // Wait for URL change
+        this.page.waitForURL(/\/app\/dashboard/, { timeout: 20000 }),
+        // Also wait for dashboard elements to ensure page is loaded
+        this.page.waitForSelector('[data-testid="dashboard-heading"]', { timeout: 20000, state: "visible" }),
+        this.save(),
+      ]);
+    } catch (error) {
+      // If navigation failed, check for error messages
+      const errorAfterSave = await errorAlert.isVisible().catch(() => false);
+      if (errorAfterSave) {
+        const errorText = await errorAlert.textContent();
+        throw new Error(`Save failed with error: ${errorText}. Original error: ${error}`);
+      }
+      // Check if we're still on the editor page (save might have failed silently)
+      const currentUrl = this.page.url();
+      if (currentUrl.includes("/app/editor")) {
+        // Check for any validation errors in form fields
+        const planNameError = this.page
+          .locator('input[data-testid="meal-plan-editor-plan-name-input"]')
+          .evaluate((el) => {
+            const input = el as HTMLInputElement;
+            return input.ariaInvalid === "true" || input.getAttribute("aria-invalid") === "true";
+          })
+          .catch(() => false);
+
+        if (await planNameError) {
+          throw new Error("Plan name validation failed. Form may not be valid.");
+        }
+
+        throw new Error(`Navigation to dashboard failed. Still on editor page: ${currentUrl}`);
+      }
+      throw error;
+    }
+
+    // Additional wait to ensure page is fully loaded
+    await this.page.waitForLoadState("networkidle");
   }
 
   /**
