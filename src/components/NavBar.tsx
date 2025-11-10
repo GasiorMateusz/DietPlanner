@@ -172,10 +172,11 @@ export function NavBar({ userEmail: initialUserEmail, className }: NavBarProps) 
           {/* Logo/Brand */}
           <a
             href="/app/dashboard"
-            className="text-xl font-bold text-foreground hover:opacity-80 transition-opacity"
+            className="flex items-center gap-2 text-xl font-bold text-foreground hover:opacity-80 transition-opacity"
             aria-label="Diet Planner Home"
           >
-            Diet Planner
+            <img src="/favicon.png" alt="Diet Planner" className="h-6 w-6" />
+            <span>Diet Planner</span>
           </a>
 
           {/* User Menu */}
