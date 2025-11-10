@@ -53,10 +53,12 @@ export const onRequest = defineMiddleware(async (context, next) => {
         // Only redirect if we have both a user AND a valid session with access token
         // This ensures cookies are properly synced
         const session = await supabase.auth.getSession();
-        if (session.data.session?.access_token) {
+        // Double-check: session must exist, have access_token, AND no session error
+        if (session.data.session?.access_token && !session.error) {
           return context.redirect("/app/dashboard", 307);
         }
         // If no valid session, allow access to auth pages (prevents loops)
+        // This is critical - don't redirect if session isn't fully established
         return await next();
       }
     }

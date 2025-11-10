@@ -53,16 +53,19 @@ export default function LoginForm({ className }: Props) {
       // Verify session is established and wait for cookies to be set
       // This prevents redirect loops when middleware checks before cookies are available
       let sessionConfirmed = false;
-      for (let i = 0; i < 10; i++) {
+      // Increase retry count and wait time for Cloudflare Pages edge environment
+      for (let i = 0; i < 20; i++) {
         const {
           data: { session },
+          error: sessionError,
         } = await supabase.auth.getSession();
-        if (session?.access_token) {
+        // Only confirm if we have a valid session with access token and no error
+        if (session?.access_token && !sessionError) {
           sessionConfirmed = true;
           break;
         }
-        // Wait 50ms between checks
-        await new Promise((resolve) => setTimeout(resolve, 50));
+        // Wait 100ms between checks (increased from 50ms for edge environments)
+        await new Promise((resolve) => setTimeout(resolve, 100));
       }
 
       if (!sessionConfirmed) {
@@ -72,6 +75,9 @@ export default function LoginForm({ className }: Props) {
         return;
       }
 
+      // Add a small delay before redirect to ensure cookies are fully propagated
+      // This is especially important in edge environments like Cloudflare Pages
+      await new Promise((resolve) => setTimeout(resolve, 200));
       // Use full page reload to ensure cookies are synced and middleware can detect session
       // eslint-disable-next-line react-compiler/react-compiler
       window.location.href = "/app/dashboard";

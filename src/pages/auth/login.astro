@@ -15,8 +15,19 @@ try {
   // Verify if user is already authenticated using getUser() to ensure session is valid
   const {
     data: { user: authenticatedUser },
+    error: getUserError,
   } = await supabase.auth.getUser();
-  user = authenticatedUser;
+  
+  // Only consider user authenticated if we have both user AND no error
+  // Also verify session exists to prevent redirect loops
+  if (!getUserError && authenticatedUser) {
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+    // Only redirect if we have a valid session with access token
+    // This prevents redirect loops when cookies aren't fully synced
+    if (!sessionError && sessionData.session?.access_token) {
+      user = authenticatedUser;
+    }
+  }
   // eslint-disable-next-line no-console
   console.log("[login.astro] User check result:", { hasUser: !!user });
 } catch (error) {
