@@ -53,8 +53,8 @@ export const userPreferencesApi = {
   },
 
   /**
-   * Gets all user preferences (language and theme).
-   * @returns All preferences (defaults to "en" and "light" if not set or user not authenticated)
+   * Gets all user preferences (language, theme, and terms acceptance).
+   * @returns All preferences (defaults to "en", "light", and terms_accepted: false if not set or user not authenticated)
    * @throws {Error} Only for non-401 errors (network issues, etc.)
    */
   async getAllPreferences(): Promise<GetAllPreferencesResponseDto> {
@@ -62,7 +62,7 @@ export const userPreferencesApi = {
       const token = await getAuthToken();
       if (!token) {
         // User not authenticated, return defaults
-        return { language: "en", theme: "light" };
+        return { language: "en", theme: "light", terms_accepted: false, terms_accepted_at: null };
       }
 
       const headers: HeadersInit = {
@@ -78,7 +78,7 @@ export const userPreferencesApi = {
       if (!response.ok) {
         if (response.status === 401) {
           // User not authenticated, return defaults (don't redirect here)
-          return { language: "en", theme: "light" };
+          return { language: "en", theme: "light", terms_accepted: false, terms_accepted_at: null };
         }
         throw new Error("Failed to fetch user preferences");
       }
@@ -87,13 +87,13 @@ export const userPreferencesApi = {
     } catch (error) {
       // If getAuthToken throws or fetch fails, return defaults
       if (error instanceof Error && error.message === "Unauthorized") {
-        return { language: "en", theme: "light" };
+        return { language: "en", theme: "light", terms_accepted: false, terms_accepted_at: null };
       }
       // For other errors, still return defaults but log in dev
       if (import.meta.env.DEV) {
         console.warn("Failed to fetch user preferences:", error);
       }
-      return { language: "en", theme: "light" };
+      return { language: "en", theme: "light", terms_accepted: false, terms_accepted_at: null };
     }
   },
 

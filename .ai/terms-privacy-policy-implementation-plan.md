@@ -5,7 +5,7 @@
 The Terms and Privacy Policy feature implements comprehensive legal documentation and user consent management for the Diet Planner application. This feature addresses GDPR compliance requirements for processing health-related data (special category data under Article 9) in Poland, establishes the platform's role as a data processor, and shifts maximum legal responsibility to users (dietitians) who act as data controllers for their clients' information.
 
 **Key Objectives:**
-- Provide bilingual Terms of Service and Privacy Policy documents (Polish and English) in a single markdown file
+- Provide bilingual Terms of Service and Privacy Policy documents (Polish and English) in JSON format
 - Require explicit consent during registration with checkboxes for important sections (UX only, not stored)
 - Store only boolean acceptance flag in `user_preferences` table
 - Allow users to view current terms from their account profile
@@ -15,9 +15,10 @@ The Terms and Privacy Policy feature implements comprehensive legal documentatio
 - Support future transition to paid model
 
 **Simplifications:**
-- Single markdown file for Terms and Privacy Policy (reused in frontend)
+- Single JSON file per language for Terms and Privacy Policy (structured data with sections)
 - Checkboxes are UX-only to ensure users read important sections (not stored in database)
 - Only store boolean `terms_accepted` flag in `user_preferences` table (no versioning, no section tracking)
+- JSON structure allows easy parsing, type safety, and content management
 
 **User Stories:**
 - US-XXX: Users must accept Terms and Privacy Policy during registration
@@ -59,9 +60,9 @@ register.astro (Astro Page - Updated)
         │   │   ├── TabsList
         │   │   ├── TabsTrigger (Terms)
         │   │   ├── TabsTrigger (Privacy Policy)
-        │   │   ├── TabsContent (Terms Content)
+        │           │   ├── TabsContent (Terms Content)
         │   │   │   ├── ScrollArea (Shadcn/ui ScrollArea)
-        │   │   │   ├── Markdown Content (Rendered from markdown file)
+        │   │   │   ├── Section Content (Rendered from JSON, markdown content within)
         │   │   │   ├── Checkbox (Section 1: Service Description) - UX only
         │   │   │   ├── Checkbox (Section 2: User Responsibilities) - UX only
         │   │   │   ├── Checkbox (Section 3: Data Processing) - UX only
@@ -70,7 +71,7 @@ register.astro (Astro Page - Updated)
         │   │   │   └── Checkbox (Section 6: Terms Modifications) - UX only
         │   │   └── TabsContent (Privacy Policy Content)
         │   │       ├── ScrollArea
-        │   │       ├── Markdown Content (Rendered from markdown file)
+        │   │       ├── Section Content (Rendered from JSON, markdown content within)
         │   │       ├── Checkbox (Section 1: Data Controller vs Processor) - UX only
         │   │       ├── Checkbox (Section 2: Data Categories) - UX only
         │   │       ├── Checkbox (Section 3: Third-Party Services) - UX only
@@ -117,7 +118,7 @@ account.astro (Astro Page - New)
 
 ### TermsAndPrivacyModal (React Component - New)
 
-- **Component description**: A modal dialog component that displays the Terms of Service and Privacy Policy documents in a tabbed interface. Users can switch between Terms and Privacy Policy tabs, scroll through content, and check off important sections. The modal can be opened from registration form or account profile. Supports both Polish and English languages based on user's language preference.
+- **Component description**: A modal dialog component that displays the Terms of Service and Privacy Policy documents in a tabbed interface. Content is loaded from JSON files (one per language) which contain structured sections with headings and markdown content. Users can switch between Terms and Privacy Policy tabs, scroll through content, and check off important sections. The modal can be opened from registration form or account profile. Supports both Polish and English languages based on user's language preference.
 
 - **Main elements**:
   - `<Dialog>`: Root dialog component with `open` and `onOpenChange` props
@@ -284,15 +285,18 @@ interface AccountProfileProps {
 - **Local state** (React `useState`):
   - `checkedSections`: `Set<string>` - Tracks which section checkboxes are checked (UX only, not sent to API)
   - `activeTab`: `"terms" | "privacy"` - Current active tab
-  - `markdownContent`: `string | null` - Loaded markdown content (from static file)
+  - `termsContent`: `TermsContent | null` - Loaded and parsed JSON content (from static JSON file)
+  - `loading`: `boolean` - Loading state while fetching JSON
+  - `error`: `string | null` - Error message if JSON loading fails
 
 - **State flow**:
   1. Component mounts or `open` changes to `true`
-  2. Loads markdown file based on current language (`/terms-privacy-policy.en.md` or `/terms-privacy-policy.pl.md`)
-  3. User checks/unchecks section checkboxes (UX only, ensures user reads important sections)
-  4. `checkedSections` state updates
-  5. "Accept All" button enabled/disabled based on all required sections being checked
-  6. On "Accept All" click, `onAccept` callback fires, modal closes (only boolean acceptance is stored)
+  2. Loads JSON file based on current language (`/terms-privacy-policy.en.json` or `/terms-privacy-policy.pl.json`)
+  3. JSON is parsed into structured sections (id, heading, content)
+  4. User checks/unchecks section checkboxes (UX only, ensures user reads important sections)
+  5. `checkedSections` state updates
+  6. "Accept All" button enabled/disabled based on all required sections being checked
+  7. On "Accept All" click, `onAccept` callback fires, modal closes (only boolean acceptance is stored)
 
 ### RegisterForm State (Updates)
 
@@ -371,12 +375,15 @@ interface AccountProfileProps {
   - `401 Unauthorized`: User not authenticated
   - `500 Internal Server Error`: Database error
 
-### Terms Content (Static Files)
+### Terms Content (Static JSON Files)
 
-- **Description**: Terms and Privacy Policy content is served as static markdown files
-- **Location**: `public/terms-privacy-policy.en.md` and `public/terms-privacy-policy.pl.md`
-- **Access**: Direct file access via URL (e.g., `/terms-privacy-policy.en.md`)
-- **No API Endpoint**: Content is loaded directly in frontend component via fetch or import
+- **Description**: Terms and Privacy Policy content is served as static JSON files with structured sections
+- **Location**: `public/terms-privacy-policy.en.json` and `public/terms-privacy-policy.pl.json`
+- **Structure**: JSON files contain `terms` and `privacy` objects, each with `title` and `sections` array
+- **Section Structure**: Each section has `id`, `heading`, and `content` (markdown string)
+- **Access**: Direct file access via URL (e.g., `/terms-privacy-policy.en.json`)
+- **No API Endpoint**: Content is loaded directly in frontend component via fetch
+- **Benefits**: Type-safe parsing, easier content management, no complex markdown parsing required
 
 ### Existing API Endpoints (Used)
 
@@ -518,7 +525,7 @@ export async function updatePreferences(
   - **Recovery**: User can refresh page
 
 - **Failed to Load Terms Content**:
-  - **Error Type**: File loading error (when opening modal)
+  - **Error Type**: File loading or JSON parsing error (when opening modal)
   - **Display**: Error message in modal
   - **User Message**: "Failed to load terms content. Please try again." (translated)
   - **Recovery**: User can close and reopen modal, or refresh page
@@ -531,11 +538,11 @@ export async function updatePreferences(
   - **User Message**: "Unable to load terms. Please check your connection and try again." (translated)
   - **Recovery**: Retry button or close and reopen
 
-- **Invalid Language**:
-  - **Error Type**: API validation error
-  - **Display**: Falls back to English content
+- **Invalid Language or JSON Structure**:
+  - **Error Type**: File not found or invalid JSON structure
+  - **Display**: Falls back to English content automatically
   - **User Message**: None (silent fallback)
-  - **Recovery**: Automatic fallback
+  - **Recovery**: Automatic fallback to English JSON file
 
 ## 11. Terms and Privacy Policy Content Structure
 
@@ -721,12 +728,44 @@ export const TERMS_CONFIG = {
 
 ### Terms Content Files Structure
 
-Terms and Privacy Policy content will be stored as single markdown files (one per language):
+Terms and Privacy Policy content will be stored as JSON files (one per language):
 
-- `public/terms-privacy-policy.en.md` - English Terms of Service and Privacy Policy (combined in one file)
-- `public/terms-privacy-policy.pl.md` - Polish Terms of Service and Privacy Policy (combined in one file)
+- `public/terms-privacy-policy.en.json` - English Terms of Service and Privacy Policy (structured JSON)
+- `public/terms-privacy-policy.pl.json` - Polish Terms of Service and Privacy Policy (structured JSON)
 
-**File Structure**: Each markdown file contains both Terms of Service and Privacy Policy sections, separated by headers. The frontend component will parse the markdown and split it into two tabs (Terms / Privacy Policy) based on section headers.
+**JSON Structure**:
+```json
+{
+  "terms": {
+    "title": "Terms of Service",
+    "sections": [
+      {
+        "id": "service-description",
+        "heading": "1. Service Description",
+        "content": "Markdown content here..."
+      }
+    ]
+  },
+  "privacy": {
+    "title": "Privacy Policy",
+    "sections": [
+      {
+        "id": "data-controller",
+        "heading": "1. Data Controller vs Processor",
+        "content": "Markdown content here..."
+      }
+    ]
+  }
+}
+```
+
+**Benefits of JSON Format**:
+- Type-safe parsing with TypeScript
+- Easy to validate structure
+- Simple iteration over sections
+- No complex markdown parsing required
+- Easy to update and maintain
+- Section content can still contain markdown (rendered with react-markdown)
 
 ## 14. Email Notifications (Future Implementation)
 
@@ -774,27 +813,30 @@ Terms and Privacy Policy content will be stored as single markdown files (one pe
 6. **Create Terms and Privacy Policy content**
    - Write comprehensive Terms of Service in English (6 sections)
    - Write comprehensive Privacy Policy in English (6 sections)
-   - Combine both into single markdown file: `public/terms-privacy-policy.en.md`
-   - Translate to Polish: `public/terms-privacy-policy.pl.md`
-   - Use markdown headers to separate Terms and Privacy Policy sections
+   - Structure content as JSON: `public/terms-privacy-policy.en.json`
+   - Translate to Polish: `public/terms-privacy-policy.pl.json`
+   - Each section should have: `id`, `heading`, and `content` (markdown string)
+   - Use section IDs matching `TERMS_CONFIG` required sections
 
-7. **Create markdown parser utility (optional)**
-   - Create `src/lib/terms/markdown-parser.ts` to split markdown into Terms/Privacy sections
-   - Parse markdown headers to identify section boundaries
-   - Or use simple string splitting based on "# Terms of Service" and "# Privacy Policy" headers
+7. **Create terms loader utility**
+   - Create `src/lib/terms/terms-loader.ts` to load and parse JSON files
+   - Create `src/lib/terms/terms.types.ts` with TypeScript types for JSON structure
+   - Implement error handling and fallback to English if language file not found
+   - Validate JSON structure on load
 
 ### Phase 3: UI Components
 
 8. **Create TermsAndPrivacyModal component**
    - Create `src/components/terms/TermsAndPrivacyModal.tsx`
    - Implement tabbed interface (Terms/Privacy)
-   - Load markdown file from `/terms-privacy-policy.{lang}.md` based on current language
-   - Parse markdown to split into Terms and Privacy Policy sections
-   - Render markdown content (use a markdown renderer like `react-markdown` or `marked`)
+   - Load JSON file from `/terms-privacy-policy.{lang}.json` based on current language
+   - Parse JSON into structured sections (no complex parsing needed)
+   - Render section content (markdown content within sections, rendered with `react-markdown`)
    - Implement checkboxes for required sections (UX only, not stored)
    - Implement "Accept All" button logic (enabled when all checkboxes checked)
    - Support both "registration" (with checkboxes) and "view" (read-only, no checkboxes) modes
    - Add translations for UI elements
+   - Handle loading states and errors gracefully
 
 9. **Update RegisterForm component**
    - Update `src/components/auth/RegisterForm.tsx`
@@ -835,7 +877,7 @@ Terms and Privacy Policy content will be stored as single markdown files (one pe
 
 14. **Test registration flow**
     - Test terms modal opens and closes
-    - Test markdown content loads correctly based on language
+    - Test JSON content loads correctly based on language
     - Test all checkboxes must be checked (UX validation)
     - Test "Accept All" button enables/disables correctly
     - Test terms acceptance boolean is recorded in database (not which sections were checked)
@@ -855,10 +897,12 @@ Terms and Privacy Policy content will be stored as single markdown files (one pe
     - Test error handling for all endpoints
 
 17. **Test error handling**
-    - Test network errors during markdown file loading
+    - Test network errors during JSON file loading
+    - Test invalid JSON structure errors (should show error message)
     - Test API errors during terms acceptance
     - Test validation errors for invalid boolean values
-    - Test markdown file not found errors (fallback to English)
+    - Test JSON file not found errors (fallback to English)
+    - Test markdown rendering within section content works correctly
 
 18. **Test accessibility**
     - Test keyboard navigation in modal
@@ -886,8 +930,10 @@ Terms and Privacy Policy content will be stored as single markdown files (one pe
 22. **Final testing**
     - End-to-end user flow testing
     - Cross-browser testing
-    - Performance testing (terms content loading)
+    - Performance testing (JSON content loading - should be faster than markdown parsing)
     - Security testing (RLS policies, authentication)
+    - Test JSON structure validation
+    - Test markdown rendering within JSON sections
 
 ## 16. Legal Compliance Notes
 

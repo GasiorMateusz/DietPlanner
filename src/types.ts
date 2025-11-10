@@ -295,21 +295,24 @@ export interface UpdateThemePreferenceResponseDto {
 }
 
 /**
- * **DTO**: The response for retrieving all user preferences (language and theme).
+ * **DTO**: The response for retrieving all user preferences (language, theme, and terms acceptance).
  * @Endpoint `GET /api/user-preferences`
  */
 export interface GetAllPreferencesResponseDto {
   language: "en" | "pl";
   theme: Theme;
+  terms_accepted: boolean;
+  terms_accepted_at: string | null;
 }
 
 /**
- * **Command**: The request payload for updating user preferences (language and/or theme).
+ * **Command**: The request payload for updating user preferences (language, theme, and/or terms acceptance).
  * @Endpoint `PUT /api/user-preferences`
  */
 export interface UpdatePreferencesCommand {
   language?: "en" | "pl";
   theme?: Theme;
+  terms_accepted?: boolean;
 }
 
 /**
@@ -319,4 +322,17 @@ export interface UpdatePreferencesCommand {
 export interface UpdatePreferencesResponseDto {
   language: "en" | "pl";
   theme: Theme;
+  terms_accepted: boolean;
+  terms_accepted_at: string | null;
+}
+
+/**
+ * **DTO**: The response for retrieving user's terms acceptance status.
+ * @Endpoint `GET /api/user-preferences` (extended response)
+ */
+export interface GetUserPreferencesResponseDto {
+  language: "en" | "pl";
+  theme: Theme;
+  terms_accepted: boolean;
+  terms_accepted_at: string | null;
 }

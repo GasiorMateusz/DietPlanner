@@ -11,6 +11,8 @@ import { supabaseClient as supabase } from "@/db/supabase.client";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { getAuthRedirectUrl } from "@/lib/utils/get-app-url";
 import { useSessionConfirmation } from "@/components/hooks/useSessionConfirmation";
+import { TermsAndPrivacyModal } from "@/components/terms/TermsAndPrivacyModal";
+import { userPreferencesApi } from "@/lib/api/user-preferences.client";
 
 interface Props {
   className?: string;
@@ -21,8 +23,8 @@ export default function RegisterForm({ className }: Props) {
   const emailId = React.useId();
   const passwordId = React.useId();
   const confirmId = React.useId();
-  const termsId = React.useId();
   const [success, setSuccess] = React.useState<string | null>(null);
+  const [isTermsModalOpen, setIsTermsModalOpen] = React.useState(false);
   const { confirmSession } = useSessionConfirmation();
 
   // Cast defaultValues to avoid strict literal type mismatch between
@@ -72,6 +74,7 @@ export default function RegisterForm({ className }: Props) {
     // If session exists, user is automatically logged in
     if (!signUpData.session) {
       // Email confirmation required
+      // Terms acceptance will be recorded after email confirmation and login
       setSuccess(t("auth.accountCreated"));
     } else {
       // Email confirmation disabled - user is automatically logged in
@@ -80,6 +83,17 @@ export default function RegisterForm({ className }: Props) {
       const sessionConfirmed = await confirmSession();
 
       if (sessionConfirmed) {
+        // Record terms acceptance in user preferences
+        try {
+          await userPreferencesApi.updatePreferences({ terms_accepted: true });
+        } catch (error) {
+          // Log error but don't block registration flow
+          // Terms acceptance can be set later from account profile
+          if (import.meta.env.DEV) {
+            console.error("Failed to record terms acceptance:", error);
+          }
+        }
+
         // Use full page reload to ensure cookies are synced and middleware can detect session
         // eslint-disable-next-line react-compiler/react-compiler
         window.location.href = "/app/dashboard";
@@ -90,6 +104,22 @@ export default function RegisterForm({ className }: Props) {
       }
     }
   });
+
+  // Handle opening terms modal
+  const handleViewTerms = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsTermsModalOpen(true);
+  };
+
+  // Handle closing terms modal
+  const handleTermsModalClose = (open: boolean) => {
+    setIsTermsModalOpen(open);
+  };
+
+  // Handle Accept All button - accepts terms after user has viewed them
+  const handleAcceptAll = () => {
+    form.setValue("termsAccepted", true, { shouldValidate: true });
+  };
 
   return (
     <form onSubmit={onSubmit} className={cn("space-y-4", className)} noValidate>
@@ -161,26 +191,31 @@ export default function RegisterForm({ className }: Props) {
         ) : null}
       </div>
 
-      <div className="flex items-start gap-2">
-        <input
-          id={termsId}
-          type="checkbox"
-          className="mt-1 h-4 w-4 rounded border-input"
-          {...form.register("termsAccepted")}
-          aria-invalid={Boolean(form.formState.errors.termsAccepted) || undefined}
-          aria-describedby={form.formState.errors.termsAccepted ? `${termsId}-error` : undefined}
-        />
-        <div>
-          <Label htmlFor={termsId} className="cursor-pointer">
-            {t("auth.termsAccept")}
-          </Label>
-          {form.formState.errors.termsAccepted ? (
-            <p id={`${termsId}-error`} className="text-sm text-destructive">
-              {form.formState.errors.termsAccepted.message}
-            </p>
-          ) : null}
+      <div className="space-y-2">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={handleViewTerms}
+            className="text-primary underline-offset-4 hover:underline text-sm"
+          >
+            {t("terms.viewTerms")}
+          </button>
         </div>
+        <Button
+          type="button"
+          variant={form.watch("termsAccepted") ? "default" : "outline"}
+          onClick={handleAcceptAll}
+          disabled={form.watch("termsAccepted")}
+          className="w-full"
+        >
+          {form.watch("termsAccepted") ? t("terms.acceptAll") + " ✓" : t("terms.acceptAll")}
+        </Button>
+        {form.formState.errors.termsAccepted ? (
+          <p className="text-sm text-destructive">{form.formState.errors.termsAccepted.message}</p>
+        ) : null}
       </div>
+
+      <TermsAndPrivacyModal open={isTermsModalOpen} onOpenChange={handleTermsModalClose} mode="view" />
 
       <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
         {form.formState.isSubmitting ? t("auth.creatingAccount") : t("auth.createAccount")}

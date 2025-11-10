@@ -44,6 +44,8 @@ export const updateThemePreferenceSchema = z.object({
 export const getAllPreferencesResponseSchema = z.object({
   language: languageCodeSchema,
   theme: themeSchema,
+  terms_accepted: z.boolean(),
+  terms_accepted_at: z.string().nullable(),
 });
 
 /**
@@ -53,7 +55,8 @@ export const updatePreferencesSchema = z
   .object({
     language: languageCodeSchema.optional(),
     theme: themeSchema.optional(),
+    terms_accepted: z.boolean().optional(),
   })
-  .refine((data) => data.language !== undefined || data.theme !== undefined, {
-    message: "At least one preference (language or theme) must be provided",
+  .refine((data) => data.language !== undefined || data.theme !== undefined || data.terms_accepted !== undefined, {
+    message: "At least one preference (language, theme, or terms_accepted) must be provided",
   });

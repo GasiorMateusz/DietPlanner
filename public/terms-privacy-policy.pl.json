@@ -1,0 +1,112 @@
+{
+  "terms": {
+    "title": "Warunki Usługi",
+    "sections": [
+      {
+        "id": "introduction",
+        "heading": "Wprowadzenie",
+        "content": "Niniejsze Warunki Usługi (\"Warunki\") regulują korzystanie z aplikacji internetowej Diet Planner (\"Usługa\") świadczonej przez Dostawcę Usługi (\"my\", \"nas\"). Tworząc konto i korzystając z Usługi, wyrażasz zgodę (\"Użytkownik\", \"ty\") na przestrzeganie niniejszych Warunków, w tym Umowy o Przetwarzanie Danych i Polityki Prywatności.\n\n**Z tej Usługi możesz korzystać wyłącznie, jeśli jesteś wykwalifikowanym, profesjonalnym dietetykiem. Ta Usługa nie jest przeznaczona do użytku przez ogół społeczeństwa lub pacjentów.**"
+      },
+      {
+        "id": "definitions",
+        "heading": "1. Definicje",
+        "content": "- **Dostawca Usługi:** Dostawca aplikacji internetowej Diet Planner.\n- **Użytkownik:** Wykwalifikowany, profesjonalny dietetyk, który zakłada konto, aby korzystać z Usługi.\n- **Usługa:** Aplikacja internetowa Diet Planner, zapewniająca narzędzia oparte na AI wspomagające Użytkowników w tworzeniu planów żywieniowych dla swoich klientów.\n- **Dane Pacjenta:** Wszelkie informacje przesłane lub wprowadzone do Usługi przez Użytkownika, w tym dane osobowe i zdrowotne klientów Użytkownika (np. wiek, waga, schorzenia, alergie). Dane Pacjenta są uważane za \"Dane Szczególnych Kategorii\" zgodnie z RODO.\n- **Treści AI:** Wszelkie plany żywieniowe, informacje żywieniowe lub inne teksty generowane przez zewnętrzne modele AI w ramach Usługi.\n- **RODO:** Rozporządzenie (UE) 2016/679 (Ogólne Rozporządzenie o Ochronie Danych), określane w Polsce jako Rozporządzenie o Ochronie Danych Osobowych.\n- **DPA:** Umowa o Przetwarzanie Danych, która stanowi integralną część niniejszych Warunków."
+      },
+      {
+        "id": "service-description",
+        "heading": "2. Opis Usługi",
+        "content": "1. Usługa jest narzędziem programowym zaprojektowanym do wspomagania Użytkowników w generowaniu i zarządzaniu planami żywieniowymi. Jest świadczona \"tak jak jest\" i \"tak jak dostępna\".\n2. Usługa wykorzystuje modele sztucznej inteligencji zapewniane przez zewnętrzne usługi (zobacz Polityka Prywatności) do generowania Treści AI.\n3. **MVP i przyszłe zmiany:** Usługa jest obecnie świadczona jako Minimalny Produkt Wykonalny (MVP) bezpłatnie. Dostawca Usługi zastrzega sobie prawo do wprowadzenia opłat, modyfikacji funkcji lub przejścia na model subskrypcyjny płatny w przyszłości. Użytkownicy zostaną powiadomieni e-mailem co najmniej 30 dni przed takimi istotnymi zmianami, w tym nową ceną."
+      },
+      {
+        "id": "user-obligations",
+        "heading": "3. Obowiązki i Gwarancje Użytkownika",
+        "content": "Korzystając z Usługi, Użytkownik wyraźnie gwarantuje, że:\n\n1. **Status Zawodowy:** Jesteś wykwalifikowanym, praktykującym dietetykiem z niezbędnymi kwalifikacjami zawodowymi i ubezpieczeniem odpowiedzialności, zgodnie ze wszystkimi obowiązującymi prawami polskimi i unijnymi.\n2. **Status Administratora Danych:** Jesteś Administratorem Danych dla wszystkich Danych Pacjenta przetwarzanych za pomocą Usługi. Dostawca Usługi działa jako Twój Podmiot Przetwarzający.\n3. **Podstawa Prawna Przetwarzania:** Masz ważną podstawę prawną zgodnie z art. 6 i art. 9 RODO (dla danych zdrowotnych) do przetwarzania wszystkich Danych Pacjenta wprowadzonych do Usługi. Obejmuje to, ale nie ogranicza się do, uzyskania wyraźnej, świadomej zgody od Twoich pacjentów lub ustalenia podstawy zgodnie z art. 9(2)(h) (świadczenie opieki zdrowotnej).\n4. **Dokładność Danych i Zgoda:** Jesteś wyłącznie odpowiedzialny za dokładność, jakość i legalność wszystkich Danych Pacjenta oraz za uzyskanie wszystkich niezbędnych zgód od Twoich pacjentów na przetwarzanie ich danych za pomocą tej Usługi i jej zewnętrznych podmiotów przetwarzających.\n5. **Bezpieczeństwo Konta:** Jesteś odpowiedzialny za zachowanie poufności danych logowania do konta oraz za wszystkie działania wykonywane w ramach Twojego konta."
+      },
+      {
+        "id": "ai-content-responsibility",
+        "heading": "4. Treści AI i Odpowiedzialność Zawodowa",
+        "content": "1. **TREŚCI AI NIE SĄ PORADĄ MEDYCZNĄ.** Użytkownik potwierdza, że wszystkie Treści AI są generowane przez zautomatyzowane systemy i są dostarczane wyłącznie w celach informacyjnych. Nie zastępują profesjonalnej oceny medycznej lub żywieniowej.\n2. **UŻYTKOWNIK MUSI ZWERYFIKOWAĆ WSZYSTKIE TREŚCI.** Użytkownik zgadza się na niezależną i profesjonalną weryfikację, sprawdzenie i zatwierdzenie wszystkich Treści AI pod kątem dokładności, kompletności i przydatności przed udostępnieniem ich jakiemukolwiek pacjentowi.\n3. **WYŁĄCZNA ODPOWIEDZIALNOŚĆ ZAWODOWA.** Użytkownik zachowuje pełną, wyłączną i jedyną odpowiedzialność zawodową za wszystkie plany żywieniowe i porady udzielone swoim pacjentom, niezależnie od tego, czy zostały wygenerowane przez Usługę, czy nie. Dostawca Usługi nie ponosi żadnej odpowiedzialności zawodowej."
+      },
+      {
+        "id": "limitation-liability",
+        "heading": "5. Ograniczenie Odpowiedzialności",
+        "content": "1. W maksymalnym zakresie dozwolonym przez prawo polskie, Dostawca Usługi wyłącza wszystkie gwarancje, wyraźne lub dorozumiane.\n2. Dostawca Usługi nie ponosi odpowiedzialności za:\n   - Wszelkie błędy, nieścisłości lub przydatność Treści AI.\n   - Wszelkie błędy w sztuce, roszczenia lub szkody wynikające z udostępnienia przez Użytkownika planów żywieniowych pacjentom.\n   - Wszelkie naruszenia danych lub straty wynikające z zaniedbania Użytkownika (np. słabe hasło, udostępnianie konta).\n   - Wszelką utratę danych, utratę zysków lub przerwę w działalności.\n3. Całkowita odpowiedzialność Dostawcy Usługi w związku z niniejszymi Warunkami jest ograniczona do kwoty zapłaconej przez Użytkownika za Usługę w ciągu 12 miesięcy poprzedzających roszczenie (lub, dla bezpłatnego MVP, ograniczona do 100 PLN)."
+      },
+      {
+        "id": "data-processing",
+        "heading": "6. Przetwarzanie Danych",
+        "content": "1. Użytkownik jest Administratorem Danych, a Dostawca Usługi jest Podmiotem Przetwarzającym w odniesieniu do Danych Pacjenta.\n2. Akceptując niniejsze Warunki, Użytkownik jednocześnie zawiera i akceptuje Umowę o Przetwarzanie Danych (DPA). Ta DPA jest obowiązkowym wymogiem zgodnie z art. 28 RODO i reguluje przetwarzanie wszystkich Danych Pacjenta."
+      },
+      {
+        "id": "term-termination",
+        "heading": "7. Czas Trwania i Rozwiązanie",
+        "content": "1. Niniejsze Warunki wchodzą w życie w momencie utworzenia konta i pozostają w mocy do momentu rozwiązania.\n2. Użytkownik może zakończyć swoje konto w dowolnym momencie z ustawień profilu konta.\n3. Dostawca Usługi może zawiesić lub zakończyć konto Użytkownika z powodu naruszenia niniejszych Warunków, w tym braku utrzymania kwalifikacji zawodowych.\n4. **Skutki Rozwiązania:** Po rozwiązaniu, konto Użytkownika i wszystkie powiązane Dane Pacjenta zostaną usunięte zgodnie z DPA."
+      },
+      {
+        "id": "terms-modifications",
+        "heading": "8. Modyfikacje Warunków",
+        "content": "1. Zastrzegamy sobie prawo do modyfikacji niniejszych Warunków w dowolnym momencie. Użytkownicy zostaną powiadomieni o istotnych zmianach e-mailem na zarejestrowany adres e-mail.\n2. Kontynuacja korzystania z Usługi po takim powiadomieniu oznacza akceptację nowych Warunków."
+      },
+      {
+        "id": "governing-law",
+        "heading": "9. Prawo Właściwe i Właściwość Sądowa",
+        "content": "1. Niniejsze Warunki podlegają prawu Rzeczypospolitej Polskiej i są interpretowane zgodnie z nim.\n2. Wszelkie spory wynikające z niniejszych Warunków podlegają wyłącznej właściwości właściwych sądów w Polsce."
+      }
+    ]
+  },
+  "privacy": {
+    "title": "Polityka Prywatności",
+    "sections": [
+      {
+        "id": "introduction",
+        "heading": "Wprowadzenie",
+        "content": "Niniejsza Polityka Prywatności wyjaśnia, w jaki sposób zbieramy, wykorzystujemy i chronimy dane osobowe.\n\n_Ta polityka jest strukturyzowana w dwóch częściach, odzwierciedlających nasze dwa odrębne role zgodnie z RODO:_\n\n- **Część A:** Kiedy działamy jako Administrator Danych dla danych kont naszych Użytkowników (dietetyków).\n- **Część B:** Kiedy działamy jako Podmiot Przetwarzający dla Danych Pacjenta przesyłanych przez naszych Użytkowników."
+      },
+      {
+        "id": "data-controller-info",
+        "heading": "CZĘŚĆ A: My jako Administrator Danych (dla danych kont użytkowników)",
+        "content": "Ta część dotyczy danych osobowych przetwarzanych dla naszych własnych celów, tj. danych dietetyków, którzy rejestrują się w naszej Usłudze.\n\n### Administrator Danych\n\nAdministratorem Danych dla Twoich danych użytkownika jest Dostawca Usługi.\n\n### Dane, które zbieramy (Użytkownicy)\n\n- **Dane Konta:** Adres e-mail, zahashowane hasło.\n- **Preferencje:** Język, preferencje motywu.\n- **Dane Prawne:** Rekord akceptacji Warunków (znacznik czasu, wersja).\n- **Dane Użytkowania (Analityka):** Zanonimizowane lub zagregowane dane, takie jak liczba sesji, używane funkcje, liczba utworzonych planów żywieniowych.\n\n### Podstawa Prawna Przetwarzania (RODO)\n\n- **Art. 6(1)(b):** Przetwarzanie jest niezbędne do wykonania umowy (te Warunki) w celu świadczenia Ci Usługi.\n- **Art. 6(1)(f):** Przetwarzanie Danych Użytkowania do celów analitycznych i ulepszania usługi jest naszym prawnie uzasadnionym interesem.\n\n### Przechowywanie Danych (Dane Użytkownika)\n\nPrzechowujemy Twoje Dane Konta Użytkownika tak długo, jak Twoje konto jest aktywne. Po usunięciu konta usuniemy te dane w ciągu 30 dni. Możemy przechowywać zanonimizowane Dane Użytkowania w sposób nieograniczony."
+      },
+      {
+        "id": "data-processor-info",
+        "heading": "CZĘŚĆ B: My jako Podmiot Przetwarzający (dla Danych Pacjenta)",
+        "content": "Ta część dotyczy Danych Pacjenta, które Ty, Użytkownik (dietetyk), wprowadzasz do Usługi.\n\n- Ty jesteś Administratorem Danych dla tych danych.\n- My jesteśmy Podmiotem Przetwarzającym.\n\nPrzetwarzamy Dane Pacjenta wyłącznie w Twoim imieniu i zgodnie z Twoimi instrukcjami (tj. Twoim korzystaniem z Usługi). Wszystkie przetwarzanie tych danych jest regulowane przez Umowę o Przetwarzanie Danych (DPA). Prosimy zapoznać się z DPA w celu uzyskania wszystkich szczegółów dotyczących przetwarzania Danych Pacjenta.\n\n**Uwaga dotycząca Historii Konwersacji AI:**\n\nW zakresie, w jakim ta historia zawiera Dane Pacjenta, przetwarzamy je jako Podmiot Przetwarzający zgodnie z DPA. Nie są przechowywane na stałe i zostaną usunięte po zakończeniu konta, zgodnie z DPA.\n\nMożemy przechowywać zanonimizowane, nieosobowe elementy tych danych (np. \"Model AI X został użyty 500 razy dzisiaj\") dla naszego prawnie uzasadnionego interesu (Art. 6(1)(f)) w analityce i ulepszaniu usługi. Te zanonimizowane dane nie mogą być powiązane z żadnym indywidualnym pacjentem."
+      },
+      {
+        "id": "data-categories",
+        "heading": "Kategorie Danych",
+        "content": "**Dane Konta (Użytkownicy):**\n- Adres e-mail, zahashowane hasło\n- Preferencje językowe i motywu\n- Rekord akceptacji Warunków\n\n**Dane Pacjenta (przetwarzane jako Podmiot Przetwarzający):**\n- Dane Osobowe: Wiek, waga, wzrost, poziom aktywności\n- Dane Szczególnych Kategorii (RODO Art. 9): Schorzenia, ograniczenia dietetyczne, alergie i inne informacje zdrowotne\n- Plany Żywieniowe: Przechowywane w bazie danych, powiązane z kontem użytkownika\n\n**Dane Użytkowania:**\n- Zanonimizowane lub zagregowane dane analityczne\n- Liczba sesji, używane funkcje, liczba utworzonych planów żywieniowych"
+      },
+      {
+        "id": "data-protection-rights",
+        "heading": "CZĘŚĆ C: Twoje Prawa do Ochrony Danych (RODO)",
+        "content": "Jako podmiot danych (dotyczy to Użytkowników w odniesieniu do ich własnych danych konta), masz prawo do:\n\n- Dostępu do swoich danych (Art. 15).\n- Sprostowania nieprawidłowych danych (Art. 16).\n- Usunięcia (\"prawo do bycia zapomnianym\") swoich danych (Art. 17).\n- Ograniczenia przetwarzania (Art. 18).\n- Przenoszenia danych (Art. 20).\n- Sprzeciwu wobec przetwarzania (Art. 21).\n\nAby skorzystać z tych praw, skontaktuj się z nami lub użyj narzędzi w profilu swojego konta.\n\n**Prawo do Złożenia Skargi:**\n\nMasz prawo do złożenia skargi do polskiego organu ochrony danych, Prezesa Urzędu Ochrony Danych Osobowych (UODO)."
+      },
+      {
+        "id": "data-security",
+        "heading": "Bezpieczeństwo Danych",
+        "content": "Wdrażamy odpowiednie środki techniczne i organizacyjne w celu ochrony danych, w tym:\n\n- Szyfrowanie podczas przesyłania (HTTPS/TLS) i w spoczynku\n- Bezpieczne uwierzytelnianie za pomocą Supabase Auth\n- Bezpieczeństwo na poziomie bazy danych (Row Level Security)\n- Polegamy na środkach bezpieczeństwa naszych podmiotów przetwarzających (zobacz poniżej)\n\nUżytkownicy są odpowiedzialni za utrzymanie bezpieczeństwa konta (hasło). Platforma nie ponosi odpowiedzialności za naruszenia spowodowane zaniedbaniem użytkownika."
+      },
+      {
+        "id": "third-party-services",
+        "heading": "Podmioty Przetwarzające i Transfery Danych",
+        "content": "Używamy usług zewnętrznych (podmiotów przetwarzających) do świadczenia Usługi. Korzystając z naszej Usługi, upoważniasz nas do ich używania.\n\n- **Supabase (UE)**\n  - Usługa: Baza danych i uwierzytelnianie\n  - Lokalizacja: Region UE (Frankfurt)\n  - _Uwaga: Dane są przechowywane w Europejskim Obszarze Gospodarczym (EOG)._\n\n- **OpenRouter.ai (USA)**\n  - Usługa: Dostęp do modeli AI i generowanie\n  - Lokalizacja: Stany Zjednoczone\n  - _Uwaga: Wiąże się to z transferem danych poza EOG. Ten transfer jest zabezpieczony Standardowymi Klauzulami Umownymi (SCCs)._\n\n- **DigitalOcean (UE/USA)**\n  - Usługa: Hosting aplikacji\n  - Lokalizacja: Region UE (preferowane) lub USA\n  - _Uwaga: Jeśli hostowane poza EOG, ten transfer jest również zabezpieczony Standardowymi Klauzulami Umownymi (SCCs)._\n\nUżytkownicy powinni przejrzeć polityki prywatności stron trzecich."
+      },
+      {
+        "id": "data-retention",
+        "heading": "Przechowywanie Danych",
+        "content": "**Dane Konta (Dane Użytkownika):** Przechowywane tak długo, jak Twoje konto jest aktywne. Po usunięciu konta usuniemy te dane w ciągu 30 dni. Możemy przechowywać zanonimizowane Dane Użytkowania w sposób nieograniczony.\n\n**Dane Pacjenta:** Przetwarzane jako Podmiot Przetwarzający. Przechowywane do usunięcia przez użytkownika lub usunięcia konta. Wszystkie Dane Pacjenta zostaną usunięte po zakończeniu konta zgodnie z DPA.\n\n**Historia Konwersacji AI:** W zakresie, w jakim zawiera Dane Pacjenta, jest przetwarzana zgodnie z DPA i zostanie usunięta po zakończeniu konta. Możemy przechowywać zanonimizowane, nieosobowe elementy w sposób nieograniczony do celów analitycznych.\n\nUżytkownicy mogą usuwać plany żywieniowe i konta w dowolnym momencie."
+      },
+      {
+        "id": "dpa-summary",
+        "heading": "Podsumowanie Umowy o Przetwarzanie Danych (DPA)",
+        "content": "Umowa o Przetwarzanie Danych (DPA) stanowi prawnie wiążącą część Warunków Usługi między:\n\n- Użytkownikiem (dietetykiem) (określanym jako \"Administrator\") ORAZ\n- Dostawcą Usługi (określanym jako \"Podmiot Przetwarzający\")\n\n### Kluczowe Postanowienia DPA:\n\n**Przedmiot:** Podmiot Przetwarzający przetwarza Dane Pacjenta w imieniu Administratora wyłącznie w celu świadczenia Usługi (np. przechowywanie danych, generowanie planów żywieniowych AI, umożliwienie Użytkownikowi edycji i eksportu planów).\n\n**Charakter i Czas Trwania:** Przechowywanie, przetwarzanie (za pomocą AI) i pobieranie Danych Pacjenta zgodnie z instrukcjami Administratora. Czas trwania: Na czas trwania aktywnego konta Użytkownika. Wszystkie Dane Pacjenta zostaną usunięte po zakończeniu konta.\n\n**Kategorie Danych Osobowych:** Dane osobowe (wiek, waga, wzrost, poziom aktywności) i Dane Szczególnych Kategorii (RODO Art. 9): schorzenia, ograniczenia dietetyczne, alergie i inne informacje zdrowotne.\n\n**Obowiązki Podmiotu Przetwarzającego:**\n- Przetwarzanie danych wyłącznie zgodnie z udokumentowanymi instrukcjami\n- Zapewnienie poufności personelu\n- Wdrożenie odpowiednich środków bezpieczeństwa (Art. 32)\n- Zarządzanie podmiotami przetwarzającymi zgodnie z Art. 28(2)\n- Zabezpieczenie transferów międzynarodowych za pomocą SCCs\n- Wsparcie Administratora w odpowiedziach na wnioski o prawa podmiotów danych\n- Usunięcie wszystkich Danych Pacjenta po zakończeniu konta\n\nAkceptując Warunki Usługi, automatycznie zawierasz tę DPA."
+      },
+      {
+        "id": "policy-changes",
+        "heading": "Zmiany w Niniejszej Polityce",
+        "content": "Możemy aktualizować tę politykę. Powiadomimy Cię o znaczących zmianach e-mailem na zarejestrowany adres e-mail."
+      }
+    ]
+  }
+}

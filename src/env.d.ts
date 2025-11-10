@@ -1,6 +1,4 @@
-/// <reference path="../.astro/types.d.ts" />
 /// <reference types="astro/client" />
-// Import Astro types - using import instead of triple-slash reference
 import type {} from "../.astro/types.d.ts";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
