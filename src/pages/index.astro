@@ -1,36 +1,14 @@
 ---
-import LandingLayout from "../layouts/LandingLayout.astro";
-import LoginForm from "../components/auth/LoginForm";
 import { createSupabaseServerClient } from "@/db/supabase.server";
+import { getAuthenticatedUser } from "@/lib/auth/auth-state.server";
 
-let user = null;
-try {
-  const supabase = createSupabaseServerClient(Astro.cookies);
-  const {
-    data: { user: authenticatedUser },
-  } = await supabase.auth.getUser();
-  user = authenticatedUser;
-} catch (error) {
-  console.error("[index.astro] Failed to initialize Supabase client:", {
-    error: error instanceof Error ? error.message : String(error),
-    stack: error instanceof Error ? error.stack : undefined,
-    name: error instanceof Error ? error.name : typeof error,
-  });
-}
+const supabase = createSupabaseServerClient(Astro.cookies);
+const user = await getAuthenticatedUser(supabase);
 
 if (user) {
   return Astro.redirect("/app/dashboard");
 }
----
 
-<LandingLayout>
-  <div class="container mx-auto px-4 py-12 max-w-md">
-    <div class="text-center mb-8">
-      <h1 class="text-3xl font-bold mb-2">Diet Planner</h1>
-      <p class="text-muted-foreground">AI-Powered Meal Planning for Dietitians</p>
-    </div>
-    <div class="bg-card border rounded-lg p-6 shadow-sm">
-      <LoginForm client:load />
-    </div>
-  </div>
-</LandingLayout>
+// Redirect to login page to reuse the same view
+return Astro.redirect("/auth/login", 307);
+---

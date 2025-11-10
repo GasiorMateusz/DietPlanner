@@ -1,23 +1,12 @@
 ---
 import "../styles/global.css";
 import { AppWithTranslations } from "@/components/AppWithTranslations";
-// import { createSupabaseServerClient } from "@/db/supabase.server";
 
 interface Props {
   title?: string;
 }
 
 const { title = "Diet Planner" } = Astro.props;
-// eslint-disable-next-line no-console
-console.log("[Layout] Rendering layout with title:", title);
-
-// Verify user session - use getUser() to ensure authenticity
-// const supabase = createSupabaseServerClient(Astro.cookies);
-// const {
-//   data: { user },
-// } = await supabase.auth.getUser();
-
-// const userEmail = user?.email;
 
 // Default theme - blocking script will check localStorage
 const initialTheme = "light";
@@ -48,7 +37,7 @@ const initialTheme = "light";
     </script>
   </head>
   <body>
-    <AppWithTranslations client:load>
+    <AppWithTranslations client:load hideNavBar={Astro.url.pathname.startsWith("/auth/")}>
       <slot />
     </AppWithTranslations>
   </body>
