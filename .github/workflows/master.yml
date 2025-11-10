@@ -83,6 +83,11 @@ jobs:
         run: npm run build:cloudflare
         env:
           TARGET: cloudflare
+          # PUBLIC_* variables are embedded into client bundle at build time
+          # They are inherited from job-level env, but explicitly listed here for clarity
+          PUBLIC_SUPABASE_URL: ${{ secrets.PUBLIC_SUPABASE_URL }}
+          PUBLIC_SUPABASE_KEY: ${{ secrets.PUBLIC_SUPABASE_KEY }}
+          PUBLIC_APP_URL: ${{ secrets.PUBLIC_APP_URL }}
 
       - name: Deploy to Cloudflare Pages
         run: |

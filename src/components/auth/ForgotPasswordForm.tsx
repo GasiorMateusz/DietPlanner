@@ -50,6 +50,11 @@ export default function ForgotPasswordForm({ className }: Props) {
     // This ensures we always use the correct production URL, not localhost
     const redirectTo = getAuthRedirectUrl("/auth/reset-password");
 
+    // Log the redirect URL being sent to Supabase for debugging
+    console.log("🔐 [Password Reset] Sending redirectTo to Supabase:", redirectTo);
+    console.log("🔐 [Password Reset] PUBLIC_APP_URL:", import.meta.env.PUBLIC_APP_URL || "NOT SET");
+    console.log("🔐 [Password Reset] Current window.location.origin:", typeof window !== "undefined" ? window.location.origin : "N/A");
+
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(values.email, {
         redirectTo,

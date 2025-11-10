@@ -47,6 +47,11 @@ export default function RegisterForm({ className }: Props) {
     // This ensures we always use the correct production URL, not localhost
     const redirectTo = getAuthRedirectUrl("/auth/login");
 
+    // Log the redirect URL being sent to Supabase for debugging
+    console.log("🔐 [Registration] Sending emailRedirectTo to Supabase:", redirectTo);
+    console.log("🔐 [Registration] PUBLIC_APP_URL:", import.meta.env.PUBLIC_APP_URL || "NOT SET");
+    console.log("🔐 [Registration] Current window.location.origin:", typeof window !== "undefined" ? window.location.origin : "N/A");
+
     const { data: signUpData, error } = await supabase.auth.signUp({
       email: data.email,
       password: data.password,
