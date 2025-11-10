@@ -28,12 +28,29 @@ export const DELETE: APIRoute = async (context) => {
     const userId = user.id;
 
     // Create admin client for deleting auth user
+    // eslint-disable-next-line no-console
+    console.log("[DELETE /api/account] Starting account deletion for user:", userId);
+    
     let adminSupabase;
     try {
+      // eslint-disable-next-line no-console
+      console.log("[DELETE /api/account] Attempting to create admin client...");
       adminSupabase = createSupabaseAdminClient();
+      // eslint-disable-next-line no-console
+      console.log("[DELETE /api/account] Admin client created successfully");
     } catch (adminClientError) {
       // eslint-disable-next-line no-console
-      console.error("Failed to create admin client:", adminClientError);
+      console.error("[DELETE /api/account] Failed to create admin client:", {
+        error: adminClientError instanceof Error ? adminClientError.message : String(adminClientError),
+        errorName: adminClientError instanceof Error ? adminClientError.name : typeof adminClientError,
+        stack: adminClientError instanceof Error ? adminClientError.stack : undefined,
+        // Additional debugging info
+        importMetaEnvKeys: Object.keys(import.meta.env).filter((key) =>
+          key.includes("SUPABASE") || key.includes("SERVICE")
+        ),
+        hasSupabaseUrl: Boolean(import.meta.env.SUPABASE_URL),
+        hasServiceRoleKey: Boolean(import.meta.env.SUPABASE_SERVICE_ROLE_KEY),
+      });
       return new Response(
         JSON.stringify({
           error: "Server configuration error",
@@ -48,7 +65,11 @@ export const DELETE: APIRoute = async (context) => {
 
     // Delete user account (meal plans + auth user)
     // Note: ai_chat_sessions are preserved
+    // eslint-disable-next-line no-console
+    console.log("[DELETE /api/account] Calling deleteUserAccount...");
     await deleteUserAccount(userId, supabase, adminSupabase);
+    // eslint-disable-next-line no-console
+    console.log("[DELETE /api/account] Account deletion completed successfully");
 
     // Return 204 No Content on success
     return new Response(null, {
