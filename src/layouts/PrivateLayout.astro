@@ -26,7 +26,7 @@ if (user?.id) {
   try {
     const preferences = await UserPreferenceService.getAllUserPreferences(user.id, supabase);
     initialTheme = preferences.theme;
-  } catch (error) {
+  } catch {
     // If fetching fails, fall back to default "light"
     // The blocking script will handle localStorage fallback
   }
@@ -43,13 +43,11 @@ if (user?.id) {
     <title>{title}</title>
     {/* Blocking script to apply theme before first paint to prevent flash */}
     <script is:inline define:vars={{ initialTheme }}>
-      (function() {
+      (function () {
         // Get theme from localStorage or use server-provided initial theme
         const storedTheme = localStorage.getItem("app-theme");
-        const theme = storedTheme && (storedTheme === "light" || storedTheme === "dark") 
-          ? storedTheme 
-          : initialTheme;
-        
+        const theme = storedTheme && (storedTheme === "light" || storedTheme === "dark") ? storedTheme : initialTheme;
+
         // Apply theme class immediately
         if (theme === "dark") {
           document.documentElement.classList.add("dark");

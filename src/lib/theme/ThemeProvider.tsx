@@ -35,7 +35,26 @@ interface ThemeProviderProps {
  * Applies theme class to <html> element for Tailwind dark mode.
  */
 export function ThemeProvider({ children, initialTheme = "light" }: ThemeProviderProps) {
-  const [theme, setThemeState] = useState<Theme>(initialTheme);
+  // Initialize theme from localStorage (most current), DOM (set by server-side script), or initialTheme
+  const getInitialTheme = (): Theme => {
+    if (typeof window !== "undefined") {
+      // First, check localStorage (most current source of truth)
+      const storedTheme = localStorage.getItem("app-theme") as Theme | null;
+      if (storedTheme && (storedTheme === "light" || storedTheme === "dark")) {
+        return storedTheme;
+      }
+
+      // If no localStorage, check if HTML element has dark class (set by server-side script)
+      const htmlElement = document.documentElement;
+      const hasDarkClass = htmlElement.classList.contains("dark");
+      if (hasDarkClass) {
+        return "dark";
+      }
+    }
+    return initialTheme;
+  };
+
+  const [theme, setThemeState] = useState<Theme>(getInitialTheme());
   const [isLoading, setIsLoading] = useState(true);
 
   /**
@@ -107,19 +126,6 @@ export function ThemeProvider({ children, initialTheme = "light" }: ThemeProvide
 
   // Sync theme state with localStorage and other provider instances
   useEffect(() => {
-    const syncTheme = () => {
-      const storedTheme = localStorage.getItem("app-theme") as Theme | null;
-      if (storedTheme && (storedTheme === "light" || storedTheme === "dark")) {
-        if (storedTheme !== theme) {
-          setThemeState(storedTheme);
-          applyThemeToDOM(storedTheme);
-        }
-      }
-    };
-
-    // Check localStorage on mount
-    syncTheme();
-
     // Listen for theme changes from other provider instances
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === "app-theme") {
@@ -153,38 +159,61 @@ export function ThemeProvider({ children, initialTheme = "light" }: ThemeProvide
     applyThemeToDOM(theme);
   }, [applyThemeToDOM, theme]);
 
-  // Fetch user theme preference on mount
+  // Fetch user theme preference on mount (only sync, don't override localStorage)
   useEffect(() => {
     const fetchThemePreference = async () => {
       try {
         setIsLoading(true);
         const preference = await userPreferencesApi.getThemePreference();
-        setThemeState(preference.theme);
-        applyThemeToDOM(preference.theme);
-        // Store in localStorage for cross-island sync
-        localStorage.setItem("app-theme", preference.theme);
-      } catch (error) {
-        // If API call fails (e.g., user not authenticated, network error),
-        // fall back to localStorage or default theme
-        const storedTheme = localStorage.getItem("app-theme") as Theme | null;
-        const fallbackTheme = storedTheme && (storedTheme === "light" || storedTheme === "dark") 
-          ? storedTheme 
-          : initialTheme;
-        
-        if (import.meta.env.DEV) {
-          // eslint-disable-next-line no-console
-          console.warn("Failed to fetch theme preference, using fallback:", error);
+
+        // Get current theme from localStorage (source of truth for UI)
+        const currentLocalTheme = localStorage.getItem("app-theme") as Theme | null;
+        const isValidLocalTheme = currentLocalTheme && (currentLocalTheme === "light" || currentLocalTheme === "dark");
+
+        // localStorage is the source of truth - only use API if localStorage is empty
+        if (!isValidLocalTheme) {
+          // No localStorage value - use API value
+          if (preference.theme !== theme) {
+            setThemeState(preference.theme);
+            applyThemeToDOM(preference.theme);
+            localStorage.setItem("app-theme", preference.theme);
+          }
+        } else {
+          // localStorage has a value - keep it and sync to API if different
+          if (preference.theme !== currentLocalTheme) {
+            // Sync localStorage to API in background (don't block UI)
+            userPreferencesApi.updateThemePreference({ theme: currentLocalTheme }).catch(() => {
+              // Silent fail - localStorage is source of truth
+            });
+          }
+          // Ensure DOM and state match localStorage
+          if (currentLocalTheme !== theme) {
+            setThemeState(currentLocalTheme);
+          }
+          applyThemeToDOM(currentLocalTheme);
         }
-        setThemeState(fallbackTheme);
-        applyThemeToDOM(fallbackTheme);
-        localStorage.setItem("app-theme", fallbackTheme);
+      } catch {
+        // If API call fails (e.g., user not authenticated, network error),
+        // use localStorage or default theme - don't change anything
+        const storedTheme = localStorage.getItem("app-theme") as Theme | null;
+        const fallbackTheme =
+          storedTheme && (storedTheme === "light" || storedTheme === "dark") ? storedTheme : initialTheme;
+
+        // Only update if different from current state
+        if (fallbackTheme !== theme) {
+          setThemeState(fallbackTheme);
+          applyThemeToDOM(fallbackTheme);
+          if (!storedTheme) {
+            localStorage.setItem("app-theme", fallbackTheme);
+          }
+        }
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchThemePreference();
-  }, [initialTheme, applyThemeToDOM]);
+  }, [initialTheme, applyThemeToDOM, theme]);
 
   // Memoize context value to ensure React detects changes and triggers re-renders
   const contextValue: ThemeContextValue = useMemo(
@@ -199,4 +228,3 @@ export function ThemeProvider({ children, initialTheme = "light" }: ThemeProvide
 
   return <ThemeContext.Provider value={contextValue}>{children}</ThemeContext.Provider>;
 }
-

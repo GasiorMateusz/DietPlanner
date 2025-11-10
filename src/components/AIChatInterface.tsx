@@ -119,7 +119,7 @@ export default function AIChatInterface() {
     };
 
     initializeChat();
-  }, []);
+  }, [t]);
 
   /**
    * Auto-scroll to bottom when new messages arrive.

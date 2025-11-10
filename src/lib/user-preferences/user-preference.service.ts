@@ -88,11 +88,7 @@ export async function getUserThemePreference(
   userId: string,
   supabase: SupabaseClient<Database>
 ): Promise<{ theme: Theme }> {
-  const { data, error } = await supabase
-    .from("user_preferences")
-    .select("theme")
-    .eq("user_id", userId)
-    .maybeSingle();
+  const { data, error } = await supabase.from("user_preferences").select("theme").eq("user_id", userId).maybeSingle();
 
   if (error) {
     throw new DatabaseError({

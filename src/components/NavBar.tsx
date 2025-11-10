@@ -197,7 +197,7 @@ export function NavBar({ userEmail: initialUserEmail, className }: NavBarProps) 
                   disabled={isDeletingAccount}
                   aria-label={t("nav.deleteAccount")}
                   size="sm"
-                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                  className="text-destructive hover:text-destructive hover:bg-destructive/10 min-w-[120px]"
                 >
                   {t("nav.deleteAccount")}
                 </Button>
@@ -207,13 +207,14 @@ export function NavBar({ userEmail: initialUserEmail, className }: NavBarProps) 
                   disabled={isLoggingOut}
                   aria-label={t("nav.logout")}
                   size="sm"
+                  className="min-w-[100px]"
                 >
                   {isLoggingOut ? t("auth.loggingOut") : t("nav.logout")}
                 </Button>
               </>
             ) : (
               <a href="/auth/login">
-                <Button variant="ghost" size="sm">
+                <Button variant="ghost" size="sm" className="min-w-[100px]">
                   {t("nav.login")}
                 </Button>
               </a>

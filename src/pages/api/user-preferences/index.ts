@@ -148,11 +148,7 @@ export const PUT: APIRoute = async (context) => {
     }
 
     // Call service to update preferences
-    const preferences = await UserPreferenceService.updateUserPreferences(
-      user.id,
-      validation.data,
-      supabase
-    );
+    const preferences = await UserPreferenceService.updateUserPreferences(user.id, validation.data, supabase);
 
     // Validate response
     const responseValidation = getAllPreferencesResponseSchema.safeParse(preferences);

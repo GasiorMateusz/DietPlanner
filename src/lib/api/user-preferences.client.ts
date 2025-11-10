@@ -116,9 +116,7 @@ export const userPreferencesApi = {
    * @returns Updated theme preference
    * @throws {Error} If the request fails
    */
-  async updateThemePreference(
-    command: UpdateThemePreferenceCommand
-  ): Promise<UpdateThemePreferenceResponseDto> {
+  async updateThemePreference(command: UpdateThemePreferenceCommand): Promise<UpdateThemePreferenceResponseDto> {
     const allPreferences = await this.updatePreferences({ theme: command.theme });
     return { theme: allPreferences.theme };
   },
@@ -129,9 +127,7 @@ export const userPreferencesApi = {
    * @returns Updated preferences
    * @throws {Error} If the request fails
    */
-  async updatePreferences(
-    command: UpdatePreferencesCommand
-  ): Promise<UpdatePreferencesResponseDto> {
+  async updatePreferences(command: UpdatePreferencesCommand): Promise<UpdatePreferencesResponseDto> {
     const headers = await getAuthHeaders();
     const response = await fetch("/api/user-preferences", {
       method: "PUT",
