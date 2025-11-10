@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "../../db/database.types.ts";
 import { DatabaseError } from "../errors.ts";
 import type { LanguageCode } from "../i18n/types";
+import type { Theme } from "../../types.ts";
 
 /**
  * Gets the user's language preference from the database.
@@ -73,4 +74,159 @@ export async function updateUserLanguagePreference(
   }
 
   return { language: data.language as LanguageCode };
+}
+
+/**
+ * Gets the user's theme preference from the database.
+ * Returns default "light" if no preference exists.
+ * @param userId - The authenticated user's ID
+ * @param supabase - The Supabase client instance
+ * @returns Theme preference (defaults to "light" if not set)
+ * @throws {DatabaseError} If the database query fails
+ */
+export async function getUserThemePreference(
+  userId: string,
+  supabase: SupabaseClient<Database>
+): Promise<{ theme: Theme }> {
+  const { data, error } = await supabase
+    .from("user_preferences")
+    .select("theme")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (error) {
+    throw new DatabaseError({
+      message: "Failed to fetch user theme preference",
+      originalError: error,
+    });
+  }
+
+  // If no preference exists, return default "light"
+  if (!data) {
+    return { theme: "light" };
+  }
+
+  return { theme: data.theme as Theme };
+}
+
+/**
+ * Updates or creates the user's theme preference in the database.
+ * Uses upsert to handle both insert and update cases.
+ * @param userId - The authenticated user's ID
+ * @param theme - The theme to set
+ * @param supabase - The Supabase client instance
+ * @returns Updated theme preference
+ * @throws {DatabaseError} If the database operation fails
+ */
+export async function updateUserThemePreference(
+  userId: string,
+  theme: Theme,
+  supabase: SupabaseClient<Database>
+): Promise<{ theme: Theme }> {
+  const { data, error } = await supabase
+    .from("user_preferences")
+    .upsert(
+      {
+        user_id: userId,
+        theme,
+        updated_at: new Date().toISOString(),
+      },
+      {
+        onConflict: "user_id",
+      }
+    )
+    .select("theme")
+    .single();
+
+  if (error) {
+    throw new DatabaseError({
+      message: "Failed to update user theme preference",
+      originalError: error,
+    });
+  }
+
+  return { theme: data.theme as Theme };
+}
+
+/**
+ * Gets all user preferences (language and theme) from the database.
+ * Returns defaults if no preference exists.
+ * @param userId - The authenticated user's ID
+ * @param supabase - The Supabase client instance
+ * @returns All user preferences (defaults to "en" and "light" if not set)
+ * @throws {DatabaseError} If the database query fails
+ */
+export async function getAllUserPreferences(
+  userId: string,
+  supabase: SupabaseClient<Database>
+): Promise<{ language: LanguageCode; theme: Theme }> {
+  const { data, error } = await supabase
+    .from("user_preferences")
+    .select("language, theme")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (error) {
+    throw new DatabaseError({
+      message: "Failed to fetch user preferences",
+      originalError: error,
+    });
+  }
+
+  // If no preference exists, return defaults
+  if (!data) {
+    return { language: "en", theme: "light" };
+  }
+
+  return {
+    language: data.language as LanguageCode,
+    theme: data.theme as Theme,
+  };
+}
+
+/**
+ * Updates or creates user preferences (language and/or theme) in the database.
+ * Uses upsert to handle both insert and update cases.
+ * Accepts partial updates - only provided fields are updated.
+ * @param userId - The authenticated user's ID
+ * @param preferences - Partial preferences object (language and/or theme)
+ * @param supabase - The Supabase client instance
+ * @returns Updated preferences (includes both language and theme)
+ * @throws {DatabaseError} If the database operation fails
+ */
+export async function updateUserPreferences(
+  userId: string,
+  preferences: { language?: LanguageCode; theme?: Theme },
+  supabase: SupabaseClient<Database>
+): Promise<{ language: LanguageCode; theme: Theme }> {
+  // First, get current preferences to preserve values not being updated
+  const current = await getAllUserPreferences(userId, supabase);
+
+  // Merge current preferences with new ones
+  const updatedPreferences = {
+    user_id: userId,
+    language: preferences.language ?? current.language,
+    theme: preferences.theme ?? current.theme,
+    updated_at: new Date().toISOString(),
+  };
+
+  const { data, error } = await supabase
+    .from("user_preferences")
+    .upsert(updatedPreferences, {
+      onConflict: "user_id",
+    })
+    .select("language, theme")
+    .single();
+
+  if (error) {
+    throw new DatabaseError({
+      message: "Failed to update user preferences",
+      originalError: error,
+    });
+  }
+
+  return {
+    language: data.language as LanguageCode,
+    theme: data.theme as Theme,
+  };
 }

@@ -1,5 +1,6 @@
 import React, { type ReactNode } from "react";
 import { TranslationProvider } from "@/lib/i18n/TranslationProvider";
+import { ThemeProvider } from "@/lib/theme/ThemeProvider";
 import { NavBar } from "@/components/NavBar";
 
 interface AppWithTranslationsProps {
@@ -8,14 +9,16 @@ interface AppWithTranslationsProps {
 }
 
 /**
- * Wrapper component that provides translation context to the entire app.
- * This ensures the TranslationProvider and NavBar are in the same React tree.
+ * Wrapper component that provides translation and theme context to the entire app.
+ * This ensures the TranslationProvider, ThemeProvider, and NavBar are in the same React tree.
  */
 export function AppWithTranslations({ children, userEmail }: AppWithTranslationsProps) {
   return (
-    <TranslationProvider>
-      <NavBar userEmail={userEmail} />
-      <main>{children}</main>
-    </TranslationProvider>
+    <ThemeProvider>
+      <TranslationProvider>
+        <NavBar userEmail={userEmail} />
+        <main>{children}</main>
+      </TranslationProvider>
+    </ThemeProvider>
   );
 }

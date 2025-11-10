@@ -5,6 +5,7 @@ import { supabaseClient as supabase } from "@/db/supabase.client";
 import { DeleteAccountConfirmationDialog } from "@/components/auth/DeleteAccountConfirmationDialog";
 import { getAuthToken } from "@/lib/auth/get-auth-token";
 import { LanguageSelector } from "@/components/LanguageSelector";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 
 interface NavBarProps {
@@ -181,6 +182,7 @@ export function NavBar({ userEmail: initialUserEmail, className }: NavBarProps) 
           <div className="flex items-center gap-4">
             {userEmail ? (
               <>
+                <ThemeToggle />
                 <LanguageSelector />
                 <span
                   className="hidden sm:inline-block text-sm text-muted-foreground truncate max-w-[200px]"

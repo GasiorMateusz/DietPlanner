@@ -242,6 +242,11 @@ export interface SendAiMessageResponseDto {
 // --- User Preferences ---
 
 /**
+ * Theme type for user preference.
+ */
+export type Theme = "light" | "dark";
+
+/**
  * **DTO**: The response for retrieving the user's language preference.
  * @Endpoint `GET /api/user-preferences`
  */
@@ -263,4 +268,55 @@ export interface UpdateLanguagePreferenceCommand {
  */
 export interface UpdateLanguagePreferenceResponseDto {
   language: "en" | "pl";
+}
+
+/**
+ * **DTO**: The response for retrieving the user's theme preference.
+ * @Endpoint `GET /api/user-preferences`
+ */
+export interface GetThemePreferenceResponseDto {
+  theme: Theme;
+}
+
+/**
+ * **Command**: The request payload for updating the user's theme preference.
+ * @Endpoint `PUT /api/user-preferences`
+ */
+export interface UpdateThemePreferenceCommand {
+  theme: Theme;
+}
+
+/**
+ * **DTO**: The response after updating the user's theme preference.
+ * @Endpoint `PUT /api/user-preferences`
+ */
+export interface UpdateThemePreferenceResponseDto {
+  theme: Theme;
+}
+
+/**
+ * **DTO**: The response for retrieving all user preferences (language and theme).
+ * @Endpoint `GET /api/user-preferences`
+ */
+export interface GetAllPreferencesResponseDto {
+  language: "en" | "pl";
+  theme: Theme;
+}
+
+/**
+ * **Command**: The request payload for updating user preferences (language and/or theme).
+ * @Endpoint `PUT /api/user-preferences`
+ */
+export interface UpdatePreferencesCommand {
+  language?: "en" | "pl";
+  theme?: Theme;
+}
+
+/**
+ * **DTO**: The response after updating user preferences.
+ * @Endpoint `PUT /api/user-preferences`
+ */
+export interface UpdatePreferencesResponseDto {
+  language: "en" | "pl";
+  theme: Theme;
 }
