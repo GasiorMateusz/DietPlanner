@@ -11,8 +11,6 @@ export async function getAuthToken(): Promise<string | null> {
     if ((error as { code?: string }).code === "refresh_token_not_found") {
       return null;
     }
-    // eslint-disable-next-line no-console
-    console.error("Error getting session:", error);
     return null;
   }
 

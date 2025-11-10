@@ -2,31 +2,10 @@
 import Layout from "@/layouts/Layout.astro";
 import RegisterForm from "@/components/auth/RegisterForm";
 import { createSupabaseServerClient } from "@/db/supabase.server";
+import { getAuthenticatedUser } from "@/lib/auth/auth-state.server";
 
-let user = null;
-try {
-  const supabase = createSupabaseServerClient(Astro.cookies);
-  // Verify if user is already authenticated using getUser() to ensure session is valid
-  const {
-    data: { user: authenticatedUser },
-    error: getUserError,
-  } = await supabase.auth.getUser();
-  
-  // Only consider user authenticated if we have both user AND no error
-  // Also verify session exists to prevent redirect loops
-  if (!getUserError && authenticatedUser) {
-    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-    // Only redirect if we have a valid session with access token
-    // This prevents redirect loops when cookies aren't fully synced
-    if (!sessionError && sessionData.session?.access_token) {
-      user = authenticatedUser;
-    }
-  }
-} catch (error) {
-  // If Supabase client creation fails, continue without auth
-  // User will see register form
-  console.error("Failed to initialize Supabase client:", error);
-}
+const supabase = createSupabaseServerClient(Astro.cookies);
+const user = await getAuthenticatedUser(supabase);
 
 if (user) {
   return Astro.redirect("/app/dashboard");

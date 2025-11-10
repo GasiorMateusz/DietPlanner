@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { loginSchema, type LoginInput } from "@/lib/validation/auth.schemas";
 import { supabaseClient as supabase } from "@/db/supabase.client";
 import { useTranslation } from "@/lib/i18n/useTranslation";
+import { useSessionConfirmation } from "@/components/hooks/useSessionConfirmation";
 
 interface Props {
   className?: string;
@@ -20,6 +21,7 @@ export default function LoginForm({ className }: Props) {
   const passwordId = React.useId();
   const formRef = React.useRef<HTMLFormElement | null>(null);
   const isSubmittingRef = React.useRef(false);
+  const { confirmSession } = useSessionConfirmation();
 
   const form = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
@@ -52,21 +54,7 @@ export default function LoginForm({ className }: Props) {
 
       // Verify session is established and wait for cookies to be set
       // This prevents redirect loops when middleware checks before cookies are available
-      let sessionConfirmed = false;
-      // Increase retry count and wait time for Cloudflare Pages edge environment
-      for (let i = 0; i < 20; i++) {
-        const {
-          data: { session },
-          error: sessionError,
-        } = await supabase.auth.getSession();
-        // Only confirm if we have a valid session with access token and no error
-        if (session?.access_token && !sessionError) {
-          sessionConfirmed = true;
-          break;
-        }
-        // Wait 100ms between checks (increased from 50ms for edge environments)
-        await new Promise((resolve) => setTimeout(resolve, 100));
-      }
+      const sessionConfirmed = await confirmSession();
 
       if (!sessionConfirmed) {
         // If session still not confirmed after retries, show error
@@ -75,9 +63,6 @@ export default function LoginForm({ className }: Props) {
         return;
       }
 
-      // Add a small delay before redirect to ensure cookies are fully propagated
-      // This is especially important in edge environments like Cloudflare Pages
-      await new Promise((resolve) => setTimeout(resolve, 200));
       // Use full page reload to ensure cookies are synced and middleware can detect session
       // eslint-disable-next-line react-compiler/react-compiler
       window.location.href = "/app/dashboard";

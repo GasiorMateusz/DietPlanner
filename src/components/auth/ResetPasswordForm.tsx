@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { resetPasswordSchema, type ResetPasswordInput } from "@/lib/validation/auth.schemas";
 import { supabaseClient as supabase } from "@/db/supabase.client";
 import { getAuthRedirectUrl } from "@/lib/utils/get-app-url";
+import { getPasswordResetSuccessMessage, shouldShowPasswordResetError } from "@/lib/auth/password-reset.utils";
 
 interface Props {
   className?: string;
@@ -245,15 +246,6 @@ export default function ResetPasswordForm({ className }: Props) {
       message.includes("Unable") ||
       message.includes("requirements"));
 
-  function getPasswordResetSuccessMessage(): string {
-    // Check if using local Supabase (Inbucket) by checking the Supabase URL
-    const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL || "";
-    const isUsingLocalSupabase = supabaseUrl.includes("localhost") || supabaseUrl.includes("127.0.0.1");
-    return isUsingLocalSupabase
-      ? "If an account exists for this email, we sent a password reset link. Check Inbucket at http://127.0.0.1:54324 for local emails."
-      : "If an account exists for this email, we sent a password reset link.";
-  }
-
   async function handleResendLink(e: React.FormEvent) {
     e.preventDefault();
     setResendMessage(null);
@@ -275,25 +267,11 @@ export default function ResetPasswordForm({ className }: Props) {
 
       setIsResending(false);
 
-      if (error) {
-        // Check if we're in development mode to show more detailed errors
-        const isLocalDev =
-          import.meta.env.DEV ||
-          (typeof window !== "undefined" &&
-            (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"));
-
-        // In development, show ALL errors to help debug
-        // Also show errors if using cloud Supabase (not local)
-        const isUsingCloudSupabase =
-          !import.meta.env.PUBLIC_SUPABASE_URL?.includes("localhost") &&
-          !import.meta.env.PUBLIC_SUPABASE_URL?.includes("127.0.0.1");
-
-        if (error && (isLocalDev || isUsingCloudSupabase)) {
-          const errorMessage = error.message || "";
-          const errorCode = (error as { code?: string }).code;
-          setResendMessage(`Error: ${errorMessage}${errorCode ? ` (Code: ${errorCode})` : ""}.`);
-          return;
-        }
+      if (error && shouldShowPasswordResetError()) {
+        const errorMessage = error.message || "";
+        const errorCode = (error as { code?: string }).code;
+        setResendMessage(`Error: ${errorMessage}${errorCode ? ` (Code: ${errorCode})` : ""}.`);
+        return;
       }
 
       // Success - show success message (security best practice to not reveal if email exists)

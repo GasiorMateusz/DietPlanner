@@ -2,46 +2,10 @@
 import Layout from "@/layouts/Layout.astro";
 import LoginForm from "@/components/auth/LoginForm";
 import { createSupabaseServerClient } from "@/db/supabase.server";
+import { getAuthenticatedUser } from "@/lib/auth/auth-state.server";
 
-let user = null;
-// eslint-disable-next-line no-console
-console.log("[login.astro] Starting page render");
-try {
-  // eslint-disable-next-line no-console
-  console.log("[login.astro] Creating Supabase client");
-  const supabase = createSupabaseServerClient(Astro.cookies);
-  // eslint-disable-next-line no-console
-  console.log("[login.astro] Getting user");
-  // Verify if user is already authenticated using getUser() to ensure session is valid
-  const {
-    data: { user: authenticatedUser },
-    error: getUserError,
-  } = await supabase.auth.getUser();
-  
-  // Only consider user authenticated if we have both user AND no error
-  // Also verify session exists to prevent redirect loops
-  if (!getUserError && authenticatedUser) {
-    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-    // Only redirect if we have a valid session with access token
-    // This prevents redirect loops when cookies aren't fully synced
-    if (!sessionError && sessionData.session?.access_token) {
-      user = authenticatedUser;
-    }
-  }
-  // eslint-disable-next-line no-console
-  console.log("[login.astro] User check result:", { hasUser: !!user });
-} catch (error) {
-  // If Supabase client creation fails, continue without auth
-  // User will see login form
-  // eslint-disable-next-line no-console
-  console.error("[login.astro] Failed to initialize Supabase client:", {
-    error: error instanceof Error ? error.message : String(error),
-    stack: error instanceof Error ? error.stack : undefined,
-    name: error instanceof Error ? error.name : typeof error,
-  });
-}
-// eslint-disable-next-line no-console
-console.log("[login.astro] Continuing with render, user:", !!user);
+const supabase = createSupabaseServerClient(Astro.cookies);
+const user = await getAuthenticatedUser(supabase);
 
 if (user) {
   return Astro.redirect("/app/dashboard");

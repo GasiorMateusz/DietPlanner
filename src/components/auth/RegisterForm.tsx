@@ -10,6 +10,7 @@ import { registerSchema, type RegisterInput } from "@/lib/validation/auth.schema
 import { supabaseClient as supabase } from "@/db/supabase.client";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { getAuthRedirectUrl } from "@/lib/utils/get-app-url";
+import { useSessionConfirmation } from "@/components/hooks/useSessionConfirmation";
 
 interface Props {
   className?: string;
@@ -22,6 +23,7 @@ export default function RegisterForm({ className }: Props) {
   const confirmId = React.useId();
   const termsId = React.useId();
   const [success, setSuccess] = React.useState<string | null>(null);
+  const { confirmSession } = useSessionConfirmation();
 
   // Cast defaultValues to avoid strict literal type mismatch between
   // the zod literal(true) validator and our UI default (unchecked).
@@ -75,26 +77,9 @@ export default function RegisterForm({ className }: Props) {
       // Email confirmation disabled - user is automatically logged in
       // Verify session is established and wait for cookies to be set
       // This prevents redirect loops when middleware checks before cookies are available
-      let sessionConfirmed = false;
-      // Increase retry count and wait time for Cloudflare Pages edge environment
-      for (let i = 0; i < 20; i++) {
-        const {
-          data: { session },
-          error: sessionError,
-        } = await supabase.auth.getSession();
-        // Only confirm if we have a valid session with access token and no error
-        if (session?.access_token && !sessionError) {
-          sessionConfirmed = true;
-          break;
-        }
-        // Wait 100ms between checks (increased from 50ms for edge environments)
-        await new Promise((resolve) => setTimeout(resolve, 100));
-      }
+      const sessionConfirmed = await confirmSession();
 
       if (sessionConfirmed) {
-        // Add a small delay before redirect to ensure cookies are fully propagated
-        // This is especially important in edge environments like Cloudflare Pages
-        await new Promise((resolve) => setTimeout(resolve, 200));
         // Use full page reload to ensure cookies are synced and middleware can detect session
         // eslint-disable-next-line react-compiler/react-compiler
         window.location.href = "/app/dashboard";
