@@ -195,4 +195,19 @@
   body {
     @apply bg-background text-foreground;
   }
+  
+  /* Select dropdown styling for dark mode */
+  select {
+    color-scheme: light dark;
+  }
+  
+  .dark select {
+    background-color: var(--card);
+    color: var(--foreground);
+  }
+  
+  .dark select option {
+    background-color: var(--card);
+    color: var(--foreground);
+  }
 }

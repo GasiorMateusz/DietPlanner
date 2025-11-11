@@ -52,7 +52,6 @@ interface UseMealPlanEditorReturn {
   sessionId: string | null;
   mode: "create" | "edit";
   handleSave: () => Promise<void>;
-  handleExport: () => Promise<void>;
 }
 
 /**
@@ -423,33 +422,6 @@ export function useMealPlanEditor({ mealPlanId }: UseMealPlanEditorProps): UseMe
     }
   }, [form, dailySummary, mode, sessionId, startupData, mealPlanId, scrollToField, t]);
 
-  /**
-   * Handles export button click (Edit Mode only).
-   */
-  const handleExport = useCallback(async () => {
-    if (!mealPlanId) {
-      return;
-    }
-
-    try {
-      const blob = await mealPlansApi.export(mealPlanId);
-
-      const filename = `meal-plan-${mealPlanId}.doc`;
-
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Failed to export meal plan";
-      setError({ key: errorMessage });
-    }
-  }, [mealPlanId]);
-
   return {
     form,
     fields,
@@ -462,6 +434,5 @@ export function useMealPlanEditor({ mealPlanId }: UseMealPlanEditorProps): UseMe
     sessionId,
     mode,
     handleSave,
-    handleExport,
   };
 }

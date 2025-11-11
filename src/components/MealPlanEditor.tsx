@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Controller } from "react-hook-form";
 import { Alert, AlertDescription } from "./ui/alert";
 import { Skeleton } from "./ui/skeleton";
@@ -6,6 +7,7 @@ import { Label } from "./ui/label";
 import { Button } from "./ui/button";
 import { DailySummaryStaticDisplay } from "./DailySummaryStaticDisplay";
 import { MealCard } from "./MealCard";
+import { ExportOptionsModal } from "./ExportOptionsModal";
 import { useMealPlanEditor } from "./hooks/useMealPlanEditor";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import type { TranslationKey } from "@/lib/i18n/types";
@@ -21,8 +23,10 @@ interface MealPlanEditorProps {
  */
 export default function MealPlanEditor({ mealPlanId }: MealPlanEditorProps) {
   const { t } = useTranslation();
-  const { form, fields, append, remove, isLoading, error, dailySummary, mode, handleSave, handleExport } =
-    useMealPlanEditor({ mealPlanId });
+  const [isExportModalOpen, setIsExportModalOpen] = useState<boolean>(false);
+  const { form, fields, append, remove, isLoading, error, dailySummary, mode, handleSave } = useMealPlanEditor({
+    mealPlanId,
+  });
 
   /**
    * Handles cancel button click - navigates back to dashboard.
@@ -190,15 +194,20 @@ export default function MealPlanEditor({ mealPlanId }: MealPlanEditorProps) {
           )}
         </div>
 
+        {/* Macro Warning Alert */}
+        <Alert className="border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200">
+          <AlertDescription>{t("editor.macroWarning")}</AlertDescription>
+        </Alert>
+
         {/* Form Actions */}
         <div className="flex gap-4 pt-4 border-t">
           <Button type="submit" variant="default" disabled={isLoading} data-testid="meal-plan-editor-save-button">
             {isLoading ? t("editor.saving") : t("editor.saveChanges")}
           </Button>
 
-          {mode === "edit" && (
-            <Button type="button" variant="outline" onClick={handleExport}>
-              {t("editor.exportToDoc")}
+          {mode === "edit" && mealPlanId && (
+            <Button type="button" variant="outline" onClick={() => setIsExportModalOpen(true)}>
+              {t("editor.export")}
             </Button>
           )}
 
@@ -207,6 +216,15 @@ export default function MealPlanEditor({ mealPlanId }: MealPlanEditorProps) {
           </Button>
         </div>
       </form>
+
+      {/* Export Options Modal */}
+      {mode === "edit" && mealPlanId && (
+        <ExportOptionsModal
+          isOpen={isExportModalOpen}
+          mealPlanId={mealPlanId}
+          onClose={() => setIsExportModalOpen(false)}
+        />
+      )}
     </div>
   );
 }

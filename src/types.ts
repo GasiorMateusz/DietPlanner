@@ -336,3 +336,40 @@ export interface GetUserPreferencesResponseDto {
   terms_accepted: boolean;
   terms_accepted_at: string | null;
 }
+
+// --- Export Options ---
+
+/**
+ * Defines the content options for export (what sections to include).
+ */
+export interface ExportContentOptions {
+  /** Include daily summary (whole plan macros: kcal, proteins, fats, carbs) */
+  dailySummary: boolean;
+  /** Include meals summary (per-meal macros for all meals - all or none) */
+  mealsSummary: boolean;
+  /** Include ingredients for each meal */
+  ingredients: boolean;
+  /** Include preparation instructions for each meal */
+  preparation: boolean;
+}
+
+/**
+ * Defines the format options for export.
+ */
+export type ExportFormat = "doc" | "html";
+
+/**
+ * Complete export options including content and format.
+ */
+export interface ExportOptions {
+  content: ExportContentOptions;
+  format: ExportFormat;
+}
+
+/**
+ * Request payload for export API endpoint.
+ */
+export interface ExportMealPlanRequest {
+  content: ExportContentOptions;
+  format: ExportFormat;
+}
