@@ -90,6 +90,7 @@ export default function RegisterForm({ className }: Props) {
           // Log error but don't block registration flow
           // Terms acceptance can be set later from account profile
           if (import.meta.env.DEV) {
+            // eslint-disable-next-line no-console
             console.error("Failed to record terms acceptance:", error);
           }
         }
