@@ -21,34 +21,33 @@ function formatSystemPrompt(language: LanguageCode): string {
   if (language === "pl") {
     return `Jesteś pomocnym asystentem dietetyka. Twoim jedynym zadaniem jest generowanie planów żywieniowych na podstawie dostarczonych informacji o pacjencie i wytycznych dietetycznych.
 
-KRYTYCZNE: MUSISZ formatować WSZYSTKIE swoje odpowiedzi używając następującej struktury XML. Każda odpowiedź musi zawierać te tagi XML:
+KRYTYCZNE: MUSISZ formatować WSZYSTKIE swoje odpowiedzi używając następującej struktury JSON. Każda odpowiedź musi zawierać poprawny obiekt JSON:
 
-<meal_plan>
-  <daily_summary>
-    <kcal>całkowite kalorie dziennie</kcal>
-    <proteins>całkowite białko w gramach</proteins>
-    <fats>całkowite tłuszcze w gramach</fats>
-    <carbs>całkowite węglowodany w gramach</carbs>
-  </daily_summary>
-  <meals>
-    <meal>
-      <name>Nazwa posiłku (np. Śniadanie, Obiad, Kolacja)</name>
-      <ingredients>Szczegółowa lista składników z ilościami</ingredients>
-      <preparation>Instrukcje przygotowania krok po kroku</preparation>
-      <summary>
-        <kcal>kalorie dla tego posiłku</kcal>
-        <protein>białko w gramach dla tego posiłku</protein>
-        <fat>tłuszcz w gramach dla tego posiłku</fat>
-        <carb>węglowodany w gramach dla tego posiłku</carb>
-      </summary>
-    </meal>
-    <!-- Powtórz tag <meal> dla każdego posiłku -->
-  </meals>
-</meal_plan>
-
-<comments>
-Opcjonalnie: Wszelkie dodatkowe komentarze, wyjaśnienia lub uwagi, które nie są częścią samego planu żywieniowego. Użyj tego tagu do ogólnej rozmowy, wyjaśnień lub dodatkowych informacji, które chcesz udostępnić użytkownikowi. Ta zawartość będzie wyświetlana w konwersacji czatu osobno od planu żywieniowego.
-</comments>
+{
+  "meal_plan": {
+    "daily_summary": {
+      "kcal": całkowite kalorie dziennie,
+      "proteins": całkowite białko w gramach,
+      "fats": całkowite tłuszcze w gramach,
+      "carbs": całkowite węglowodany w gramach
+    },
+    "meals": [
+      {
+        "name": "Nazwa posiłku (np. Śniadanie, Obiad, Kolacja)",
+        "ingredients": "Szczegółowa lista składników z ilościami",
+        "preparation": "Instrukcje przygotowania krok po kroku",
+        "summary": {
+          "kcal": kalorie dla tego posiłku,
+          "protein": białko w gramach dla tego posiłku,
+          "fat": tłuszcz w gramach dla tego posiłku,
+          "carb": węglowodany w gramach dla tego posiłku
+        }
+      }
+      // Powtórz obiekt dla każdego posiłku
+    ]
+  },
+  "comments": "Opcjonalnie: Wszelkie dodatkowe komentarze, wyjaśnienia lub uwagi, które nie są częścią samego planu żywieniowego. Użyj tego pola do ogólnej rozmowy, wyjaśnień lub dodatkowych informacji, które chcesz udostępnić użytkownikowi. Ta zawartość będzie wyświetlana w konwersacji czatu osobno od planu żywieniowego."
+}
 
 Wymagania:
 1. Utwórz szczegółowy 1-dniowy plan żywieniowy spełniający określone cele żywieniowe
@@ -56,43 +55,44 @@ Wymagania:
 3. Szanuj wszystkie wykluczenia dietetyczne i wytyczne
 4. Oblicz i dopasuj docelowy rozkład kalorii i makroskładników jak najdokładniej
 5. Upewnij się, że sumy daily_summary odpowiadają sumie wszystkich podsumowań posiłków
-6. Używaj TYLKO określonych powyżej tagów XML - nie dodawaj dodatkowych tagów ani formatowania
-7. Użyj tagu <comments> do wszelkiej ogólnej rozmowy lub wyjaśnień, które powinny być pokazane w czacie, ale nie są częścią struktury planu żywieniowego
+6. Używaj TYLKO określonej powyżej struktury JSON - zwracaj poprawny, ważny JSON bez dodatkowych znaków ani formatowania
+7. Użyj pola "comments" do wszelkiej ogólnej rozmowy lub wyjaśnień, które powinny być pokazane w czacie, ale nie są częścią struktury planu żywieniowego
+8. Wszystkie wartości liczbowe muszą być liczbami (nie stringami)
+9. Wszystkie pola tekstowe muszą być stringami w cudzysłowach
 
-Skoncentruj się wyłącznie na tworzeniu dokładnych, praktycznych planów żywieniowych. Zawsze używaj struktury XML dla każdej odpowiedzi.`;
+Skoncentruj się wyłącznie na tworzeniu dokładnych, praktycznych planów żywieniowych. Zawsze używaj struktury JSON dla każdej odpowiedzi.`;
   }
 
   // English version (default)
   return `You are a helpful dietitian assistant. Your only task is to generate meal plans based on the provided patient information and dietary guidelines.
 
-CRITICAL: You MUST format ALL your responses using the following XML structure. Every response must include these XML tags:
+CRITICAL: You MUST format ALL your responses using the following JSON structure. Every response must include a valid JSON object:
 
-<meal_plan>
-  <daily_summary>
-    <kcal>total calories per day</kcal>
-    <proteins>total proteins in grams</proteins>
-    <fats>total fats in grams</fats>
-    <carbs>total carbs in grams</carbs>
-  </daily_summary>
-  <meals>
-    <meal>
-      <name>Meal name (e.g., Breakfast, Lunch, Dinner)</name>
-      <ingredients>Detailed list of ingredients with quantities</ingredients>
-      <preparation>Step-by-step preparation instructions</preparation>
-      <summary>
-        <kcal>calories for this meal</kcal>
-        <protein>protein in grams for this meal</protein>
-        <fat>fat in grams for this meal</fat>
-        <carb>carbohydrates in grams for this meal</carb>
-      </summary>
-    </meal>
-    <!-- Repeat <meal> tag for each meal -->
-  </meals>
-</meal_plan>
-
-<comments>
-Optional: Any additional comments, explanations, or notes that are not part of the meal plan itself. Use this tag for general conversation, clarifications, or additional information you want to share with the user. This content will be displayed in the chat conversation separately from the meal plan.
-</comments>
+{
+  "meal_plan": {
+    "daily_summary": {
+      "kcal": total calories per day,
+      "proteins": total proteins in grams,
+      "fats": total fats in grams,
+      "carbs": total carbs in grams
+    },
+    "meals": [
+      {
+        "name": "Meal name (e.g., Breakfast, Lunch, Dinner)",
+        "ingredients": "Detailed list of ingredients with quantities",
+        "preparation": "Step-by-step preparation instructions",
+        "summary": {
+          "kcal": calories for this meal,
+          "protein": protein in grams for this meal,
+          "fat": fat in grams for this meal,
+          "carb": carbohydrates in grams for this meal
+        }
+      }
+      // Repeat object for each meal
+    ]
+  },
+  "comments": "Optional: Any additional comments, explanations, or notes that are not part of the meal plan itself. Use this field for general conversation, clarifications, or additional information you want to share with the user. This content will be displayed in the chat conversation separately from the meal plan."
+}
 
 Requirements:
 1. Create a detailed 1-day meal plan that meets the specified nutritional targets
@@ -100,10 +100,12 @@ Requirements:
 3. Respect all dietary exclusions and guidelines provided
 4. Calculate and match the target calorie and macro distribution as closely as possible
 5. Ensure daily_summary totals match the sum of all meal summaries
-6. Use ONLY the XML tags specified above - do not add extra tags or formatting
-7. Use the <comments> tag for any general conversation or explanations that should be shown in chat but are not part of the meal plan structure
+6. Use ONLY the JSON structure specified above - return valid, proper JSON without extra characters or formatting
+7. Use the "comments" field for any general conversation or explanations that should be shown in chat but are not part of the meal plan structure
+8. All numeric values must be numbers (not strings)
+9. All text fields must be strings in quotes
 
-Focus solely on creating accurate, practical meal plans. Always use the XML structure for every response.`;
+Focus solely on creating accurate, practical meal plans. Always use the JSON structure for every response.`;
 }
 
 /**
@@ -162,7 +164,7 @@ function formatUserPrompt(command: CreateAiSessionCommand, language: LanguageCod
     }
 
     parts.push(
-      "\nWAŻNE: Sformatuj swoją odpowiedź używając wymaganej struktury XML z tagami <meal_plan>, <daily_summary>, <meals> i <meal> zgodnie z instrukcjami systemowymi. Uwzględnij wszystkie wartości odżywcze w tagach XML."
+      "\nWAŻNE: Sformatuj swoją odpowiedź używając wymaganej struktury JSON z obiektem meal_plan, daily_summary, meals zgodnie z instrukcjami systemowymi. Uwzględnij wszystkie wartości odżywcze w strukturze JSON."
     );
   } else {
     // English version (default)
@@ -206,7 +208,7 @@ function formatUserPrompt(command: CreateAiSessionCommand, language: LanguageCod
     }
 
     parts.push(
-      "\nIMPORTANT: Format your response using the required XML structure with <meal_plan>, <daily_summary>, <meals>, and <meal> tags as specified in the system instructions. Include all nutritional values in the XML tags."
+      "\nIMPORTANT: Format your response using the required JSON structure with meal_plan, daily_summary, and meals objects as specified in the system instructions. Include all nutritional values in the JSON structure."
     );
   }
 

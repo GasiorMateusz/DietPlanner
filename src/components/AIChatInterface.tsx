@@ -191,7 +191,7 @@ export default function AIChatInterface() {
 
   /**
    * Extract meal plan from the latest assistant message.
-   * Parses XML tags and returns structured meal plan data.
+   * Parses JSON structure and returns structured meal plan data.
    */
   const currentMealPlan = useMemo(() => {
     return extractCurrentMealPlan(chatState.messageHistory);

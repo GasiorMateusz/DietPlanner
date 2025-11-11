@@ -9,38 +9,40 @@ describe("extractCurrentMealPlan", () => {
         { role: "user", content: "Create a meal plan" },
         {
           role: "assistant",
-          content: `
-            <daily_summary>
-              <kcal>2000</kcal>
-              <proteins>150</proteins>
-              <fats>65</fats>
-              <carbs>250</carbs>
-            </daily_summary>
-            <meals>
-              <meal>
-                <name>Breakfast</name>
-                <ingredients>Eggs, toast</ingredients>
-                <preparation>Cook eggs and toast bread</preparation>
-                <summary>
-                  <kcal>500</kcal>
-                  <protein>30</protein>
-                  <fat>20</fat>
-                  <carb>50</carb>
-                </summary>
-              </meal>
-              <meal>
-                <name>Lunch</name>
-                <ingredients>Chicken, rice</ingredients>
-                <preparation>Grill chicken and cook rice</preparation>
-                <summary>
-                  <kcal>750</kcal>
-                  <protein>60</protein>
-                  <fat>25</fat>
-                  <carb>80</carb>
-                </summary>
-              </meal>
-            </meals>
-          `,
+          content: `{
+            "meal_plan": {
+              "daily_summary": {
+                "kcal": 2000,
+                "proteins": 150,
+                "fats": 65,
+                "carbs": 250
+              },
+              "meals": [
+                {
+                  "name": "Breakfast",
+                  "ingredients": "Eggs, toast",
+                  "preparation": "Cook eggs and toast bread",
+                  "summary": {
+                    "kcal": 500,
+                    "protein": 30,
+                    "fat": 20,
+                    "carb": 50
+                  }
+                },
+                {
+                  "name": "Lunch",
+                  "ingredients": "Chicken, rice",
+                  "preparation": "Grill chicken and cook rice",
+                  "summary": {
+                    "kcal": 750,
+                    "protein": 60,
+                    "fat": 25,
+                    "carb": 80
+                  }
+                }
+              ]
+            }
+          }`,
         },
       ];
 
@@ -59,40 +61,56 @@ describe("extractCurrentMealPlan", () => {
         { role: "user", content: "Create initial plan" },
         {
           role: "assistant",
-          content: `
-            <meals>
-              <meal>
-                <name>Old Meal</name>
-                <ingredients>Old ingredients</ingredients>
-                <preparation>Old preparation</preparation>
-                <summary>
-                  <kcal>100</kcal>
-                  <protein>10</protein>
-                  <fat>5</fat>
-                  <carb>15</carb>
-                </summary>
-              </meal>
-            </meals>
-          `,
+          content: `{
+            "meal_plan": {
+              "daily_summary": {
+                "kcal": 2000,
+                "proteins": 150,
+                "fats": 65,
+                "carbs": 250
+              },
+              "meals": [
+                {
+                  "name": "Old Meal",
+                  "ingredients": "Old ingredients",
+                  "preparation": "Old preparation",
+                  "summary": {
+                    "kcal": 100,
+                    "protein": 10,
+                    "fat": 5,
+                    "carb": 15
+                  }
+                }
+              ]
+            }
+          }`,
         },
         { role: "user", content: "Update the plan" },
         {
           role: "assistant",
-          content: `
-            <meals>
-              <meal>
-                <name>New Meal</name>
-                <ingredients>New ingredients</ingredients>
-                <preparation>New preparation</preparation>
-                <summary>
-                  <kcal>200</kcal>
-                  <protein>20</protein>
-                  <fat>10</fat>
-                  <carb>30</carb>
-                </summary>
-              </meal>
-            </meals>
-          `,
+          content: `{
+            "meal_plan": {
+              "daily_summary": {
+                "kcal": 2000,
+                "proteins": 150,
+                "fats": 65,
+                "carbs": 250
+              },
+              "meals": [
+                {
+                  "name": "New Meal",
+                  "ingredients": "New ingredients",
+                  "preparation": "New preparation",
+                  "summary": {
+                    "kcal": 200,
+                    "protein": 20,
+                    "fat": 10,
+                    "carb": 30
+                  }
+                }
+              ]
+            }
+          }`,
         },
       ];
 
@@ -122,14 +140,12 @@ describe("extractCurrentMealPlan", () => {
       const messageHistory: ChatMessage[] = [
         {
           role: "assistant",
-          // Meal with empty name will fail validation
-          content: "<meals><meal><name></name><preparation>Some prep</preparation></meal></meals>",
+          content: "Just some text without any meal plan structure",
         },
       ];
 
       const result = extractCurrentMealPlan(messageHistory);
 
-      // Should return null because name is empty (fails validation)
       expect(result).toBeNull();
     });
 
@@ -163,11 +179,13 @@ describe("extractCurrentMealPlan", () => {
   });
 
   describe("edge cases", () => {
-    it("should handle message with only comments (no meal plan XML)", () => {
+    it("should handle message with only comments (no meal plan JSON)", () => {
       const messageHistory: ChatMessage[] = [
         {
           role: "assistant",
-          content: "<comments>This is just a comment, no meal plan</comments>",
+          content: `{
+            "comments": "This is just a comment, no meal plan"
+          }`,
         },
       ];
 
@@ -180,18 +198,23 @@ describe("extractCurrentMealPlan", () => {
       const messageHistory: ChatMessage[] = [
         {
           role: "assistant",
-          content: `
-            <daily_summary>
-              <kcal>2000</kcal>
-            </daily_summary>
-            Some text without meals
-          `,
+          content: `{
+            "meal_plan": {
+              "daily_summary": {
+                "kcal": 2000,
+                "proteins": 150,
+                "fats": 65,
+                "carbs": 250
+              },
+              "meals": []
+            }
+          }`,
         },
       ];
 
       const result = extractCurrentMealPlan(messageHistory);
 
-      // Should return null because fallback structure has empty name
+      // Should return null because meals array is empty (fails validation)
       expect(result).toBeNull();
     });
 
@@ -199,21 +222,29 @@ describe("extractCurrentMealPlan", () => {
       const messageHistory: ChatMessage[] = [
         {
           role: "assistant",
-          content: `
-            <meals>
-              <meal>
-                <name></name>
-                <ingredients>Some ingredients</ingredients>
-                <preparation>Some preparation</preparation>
-                <summary>
-                  <kcal>500</kcal>
-                  <protein>30</protein>
-                  <fat>20</fat>
-                  <carb>50</carb>
-                </summary>
-              </meal>
-            </meals>
-          `,
+          content: `{
+            "meal_plan": {
+              "daily_summary": {
+                "kcal": 2000,
+                "proteins": 150,
+                "fats": 65,
+                "carbs": 250
+              },
+              "meals": [
+                {
+                  "name": "",
+                  "ingredients": "Some ingredients",
+                  "preparation": "Some preparation",
+                  "summary": {
+                    "kcal": 500,
+                    "protein": 30,
+                    "fat": 20,
+                    "carb": 50
+                  }
+                }
+              ]
+            }
+          }`,
         },
       ];
 
@@ -223,21 +254,29 @@ describe("extractCurrentMealPlan", () => {
     });
 
     it("should handle meal plan where preparation matches full message content", () => {
-      const fullContent = `
-        <meals>
-          <meal>
-            <name>Test Meal</name>
-            <ingredients>Ingredients</ingredients>
-            <preparation>Preparation</preparation>
-            <summary>
-              <kcal>500</kcal>
-              <protein>30</protein>
-              <fat>20</fat>
-              <carb>50</carb>
-            </summary>
-          </meal>
-        </meals>
-      `;
+      const fullContent = `{
+        "meal_plan": {
+          "daily_summary": {
+            "kcal": 2000,
+            "proteins": 150,
+            "fats": 65,
+            "carbs": 250
+          },
+          "meals": [
+            {
+              "name": "Test Meal",
+              "ingredients": "Ingredients",
+              "preparation": "Preparation",
+              "summary": {
+                "kcal": 500,
+                "protein": 30,
+                "fat": 20,
+                "carb": 50
+              }
+            }
+          ]
+        }
+      }`;
 
       const messageHistory: ChatMessage[] = [
         {
@@ -261,21 +300,29 @@ describe("extractCurrentMealPlan", () => {
         { role: "user", content: "Question 2" },
         {
           role: "assistant",
-          content: `
-            <meals>
-              <meal>
-                <name>Final Meal</name>
-                <ingredients>Final ingredients</ingredients>
-                <preparation>Final preparation</preparation>
-                <summary>
-                  <kcal>500</kcal>
-                  <protein>30</protein>
-                  <fat>20</fat>
-                  <carb>50</carb>
-                </summary>
-              </meal>
-            </meals>
-          `,
+          content: `{
+            "meal_plan": {
+              "daily_summary": {
+                "kcal": 2000,
+                "proteins": 150,
+                "fats": 65,
+                "carbs": 250
+              },
+              "meals": [
+                {
+                  "name": "Final Meal",
+                  "ingredients": "Final ingredients",
+                  "preparation": "Final preparation",
+                  "summary": {
+                    "kcal": 500,
+                    "protein": 30,
+                    "fat": 20,
+                    "carb": 50
+                  }
+                }
+              ]
+            }
+          }`,
         },
       ];
 
@@ -303,49 +350,51 @@ describe("extractCurrentMealPlan", () => {
       const messageHistory: ChatMessage[] = [
         {
           role: "assistant",
-          content: `
-            <daily_summary>
-              <kcal>2500</kcal>
-              <proteins>180</proteins>
-              <fats>80</fats>
-              <carbs>300</carbs>
-            </daily_summary>
-            <meals>
-              <meal>
-                <name>Breakfast</name>
-                <ingredients>Eggs, toast</ingredients>
-                <preparation>Cook</preparation>
-                <summary>
-                  <kcal>600</kcal>
-                  <protein>40</protein>
-                  <fat>25</fat>
-                  <carb>60</carb>
-                </summary>
-              </meal>
-              <meal>
-                <name>Lunch</name>
-                <ingredients>Chicken, rice</ingredients>
-                <preparation>Grill</preparation>
-                <summary>
-                  <kcal>800</kcal>
-                  <protein>70</protein>
-                  <fat>30</fat>
-                  <carb>90</carb>
-                </summary>
-              </meal>
-              <meal>
-                <name>Dinner</name>
-                <ingredients>Fish, vegetables</ingredients>
-                <preparation>Bake</preparation>
-                <summary>
-                  <kcal>1100</kcal>
-                  <protein>70</protein>
-                  <fat>25</fat>
-                  <carb>150</carb>
-                </summary>
-              </meal>
-            </meals>
-          `,
+          content: `{
+            "meal_plan": {
+              "daily_summary": {
+                "kcal": 2500,
+                "proteins": 180,
+                "fats": 80,
+                "carbs": 300
+              },
+              "meals": [
+                {
+                  "name": "Breakfast",
+                  "ingredients": "Eggs, toast",
+                  "preparation": "Cook",
+                  "summary": {
+                    "kcal": 600,
+                    "protein": 40,
+                    "fat": 25,
+                    "carb": 60
+                  }
+                },
+                {
+                  "name": "Lunch",
+                  "ingredients": "Chicken, rice",
+                  "preparation": "Grill",
+                  "summary": {
+                    "kcal": 800,
+                    "protein": 70,
+                    "fat": 30,
+                    "carb": 90
+                  }
+                },
+                {
+                  "name": "Dinner",
+                  "ingredients": "Fish, vegetables",
+                  "preparation": "Bake",
+                  "summary": {
+                    "kcal": 1100,
+                    "protein": 70,
+                    "fat": 25,
+                    "carb": 150
+                  }
+                }
+              ]
+            }
+          }`,
         },
       ];
 

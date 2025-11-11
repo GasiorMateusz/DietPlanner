@@ -2,7 +2,7 @@ import type { MealPlanContentDailySummary, MealPlanStartupData } from "@/types";
 
 /**
  * Calculates daily nutritional summary from target kcal and macro distribution.
- * Used as a fallback when the parsed XML doesn't provide a daily summary.
+ * Used as a fallback when the parsed JSON doesn't provide a daily summary.
  *
  * Calculation formulas:
  * - Proteins (g) = (kcal * protein_percentage) / 100 / 4 (proteins have 4 kcal/g)
@@ -36,10 +36,10 @@ export function calculateDailySummaryFromTargets(
 }
 
 /**
- * Determines the final daily summary to use, preferring parsed XML data
+ * Determines the final daily summary to use, preferring parsed JSON data
  * but falling back to calculated values if the parsed summary is invalid or empty.
  *
- * @param parsedSummary - Daily summary parsed from XML
+ * @param parsedSummary - Daily summary parsed from JSON
  * @param startupData - Startup data containing target kcal and macro distribution
  * @returns Final daily summary to use
  */

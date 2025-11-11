@@ -55,15 +55,21 @@ describe("MessageItem", () => {
       expect(messageElement).toBeInTheDocument();
     });
 
-    it("should extract and display comments when present", () => {
+    it("should extract and display comments when present in JSON", () => {
       const message: ChatMessage = {
         role: "assistant",
-        content: `
-          <meal_plan>
-            <meals>...</meals>
-          </meal_plan>
-          <comments>This is an important comment about the meal plan</comments>
-        `,
+        content: `{
+          "meal_plan": {
+            "daily_summary": {
+              "kcal": 2000,
+              "proteins": 150,
+              "fats": 65,
+              "carbs": 250
+            },
+            "meals": []
+          },
+          "comments": "This is an important comment about the meal plan"
+        }`,
       };
 
       render(<MessageItem message={message} />);
@@ -75,28 +81,44 @@ describe("MessageItem", () => {
     it("should display cleaned content when no comments are present", () => {
       const message: ChatMessage = {
         role: "assistant",
-        content: `
-          Some introductory text
-          <meal_plan>
-            <meals>...</meals>
-          </meal_plan>
-          Some closing text
-        `,
+        content: `Some introductory text
+        {
+          "meal_plan": {
+            "daily_summary": {
+              "kcal": 2000,
+              "proteins": 150,
+              "fats": 65,
+              "carbs": 250
+            },
+            "meals": []
+          }
+        }
+        Some closing text`,
       };
 
       render(<MessageItem message={message} />);
 
-      // The meal_plan tags should be removed
+      // The JSON structure should be removed
       const content = screen.getByRole("paragraph");
       expect(content.textContent).toContain("Some introductory text");
       expect(content.textContent).toContain("Some closing text");
-      expect(content.textContent).not.toContain("<meal_plan>");
+      expect(content.textContent).not.toContain("meal_plan");
     });
 
     it("should display fallback message when content is empty after cleaning", () => {
       const message: ChatMessage = {
         role: "assistant",
-        content: "<meal_plan><meals>...</meals></meal_plan>",
+        content: `{
+          "meal_plan": {
+            "daily_summary": {
+              "kcal": 2000,
+              "proteins": 150,
+              "fats": 65,
+              "carbs": 250
+            },
+            "meals": []
+          }
+        }`,
       };
 
       render(<MessageItem message={message} />);
@@ -108,13 +130,19 @@ describe("MessageItem", () => {
     it("should prioritize comments over cleaned content", () => {
       const message: ChatMessage = {
         role: "assistant",
-        content: `
-          <meal_plan>
-            <meals>...</meals>
-          </meal_plan>
-          <comments>This comment should be shown</comments>
-          Some other text that should not be shown
-        `,
+        content: `{
+          "meal_plan": {
+            "daily_summary": {
+              "kcal": 2000,
+              "proteins": 150,
+              "fats": 65,
+              "carbs": 250
+            },
+            "meals": []
+          },
+          "comments": "This comment should be shown"
+        }
+        Some other text that should not be shown`,
       };
 
       render(<MessageItem message={message} />);
@@ -126,11 +154,10 @@ describe("MessageItem", () => {
     it("should handle multiline comments", () => {
       const message: ChatMessage = {
         role: "assistant",
-        content: `
-          <comments>Line 1 comment
-Line 2 comment
-Line 3 comment</comments>
-        `,
+        content: `{
+          "meal_plan": {},
+          "comments": "Line 1 comment\\nLine 2 comment\\nLine 3 comment"
+        }`,
       };
 
       render(<MessageItem message={message} />);
@@ -139,32 +166,53 @@ Line 3 comment</comments>
       expect(commentElement).toBeInTheDocument();
     });
 
-    it("should handle case-insensitive comments tag", () => {
+    it("should display cleaned content when comments field is missing", () => {
       const message: ChatMessage = {
         role: "assistant",
-        content: "<COMMENTS>Uppercase comments tag</COMMENTS>",
+        content: `{
+          "meal_plan": {
+            "daily_summary": {
+              "kcal": 2000,
+              "proteins": 150,
+              "fats": 65,
+              "carbs": 250
+            },
+            "meals": []
+          }
+        }
+        Some actual content here`,
       };
 
       render(<MessageItem message={message} />);
 
-      const commentElement = screen.getByText("Uppercase comments tag");
-      expect(commentElement).toBeInTheDocument();
-    });
-
-    it("should display cleaned content when comments tag is empty", () => {
-      const message: ChatMessage = {
-        role: "assistant",
-        content: `
-          <comments></comments>
-          Some actual content here
-        `,
-      };
-
-      render(<MessageItem message={message} />);
-
-      // Empty comments should fall back to cleaned content
+      // Missing comments should fall back to cleaned content
       const content = screen.getByRole("paragraph");
       expect(content.textContent).toContain("Some actual content here");
+    });
+
+    it("should handle JSON embedded in text", () => {
+      const message: ChatMessage = {
+        role: "assistant",
+        content: `Here's your meal plan:
+        {
+          "meal_plan": {
+            "daily_summary": {
+              "kcal": 2000,
+              "proteins": 150,
+              "fats": 65,
+              "carbs": 250
+            },
+            "meals": []
+          },
+          "comments": "This plan meets your requirements"
+        }
+        Hope you enjoy it!`,
+      };
+
+      render(<MessageItem message={message} />);
+
+      const commentElement = screen.getByText("This plan meets your requirements");
+      expect(commentElement).toBeInTheDocument();
     });
   });
 
@@ -207,18 +255,36 @@ Line 3 comment</comments>
       expect(messageElement).toBeInTheDocument();
     });
 
-    it("should handle message with XML-like content that is not actual XML", () => {
+    it("should handle message with JSON-like content that is not actual JSON", () => {
       const message: ChatMessage = {
         role: "assistant",
-        content: "This is not <really> XML, it is just text with angle brackets",
+        content: "This is not {really} JSON, it is just text with braces",
       };
 
       render(<MessageItem message={message} />);
 
-      // removeXmlTags removes angle brackets, so <really> becomes empty
       const messageElement = screen.getByRole("paragraph");
       expect(messageElement.textContent).toContain("This is not");
-      expect(messageElement.textContent).toContain("XML, it is just text with angle brackets");
+      expect(messageElement.textContent).toContain("JSON, it is just text with braces");
+    });
+
+    it("should handle malformed JSON gracefully", () => {
+      const message: ChatMessage = {
+        role: "assistant",
+        content: `{
+          "meal_plan": {
+            "daily_summary": {
+              "kcal": 2000
+            }
+          }
+        `,
+      };
+
+      render(<MessageItem message={message} />);
+
+      // Should fall back to showing the content or fallback message
+      const content = screen.getByRole("paragraph");
+      expect(content).toBeInTheDocument();
     });
   });
 });
