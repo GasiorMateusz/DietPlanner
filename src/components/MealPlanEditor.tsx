@@ -123,13 +123,39 @@ export default function MealPlanEditor({ mealPlanId }: MealPlanEditorProps) {
             name="planName"
             control={form.control}
             render={({ field, fieldState }) => (
-              <Input
-                id="plan-name"
-                {...field}
-                placeholder={t("editor.planNamePlaceholder")}
-                aria-invalid={fieldState.invalid}
-                data-testid="meal-plan-editor-plan-name-input"
-              />
+              <>
+                <Input
+                  id="plan-name"
+                  {...field}
+                  placeholder={t("editor.planNamePlaceholder")}
+                  aria-invalid={fieldState.invalid}
+                  data-testid="meal-plan-editor-plan-name-input"
+                />
+                {fieldState.error && (
+                  <p className="text-sm text-destructive mt-1">
+                    {(() => {
+                      const errorMessage = fieldState.error.message;
+                      if (!errorMessage) return null;
+
+                      // Check if it's a translation key
+                      if (
+                        errorMessage.startsWith("editor.validation.") ||
+                        errorMessage.startsWith("common.")
+                      ) {
+                        return t(errorMessage as TranslationKey);
+                      }
+
+                      // Check if it's a known English error message and translate it
+                      if (errorMessage === "Plan name is required") {
+                        return t("editor.validation.planNameRequired");
+                      }
+
+                      // Return the error message as-is
+                      return errorMessage;
+                    })()}
+                  </p>
+                )}
+              </>
             )}
           />
         </div>

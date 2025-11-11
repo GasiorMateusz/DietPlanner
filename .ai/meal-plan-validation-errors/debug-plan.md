@@ -342,6 +342,17 @@ This plan follows a systematic, multi-phase debugging approach:
 **Next steps**: Test the implementation with various validation error scenarios
 **Status**: ✅ Success
 
+### 2025-01-25 - Translation Fix for Client-Side Validation
+**What was done**: Fixed missing translations for client-side validation errors (e.g., "Meal name is required")
+**Findings**: 
+- Zod schemas use hardcoded English error messages that weren't being translated
+- Updated `scrollToField` function to translate error messages and set form field errors with translated messages
+- Updated `MealCard.tsx` and `MealPlanEditor.tsx` to detect and translate known English error messages
+- Added inline error display for plan name field
+- All validation errors (both client-side and API) now display in the user's selected language
+**Next steps**: None - implementation complete
+**Status**: ✅ Success
+
 ---
 
 **Last Updated**: 2025-01-25

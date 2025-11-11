@@ -169,8 +169,9 @@ export function useMealPlanEditor({ mealPlanId }: UseMealPlanEditorProps): UseMe
 
   /**
    * Scrolls to an element by its selector and focuses it.
+   * Also sets form field error with translated message.
    */
-  const scrollToField = (selector: string, errorKey: string, params?: Record<string, string>) => {
+  const scrollToField = (selector: string, errorKey: string, params?: Record<string, string | number>) => {
     const element = document.querySelector(selector);
     if (element) {
       element.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -178,6 +179,32 @@ export function useMealPlanEditor({ mealPlanId }: UseMealPlanEditorProps): UseMe
       if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) {
         setTimeout(() => element.focus(), 100);
       }
+
+      // Translate the error message
+      let translatedMessage = t(errorKey as TranslationKey);
+      if (params) {
+        for (const [key, value] of Object.entries(params)) {
+          translatedMessage = translatedMessage.replace(new RegExp(`\\{${key}\\}`, "g"), String(value));
+        }
+      }
+
+      // Set form field error with translated message
+      if (selector === "#plan-name") {
+        form.setError("planName", {
+          type: "validation",
+          message: translatedMessage,
+        });
+      } else if (selector.startsWith("#meal-name-")) {
+        const match = selector.match(/#meal-name-(\d+)/);
+        if (match) {
+          const mealIndex = parseInt(match[1], 10);
+          form.setError(`meals.${mealIndex}.name` as any, {
+            type: "validation",
+            message: translatedMessage,
+          });
+        }
+      }
+
       setError({ key: errorKey, params });
     }
   };
@@ -217,7 +244,7 @@ export function useMealPlanEditor({ mealPlanId }: UseMealPlanEditorProps): UseMe
           for (const key in mealsError) {
             const index = Number(key);
             if (!isNaN(index) && mealsError[index]?.name) {
-              scrollToField(`#meal-name-${index}`, "editor.validation.mealNameRequired", { index: String(index + 1) });
+              scrollToField(`#meal-name-${index}`, "editor.validation.mealNameRequired", { index: index + 1 });
               return;
             }
           }

@@ -52,11 +52,29 @@ export function MealCard({ mealIndex, control, isRemoveable, onRemove }: MealCar
               />
               {fieldState.error && (
                 <p className="text-sm text-destructive mt-1">
-                  {fieldState.error.message &&
-                  (fieldState.error.message.startsWith("editor.validation.") ||
-                    fieldState.error.message.startsWith("common."))
-                    ? t(fieldState.error.message as TranslationKey)
-                    : fieldState.error.message}
+                  {(() => {
+                    const errorMessage = fieldState.error.message;
+                    if (!errorMessage) return null;
+
+                    // Check if it's a translation key
+                    if (
+                      errorMessage.startsWith("editor.validation.") ||
+                      errorMessage.startsWith("common.")
+                    ) {
+                      return t(errorMessage as TranslationKey);
+                    }
+
+                    // Check if it's a known English error message and translate it
+                    if (errorMessage === "Meal name is required") {
+                      return t("editor.validation.mealNameRequired").replace(
+                        /\{index\}/g,
+                        String(mealIndex + 1)
+                      );
+                    }
+
+                    // Return the error message as-is
+                    return errorMessage;
+                  })()}
                 </p>
               )}
             </>
