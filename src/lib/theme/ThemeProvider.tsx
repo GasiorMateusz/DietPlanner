@@ -112,6 +112,7 @@ export function ThemeProvider({ children, initialTheme = "light" }: ThemeProvide
           // If not authenticated, skip API sync (localStorage is source of truth)
         } catch (error) {
           // Log error but don't revert - localStorage is source of truth
+          // Error is silently ignored as localStorage is the source of truth
           if (import.meta.env.DEV) {
             // eslint-disable-next-line no-console
             console.warn("Failed to persist theme preference, keeping local change:", error);
