@@ -28,6 +28,7 @@ export const userPreferencesApi = {
     } catch (error) {
       // If getAllPreferences fails, return default
       if (import.meta.env.DEV) {
+        // eslint-disable-next-line no-console
         console.warn("Failed to fetch language preference:", error);
       }
       return { language: "en" };
@@ -46,6 +47,7 @@ export const userPreferencesApi = {
     } catch (error) {
       // If getAllPreferences fails, return default
       if (import.meta.env.DEV) {
+        // eslint-disable-next-line no-console
         console.warn("Failed to fetch theme preference:", error);
       }
       return { theme: "light" };
@@ -91,6 +93,7 @@ export const userPreferencesApi = {
       }
       // For other errors, still return defaults but log in dev
       if (import.meta.env.DEV) {
+        // eslint-disable-next-line no-console
         console.warn("Failed to fetch user preferences:", error);
       }
       return { language: "en", theme: "light", terms_accepted: false, terms_accepted_at: null };
