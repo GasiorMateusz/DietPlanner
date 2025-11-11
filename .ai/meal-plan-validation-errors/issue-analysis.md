@@ -2,7 +2,7 @@
 
 **Date**: 2025-01-25
 **Reported By**: User
-**Status**: 🔍 Investigating
+**Status**: ✅ Resolved
 **Environment**: Local Development, Production
 
 ---
@@ -134,33 +134,71 @@ Based on initial analysis, the following components are involved:
 
 ---
 
-## 3. Root Cause Hypothesis
+## 3. Root Cause Analysis
 
-### 3.1 Initial Hypothesis
+### 3.1 Root Cause Identified: 2025-01-25
 
-**Primary Issues**:
+**Primary Root Causes**:
 
-1. **XML Parsing Fragility**: 
-   - XML parsing relies on regex matching which is fragile
-   - If AI returns wrong XML tags (e.g., `<item>` instead of expected tags) or missing tags, parsing fails silently
-   - Parsing returns default values (0 for numbers, empty strings) when tags are missing
-   - This leads to validation errors downstream (e.g., kcal = 0, empty meal names)
+1. **Error Message Format and Translation**:
+   - API returns raw Zod validation errors with technical paths (e.g., "Plan Content → Meals → item 1 → Summary → Kcal")
+   - Error messages were not translated - always displayed in English regardless of user's language preference
+   - Error messages were not mapped to user-friendly, field-specific messages
+   - Client-side validation errors from Zod schemas used hardcoded English messages that weren't being translated
 
-2. **Error Message Format**:
-   - API returns raw Zod validation errors in English
-   - Error messages are not translated
-   - Error messages don't map to user-friendly, field-specific messages
-   - Error messages use technical paths like "Plan Content → Meals → item 1 → Summary → Kcal"
+2. **Error Display Location**:
+   - Errors were displayed only in a generic alert at the top of the form
+   - Errors were not displayed inline next to the problematic fields
+   - Users could not identify which specific meal or field had the problem
+   - No visual indication of which fields needed attention
 
-3. **Error Display Location**:
-   - Errors are displayed in a generic alert at the top of the form
-   - Errors are not displayed inline next to the problematic fields
-   - Users cannot see which specific meal or field has the problem
+3. **Missing Error Mapping Infrastructure**:
+   - No utility to parse Zod error paths and map them to user-friendly messages
+   - No translation keys for validation errors
+   - No mechanism to map API validation errors to form field errors for inline display
 
-4. **Language Handling**:
-   - XML format is language-agnostic but parsing is fragile
-   - When language changes during conversation, XML structure may change
-   - JSON format would be more robust and language-independent
+### 3.2 Why It Happens
+
+**Error Message Issues**:
+- Zod validation errors use technical paths that are not user-friendly
+- The `base.client.ts` formatted errors but didn't preserve structured details for translation
+- Client-side Zod schemas had hardcoded English error messages
+- No translation system for validation errors existed
+
+**Error Display Issues**:
+- React Hook Form errors were not being set with translated messages
+- `MealCard` component didn't display inline errors
+- Error state was only managed at the form level, not at the field level
+
+### 3.3 Evidence
+
+**Before Fix**:
+- Error messages: "Validation failed. Name: String must contain at least 1 character(s); Plan Content → Meals → item 1 → Summary → Kcal: Number must be greater than 0"
+- Errors appeared only in alert box at top
+- All errors in English regardless of language setting
+- No indication of which specific field had the problem
+
+**After Fix**:
+- Error messages: "Meal 1: Calories must be greater than 0" (translated)
+- Errors appear inline next to problematic fields
+- Errors display in user's selected language (English/Polish)
+- Clear indication of which meal and field has the problem
+
+### 3.4 Technical Explanation
+
+The issue stemmed from multiple layers:
+1. **API Layer**: Zod validation errors were returned with technical paths but no translation mechanism
+2. **Client Layer**: Error handling didn't parse and map error paths to user-friendly messages
+3. **UI Layer**: No inline error display - errors only shown in generic alert
+4. **Translation Layer**: Missing translation keys for validation errors
+5. **Form Layer**: React Hook Form errors weren't being translated when set
+
+The fix required:
+- Creating an error mapper utility to parse Zod paths and map to translation keys
+- Adding comprehensive translation keys for all validation errors
+- Updating error handling to preserve structured error details
+- Implementing inline error display in form components
+- Translating both API and client-side validation errors
 
 ### 3.2 Areas to Investigate
 
