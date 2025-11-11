@@ -121,14 +121,10 @@ export function ExportOptionsModal({
         format,
       };
 
-      // Call API to export
-      const blob = await mealPlansApi.export(mealPlanId, options);
+      // Call API to export - returns both blob and filename from Content-Disposition header
+      const { blob, filename } = await mealPlansApi.export(mealPlanId, options);
 
-      // Determine file extension based on format
-      const extension = format === "doc" ? "doc" : "html";
-      const filename = `meal-plan-${mealPlanId}.${extension}`;
-
-      // Create blob URL and trigger download
+      // Create blob URL and trigger download using filename from API
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;

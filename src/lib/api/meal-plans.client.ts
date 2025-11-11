@@ -107,9 +107,9 @@ export const mealPlansApi = {
    * Exports a meal plan with specified options.
    * @param id - Meal plan ID
    * @param options - Export options (content and format)
-   * @returns Blob containing the exported file
+   * @returns Object containing the blob and filename extracted from Content-Disposition header
    */
-  async export(id: string, options: ExportOptions): Promise<Blob> {
+  async export(id: string, options: ExportOptions): Promise<{ blob: Blob; filename: string }> {
     const headers = await getAuthHeadersWithoutContentType();
     const queryParams = new URLSearchParams({
       dailySummary: options.content.dailySummary.toString(),
@@ -123,6 +123,42 @@ export const mealPlansApi = {
       headers,
     });
 
-    return handleApiBlobResponse(response);
+    if (response.status === 401) {
+      window.location.href = "/auth/login";
+      throw new Error("Unauthorized");
+    }
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({
+        error: "Failed to download file",
+      }));
+      throw new Error(errorData.error || "Failed to download file");
+    }
+
+    // Extract filename from Content-Disposition header
+    const contentDisposition = response.headers.get("Content-Disposition");
+    const extension = options.format === "doc" ? "doc" : "html";
+    let filename = `meal-plan-${id}.${extension}`; // fallback
+
+    if (contentDisposition) {
+      // Match filename="..." or filename=... (handles quoted and unquoted values)
+      // RFC 5987 format: filename*=UTF-8''... is also supported
+      const filenameMatch =
+        contentDisposition.match(/filename\*=UTF-8''(.+?)(?:;|$)/i) ||
+        contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/i);
+      
+      if (filenameMatch && filenameMatch[1]) {
+        // Decode URI-encoded filename (for RFC 5987 format) or remove quotes
+        try {
+          filename = decodeURIComponent(filenameMatch[1].replace(/['"]/g, ""));
+        } catch {
+          // If decoding fails, just remove quotes
+          filename = filenameMatch[1].replace(/['"]/g, "");
+        }
+      }
+    }
+
+    const blob = await response.blob();
+    return { blob, filename };
   },
 };
