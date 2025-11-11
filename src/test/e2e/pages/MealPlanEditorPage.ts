@@ -107,11 +107,27 @@ export class MealPlanEditorPage {
     }
 
     // Check for any existing error messages before saving
-    const errorAlert = this.page.locator('[role="alert"]').first();
-    const hasError = await errorAlert.isVisible().catch(() => false);
-    if (hasError) {
-      const errorText = await errorAlert.textContent();
-      throw new Error(`Form has validation errors before save: ${errorText}`);
+    // Only check for destructive/error alerts, not warning/info alerts
+    // Error alerts have destructive styling (border-destructive, bg-destructive/10, text-destructive)
+    // Warning alerts have amber styling and should be ignored
+    const allAlerts = this.page.locator('[role="alert"]');
+    const alertCount = await allAlerts.count();
+    
+    for (let i = 0; i < alertCount; i++) {
+      const alert = allAlerts.nth(i);
+      const isVisible = await alert.isVisible().catch(() => false);
+      if (!isVisible) continue;
+      
+      // Check if this is an error alert (has destructive classes) or a warning (has amber classes)
+      const classes = await alert.getAttribute("class").catch(() => "");
+      const hasDestructive = classes?.includes("destructive") || classes?.includes("border-destructive");
+      const hasAmber = classes?.includes("amber");
+      
+      // Only throw if it's an error alert, not a warning
+      if (hasDestructive && !hasAmber) {
+        const errorText = await alert.textContent();
+        throw new Error(`Form has validation errors before save: ${errorText}`);
+      }
     }
 
     // Wait a bit more to ensure form state is stable

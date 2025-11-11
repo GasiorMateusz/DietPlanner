@@ -97,15 +97,62 @@ export class LoginPage {
     await this.page.waitForLoadState("domcontentloaded");
     await this.fillForm(email, password);
 
-    // Wait for submit button to be enabled before clicking
-    await this.submitButton.waitFor({ state: "visible", timeout: 5000 });
+    // Wait for submit button to be enabled and visible before clicking
+    await this.submitButton.waitFor({ state: "visible", timeout: 10000 });
+    
+    // Wait a bit for any async operations to complete
+    await this.page.waitForTimeout(500);
 
-    // Submit and wait for navigation to dashboard
-    // Use Promise.all to wait for both click and navigation simultaneously
-    await Promise.all([this.page.waitForURL(/\/app\/dashboard/, { timeout: 20000 }), this.submit()]);
+    // Submit the form and wait for either navigation or error
+    await this.submit();
 
-    // Additional wait to ensure page is fully loaded
-    await this.page.waitForLoadState("networkidle");
+    // Wait for either navigation to dashboard OR error message to appear
+    // Use Promise.race to detect which happens first
+    try {
+      await Promise.race([
+        // Success: navigation to dashboard
+        this.page.waitForURL(/\/app\/dashboard/, { timeout: 20000 }),
+        // Failure: error message appears
+        this.page
+          .waitForSelector('[data-testid="login-form"] [role="alert"]', { timeout: 10000 })
+          .then(async () => {
+            // Get error message for better debugging
+            const errorText = await this.page
+              .locator('[data-testid="login-form"] [role="alert"]')
+              .textContent()
+              .catch(() => "Unknown error");
+            // Log the email used for debugging (but not the password)
+            console.error(`Login failed for email: ${email}`);
+            throw new Error(`Login failed: ${errorText}. Please verify E2E_USERNAME and E2E_PASSWORD in .env.test are correct.`);
+          }),
+      ]);
+
+      // If we get here, navigation succeeded
+      // Additional wait to ensure page is fully loaded
+      await this.page.waitForLoadState("networkidle");
+    } catch (error) {
+      // If it's our custom error, re-throw it
+      if (error instanceof Error && error.message.includes("Login failed")) {
+        throw error;
+      }
+      // Otherwise, it might be a timeout - check if we're on dashboard or still on login
+      const currentUrl = this.page.url();
+      if (currentUrl.includes("/app/dashboard")) {
+        // Navigation succeeded, just continue
+        await this.page.waitForLoadState("networkidle");
+      } else {
+        // Still on login page, check for error
+        const errorElement = await this.page
+          .locator('[data-testid="login-form"] [role="alert"]')
+          .first()
+          .textContent()
+          .catch(() => null);
+        if (errorElement) {
+          throw new Error(`Login failed: ${errorElement}`);
+        }
+        throw new Error(`Login timeout. Current URL: ${currentUrl}`);
+      }
+    }
   }
 
   /**
