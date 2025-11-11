@@ -67,6 +67,7 @@ export function AccountProfile({ userEmail, termsAccepted, termsAcceptedAt }: Ac
       setDeleteError(errorMessage);
       setIsDeletingAccount(false);
       if (import.meta.env.DEV) {
+        // eslint-disable-next-line no-console
         console.error("Error deleting account:", error);
       }
     }

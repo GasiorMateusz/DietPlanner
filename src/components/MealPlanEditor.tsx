@@ -10,6 +10,7 @@ import { MealCard } from "./MealCard";
 import { ExportOptionsModal } from "./ExportOptionsModal";
 import { useMealPlanEditor } from "./hooks/useMealPlanEditor";
 import { useTranslation } from "@/lib/i18n/useTranslation";
+import type { TranslationKey } from "@/lib/i18n/types";
 
 interface MealPlanEditorProps {
   /** Optional meal plan ID for Edit Mode */
@@ -59,13 +60,6 @@ export default function MealPlanEditor({ mealPlanId }: MealPlanEditorProps) {
     }
   };
 
-  /**
-   * Checks if form is ready to be saved.
-   */
-  const isFormReady = (): boolean => {
-    return form.formState.isValid && !isLoading && fields.length > 0;
-  };
-
   // Show loading state
   if (isLoading && fields.length === 0) {
     return (
@@ -83,7 +77,13 @@ export default function MealPlanEditor({ mealPlanId }: MealPlanEditorProps) {
     return (
       <div className="container mx-auto p-4 sm:p-8 max-w-4xl">
         <Alert className="border-destructive bg-destructive/10 text-destructive">
-          <AlertDescription>{error}</AlertDescription>
+          <AlertDescription>
+            {error.key.startsWith("editor.validation.") || error.key.startsWith("common.")
+              ? error.params
+                ? t(error.key as TranslationKey).replace(/\{(\w+)\}/g, (_, key) => error.params?.[key] || "")
+                : t(error.key as TranslationKey)
+              : error.key}
+          </AlertDescription>
         </Alert>
       </div>
     );
@@ -99,7 +99,13 @@ export default function MealPlanEditor({ mealPlanId }: MealPlanEditorProps) {
       {/* Error Alert */}
       {error && (
         <Alert className="mb-6 border-destructive bg-destructive/10 text-destructive">
-          <AlertDescription>{error}</AlertDescription>
+          <AlertDescription>
+            {error.key.startsWith("editor.validation.") || error.key.startsWith("common.")
+              ? error.params
+                ? t(error.key as TranslationKey).replace(/\{(\w+)\}/g, (_, key) => error.params?.[key] || "")
+                : t(error.key as TranslationKey)
+              : error.key}
+          </AlertDescription>
         </Alert>
       )}
 
@@ -120,16 +126,13 @@ export default function MealPlanEditor({ mealPlanId }: MealPlanEditorProps) {
             name="planName"
             control={form.control}
             render={({ field, fieldState }) => (
-              <>
-                <Input
-                  id="plan-name"
-                  {...field}
-                  placeholder={t("editor.planNamePlaceholder")}
-                  aria-invalid={fieldState.invalid}
-                  data-testid="meal-plan-editor-plan-name-input"
-                />
-                {fieldState.error && <p className="text-sm text-destructive">{fieldState.error.message}</p>}
-              </>
+              <Input
+                id="plan-name"
+                {...field}
+                placeholder={t("editor.planNamePlaceholder")}
+                aria-invalid={fieldState.invalid}
+                data-testid="meal-plan-editor-plan-name-input"
+              />
             )}
           />
         </div>
@@ -138,7 +141,7 @@ export default function MealPlanEditor({ mealPlanId }: MealPlanEditorProps) {
         <DailySummaryStaticDisplay summary={dailySummary} />
 
         {/* Meals List */}
-        <div className="space-y-4">
+        <div className="space-y-4" data-testid="meal-plan-editor-meals-section">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold">{t("editor.meals")}</h2>
             <Button type="button" variant="outline" onClick={handleMealAdd}>
@@ -161,9 +164,6 @@ export default function MealPlanEditor({ mealPlanId }: MealPlanEditorProps) {
               ))}
             </div>
           )}
-          {form.formState.errors.meals && (
-            <p className="text-sm text-destructive">{form.formState.errors.meals.message}</p>
-          )}
         </div>
 
         {/* Macro Warning Alert */}
@@ -173,7 +173,7 @@ export default function MealPlanEditor({ mealPlanId }: MealPlanEditorProps) {
 
         {/* Form Actions */}
         <div className="flex gap-4 pt-4 border-t">
-          <Button type="submit" variant="default" disabled={!isFormReady()} data-testid="meal-plan-editor-save-button">
+          <Button type="submit" variant="default" disabled={isLoading} data-testid="meal-plan-editor-save-button">
             {isLoading ? t("editor.saving") : t("editor.saveChanges")}
           </Button>
 
