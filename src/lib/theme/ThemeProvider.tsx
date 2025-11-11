@@ -1,6 +1,7 @@
 import React, { createContext, useEffect, useState, useMemo, useCallback, type ReactNode } from "react";
 import type { Theme } from "../../types.ts";
 import { userPreferencesApi } from "@/lib/api/user-preferences.client";
+import { getAuthToken } from "@/lib/auth/get-auth-token";
 
 /**
  * Theme context value type.
@@ -103,7 +104,12 @@ export function ThemeProvider({ children, initialTheme = "light" }: ThemeProvide
       // Only save if theme actually changed
       if (previousTheme !== null && previousTheme !== newTheme) {
         try {
-          await userPreferencesApi.updateThemePreference({ theme: newTheme });
+          // Only sync to API if user is authenticated (prevents redirect loops on auth pages)
+          const token = await getAuthToken();
+          if (token) {
+            await userPreferencesApi.updateThemePreference({ theme: newTheme });
+          }
+          // If not authenticated, skip API sync (localStorage is source of truth)
         } catch (error) {
           // Log error but don't revert - localStorage is source of truth
           if (import.meta.env.DEV) {
@@ -180,11 +186,17 @@ export function ThemeProvider({ children, initialTheme = "light" }: ThemeProvide
           }
         } else {
           // localStorage has a value - keep it and sync to API if different
+          // Only sync to API if user is authenticated (prevents redirect loops on auth pages)
           if (preference.theme !== currentLocalTheme) {
-            // Sync localStorage to API in background (don't block UI)
-            userPreferencesApi.updateThemePreference({ theme: currentLocalTheme }).catch(() => {
-              // Silent fail - localStorage is source of truth
-            });
+            // Check if user is authenticated before attempting to sync
+            const token = await getAuthToken();
+            if (token) {
+              // Sync localStorage to API in background (don't block UI)
+              userPreferencesApi.updateThemePreference({ theme: currentLocalTheme }).catch(() => {
+                // Silent fail - localStorage is source of truth
+              });
+            }
+            // If not authenticated, skip API sync (localStorage is source of truth)
           }
           // Ensure DOM and state match localStorage
           if (currentLocalTheme !== theme) {

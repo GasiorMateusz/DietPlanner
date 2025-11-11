@@ -1,4 +1,3 @@
-/// <reference path="../.astro/types.d.ts" />
 /// <reference types="astro/client" />
 import type {} from "../.astro/types.d.ts";
 
