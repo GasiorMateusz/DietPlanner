@@ -5,6 +5,14 @@ import { mealPlanFormSchema, type MealPlanFormData } from "@/lib/validation/meal
 import { mealPlansApi } from "@/lib/api/meal-plans.client";
 import { parseXmlMealPlan } from "@/lib/utils/meal-plan-parser";
 import { resolveDailySummary } from "@/lib/utils/meal-plan-calculations";
+import {
+  formatValidationErrors,
+  getFieldSelector,
+  type FormattedValidationError,
+} from "@/lib/utils/validation-error-mapper";
+import { isValidationError, type ValidationErrorDetail } from "@/lib/api/base.client";
+import { useTranslation } from "@/lib/i18n/useTranslation";
+import type { TranslationKey } from "@/lib/i18n/types";
 import type {
   MealPlanContentDailySummary,
   MealPlanStartupData,
@@ -28,7 +36,8 @@ interface UseMealPlanEditorProps {
 
 interface ErrorInfo {
   key: string;
-  params?: Record<string, string>;
+  params?: Record<string, string | number>;
+  fieldErrors?: Map<string, FormattedValidationError>; // Map of field paths to errors for inline display
 }
 
 interface UseMealPlanEditorReturn {
@@ -51,6 +60,7 @@ interface UseMealPlanEditorReturn {
  * Handles form state, dynamic meal array, and API operations.
  */
 export function useMealPlanEditor({ mealPlanId }: UseMealPlanEditorProps): UseMealPlanEditorReturn {
+  const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<ErrorInfo | null>(null);
   const [dailySummary, setDailySummary] = useState<MealPlanContentDailySummary>({
@@ -164,18 +174,52 @@ export function useMealPlanEditor({ mealPlanId }: UseMealPlanEditorProps): UseMe
 
   /**
    * Scrolls to an element by its selector and focuses it.
+   * Also sets form field error with translated message.
    */
-  const scrollToField = (selector: string, errorKey: string, params?: Record<string, string>) => {
-    const element = document.querySelector(selector);
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth", block: "center" });
-      // Focus the input if it's an input element
-      if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) {
-        setTimeout(() => element.focus(), 100);
+  const scrollToField = useCallback(
+    (selector: string, errorKey: string, params?: Record<string, string | number>) => {
+      const element = document.querySelector(selector);
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth", block: "center" });
+        // Focus the input if it's an input element
+        if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) {
+          setTimeout(() => element.focus(), 100);
+        }
+
+        // Translate the error message
+        let translatedMessage = t(errorKey as TranslationKey);
+        if (params) {
+          for (const [key, value] of Object.entries(params)) {
+            translatedMessage = translatedMessage.replace(new RegExp(`\\{${key}\\}`, "g"), String(value));
+          }
+        }
+
+        // Set form field error with translated message
+        if (selector === "#plan-name") {
+          form.setError("planName", {
+            type: "validation",
+            message: translatedMessage,
+          });
+        } else if (selector.startsWith("#meal-name-")) {
+          const match = selector.match(/#meal-name-(\d+)/);
+          if (match) {
+            const mealIndex = parseInt(match[1], 10);
+            // Note: Using 'as any' here is necessary because react-hook-form's types
+            // don't perfectly handle dynamic field paths constructed at runtime.
+            // The path is validated by the regex match above, so this is type-safe in practice.
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            form.setError(`meals.${mealIndex}.name` as any, {
+              type: "validation",
+              message: translatedMessage,
+            });
+          }
+        }
+
+        setError({ key: errorKey, params });
       }
-      setError({ key: errorKey, params });
-    }
-  };
+    },
+    [form, t]
+  );
 
   /**
    * Handles form submission (save).
@@ -212,7 +256,7 @@ export function useMealPlanEditor({ mealPlanId }: UseMealPlanEditorProps): UseMe
           for (const key in mealsError) {
             const index = Number(key);
             if (!isNaN(index) && mealsError[index]?.name) {
-              scrollToField(`#meal-name-${index}`, "editor.validation.mealNameRequired", { index: String(index + 1) });
+              scrollToField(`#meal-name-${index}`, "editor.validation.mealNameRequired", { index: index + 1 });
               return;
             }
           }
@@ -274,13 +318,110 @@ export function useMealPlanEditor({ mealPlanId }: UseMealPlanEditorProps): UseMe
         window.location.href = "/app/dashboard";
       }
     } catch (err) {
-      // For API errors, store the raw message (not a translation key)
-      // These are typically server errors that don't have translations
-      const errorMessage = err instanceof Error ? err.message : "An error occurred while saving. Please try again.";
-      setError({ key: errorMessage });
       setIsLoading(false);
+
+      // Check if this is a validation error with structured details
+      if (isValidationError(err)) {
+        const validationDetails: ValidationErrorDetail[] = err.validationDetails;
+
+        // Format validation errors using the mapper
+        const formattedErrors = formatValidationErrors(validationDetails);
+
+        // Create a map of field paths to errors for inline display
+        const fieldErrorsMap = new Map<string, FormattedValidationError>();
+        formattedErrors.forEach((error) => {
+          if (error.fieldPath) {
+            fieldErrorsMap.set(error.fieldPath, error);
+          }
+        });
+
+        // Set form field errors for inline display
+        formattedErrors.forEach((formattedError) => {
+          if (formattedError.fieldPath) {
+            // Format error message with translated field names
+            let errorMessage = t(formattedError.translationKey as TranslationKey);
+            if (formattedError.params) {
+              // Replace placeholders in the translated message
+              for (const [key, value] of Object.entries(formattedError.params)) {
+                if (key === "fieldKey" && typeof value === "string") {
+                  // Translate the field name and replace {field} placeholder
+                  const translatedField = t(value as TranslationKey);
+                  errorMessage = errorMessage.replace(/\{field\}/g, translatedField);
+                } else {
+                  // Replace other placeholders
+                  errorMessage = errorMessage.replace(new RegExp(`\\{${key}\\}`, "g"), String(value));
+                }
+              }
+            }
+
+            // Map field path to react-hook-form path
+            if (formattedError.fieldPath.startsWith("meals.")) {
+              // Extract meal index and field (handles both direct fields and nested summary fields)
+              const match = formattedError.fieldPath.match(/^meals\.(\d+)\.(.+)$/);
+              if (match) {
+                const mealIndex = parseInt(match[1], 10);
+                const fieldPath = match[2]; // This could be "name", "ingredients", "preparation", or "summary.kcal", etc.
+                // Note: Using 'as any' here is necessary because react-hook-form's types
+                // don't perfectly handle dynamic field paths constructed at runtime.
+                // The path is validated by the regex match above, so this is type-safe in practice.
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                form.setError(`meals.${mealIndex}.${fieldPath}` as any, {
+                  type: "validation",
+                  message: errorMessage,
+                });
+              }
+            } else if (formattedError.fieldPath === "name" || formattedError.fieldPath === "planName") {
+              form.setError("planName", {
+                type: "validation",
+                message: errorMessage,
+              });
+            }
+          }
+        });
+
+        // Scroll to first error field
+        const firstError = formattedErrors[0];
+        if (firstError?.fieldPath) {
+          const selector = getFieldSelector(firstError.fieldPath);
+          if (selector) {
+            const element = document.querySelector(selector);
+            if (element) {
+              element.scrollIntoView({ behavior: "smooth", block: "center" });
+              if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) {
+                setTimeout(() => element.focus(), 100);
+              }
+            }
+          }
+        }
+
+        // Set general error message
+        setError({
+          key: "editor.validation.fixMealErrors",
+          params: {},
+          fieldErrors: fieldErrorsMap,
+        });
+        return;
+      }
+
+      // For other API errors
+      if (err instanceof Error) {
+        const errorMessage = err.message;
+
+        // Check if it's a validation error (but without structured details)
+        if (errorMessage.includes("Validation failed") || errorMessage.includes("→")) {
+          setError({
+            key: "editor.validation.fixMealErrors",
+            params: {},
+          });
+        } else {
+          // Other API errors
+          setError({ key: errorMessage });
+        }
+      } else {
+        setError({ key: "An error occurred while saving. Please try again." });
+      }
     }
-  }, [form, dailySummary, mode, sessionId, startupData, mealPlanId]);
+  }, [form, dailySummary, mode, sessionId, startupData, mealPlanId, scrollToField, t]);
 
   /**
    * Handles export button click (Edit Mode only).
