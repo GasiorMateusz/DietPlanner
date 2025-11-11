@@ -99,7 +99,7 @@ export class LoginPage {
 
     // Wait for submit button to be enabled and visible before clicking
     await this.submitButton.waitFor({ state: "visible", timeout: 10000 });
-    
+
     // Wait a bit for any async operations to complete
     await this.page.waitForTimeout(500);
 
@@ -113,18 +113,19 @@ export class LoginPage {
         // Success: navigation to dashboard
         this.page.waitForURL(/\/app\/dashboard/, { timeout: 20000 }),
         // Failure: error message appears
-        this.page
-          .waitForSelector('[data-testid="login-form"] [role="alert"]', { timeout: 10000 })
-          .then(async () => {
-            // Get error message for better debugging
-            const errorText = await this.page
-              .locator('[data-testid="login-form"] [role="alert"]')
-              .textContent()
-              .catch(() => "Unknown error");
-            // Log the email used for debugging (but not the password)
-            console.error(`Login failed for email: ${email}`);
-            throw new Error(`Login failed: ${errorText}. Please verify E2E_USERNAME and E2E_PASSWORD in .env.test are correct.`);
-          }),
+        this.page.waitForSelector('[data-testid="login-form"] [role="alert"]', { timeout: 10000 }).then(async () => {
+          // Get error message for better debugging
+          const errorText = await this.page
+            .locator('[data-testid="login-form"] [role="alert"]')
+            .textContent()
+            .catch(() => "Unknown error");
+          // Log the email used for debugging (but not the password)
+          // eslint-disable-next-line no-console
+          console.error(`Login failed for email: ${email}`);
+          throw new Error(
+            `Login failed: ${errorText}. Please verify E2E_USERNAME and E2E_PASSWORD in .env.test are correct.`
+          );
+        }),
       ]);
 
       // If we get here, navigation succeeded
