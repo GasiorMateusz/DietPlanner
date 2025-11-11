@@ -105,12 +105,8 @@ export function AccountProfile({ userEmail, termsAccepted, termsAcceptedAt }: Ac
           <div className="space-y-4">
             <div className="space-y-2">
               <div className="text-sm text-muted-foreground">{t("account.acceptedAt")}</div>
-              <div className="text-base">
-                {t("account.accepted")}
-              </div>
-              {termsAcceptedAt && (
-                <div className="text-xs text-muted-foreground">{formatDate(termsAcceptedAt)}</div>
-              )}
+              <div className="text-base">{termsAccepted ? t("account.accepted") : t("account.notAccepted")}</div>
+              {termsAcceptedAt && <div className="text-xs text-muted-foreground">{formatDate(termsAcceptedAt)}</div>}
             </div>
             <Button variant="outline" onClick={() => setIsTermsModalOpen(true)}>
               {t("account.viewCurrentTerms")}

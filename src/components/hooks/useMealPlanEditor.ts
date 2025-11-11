@@ -5,7 +5,12 @@ import { mealPlanFormSchema, type MealPlanFormData } from "@/lib/validation/meal
 import { mealPlansApi } from "@/lib/api/meal-plans.client";
 import { parseXmlMealPlan } from "@/lib/utils/meal-plan-parser";
 import { resolveDailySummary } from "@/lib/utils/meal-plan-calculations";
-import { formatValidationErrors, getFieldSelector, type FormattedValidationError } from "@/lib/utils/validation-error-mapper";
+import {
+  formatValidationErrors,
+  getFieldSelector,
+  type FormattedValidationError,
+} from "@/lib/utils/validation-error-mapper";
+import { isValidationError, type ValidationErrorDetail } from "@/lib/api/base.client";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import type { TranslationKey } from "@/lib/i18n/types";
 import type {
@@ -171,43 +176,50 @@ export function useMealPlanEditor({ mealPlanId }: UseMealPlanEditorProps): UseMe
    * Scrolls to an element by its selector and focuses it.
    * Also sets form field error with translated message.
    */
-  const scrollToField = (selector: string, errorKey: string, params?: Record<string, string | number>) => {
-    const element = document.querySelector(selector);
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth", block: "center" });
-      // Focus the input if it's an input element
-      if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) {
-        setTimeout(() => element.focus(), 100);
-      }
-
-      // Translate the error message
-      let translatedMessage = t(errorKey as TranslationKey);
-      if (params) {
-        for (const [key, value] of Object.entries(params)) {
-          translatedMessage = translatedMessage.replace(new RegExp(`\\{${key}\\}`, "g"), String(value));
+  const scrollToField = useCallback(
+    (selector: string, errorKey: string, params?: Record<string, string | number>) => {
+      const element = document.querySelector(selector);
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth", block: "center" });
+        // Focus the input if it's an input element
+        if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) {
+          setTimeout(() => element.focus(), 100);
         }
-      }
 
-      // Set form field error with translated message
-      if (selector === "#plan-name") {
-        form.setError("planName", {
-          type: "validation",
-          message: translatedMessage,
-        });
-      } else if (selector.startsWith("#meal-name-")) {
-        const match = selector.match(/#meal-name-(\d+)/);
-        if (match) {
-          const mealIndex = parseInt(match[1], 10);
-          form.setError(`meals.${mealIndex}.name` as any, {
+        // Translate the error message
+        let translatedMessage = t(errorKey as TranslationKey);
+        if (params) {
+          for (const [key, value] of Object.entries(params)) {
+            translatedMessage = translatedMessage.replace(new RegExp(`\\{${key}\\}`, "g"), String(value));
+          }
+        }
+
+        // Set form field error with translated message
+        if (selector === "#plan-name") {
+          form.setError("planName", {
             type: "validation",
             message: translatedMessage,
           });
+        } else if (selector.startsWith("#meal-name-")) {
+          const match = selector.match(/#meal-name-(\d+)/);
+          if (match) {
+            const mealIndex = parseInt(match[1], 10);
+            // Note: Using 'as any' here is necessary because react-hook-form's types
+            // don't perfectly handle dynamic field paths constructed at runtime.
+            // The path is validated by the regex match above, so this is type-safe in practice.
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            form.setError(`meals.${mealIndex}.name` as any, {
+              type: "validation",
+              message: translatedMessage,
+            });
+          }
         }
-      }
 
-      setError({ key: errorKey, params });
-    }
-  };
+        setError({ key: errorKey, params });
+      }
+    },
+    [form, t]
+  );
 
   /**
    * Handles form submission (save).
@@ -309,12 +321,8 @@ export function useMealPlanEditor({ mealPlanId }: UseMealPlanEditorProps): UseMe
       setIsLoading(false);
 
       // Check if this is a validation error with structured details
-      if (err instanceof Error && (err as any).isValidationError && (err as any).validationDetails) {
-        const validationDetails = (err as any).validationDetails as Array<{
-          path?: (string | number)[];
-          message?: string;
-          code?: string;
-        }>;
+      if (isValidationError(err)) {
+        const validationDetails: ValidationErrorDetail[] = err.validationDetails;
 
         // Format validation errors using the mapper
         const formattedErrors = formatValidationErrors(validationDetails);
@@ -353,6 +361,10 @@ export function useMealPlanEditor({ mealPlanId }: UseMealPlanEditorProps): UseMe
               if (match) {
                 const mealIndex = parseInt(match[1], 10);
                 const fieldPath = match[2]; // This could be "name", "ingredients", "preparation", or "summary.kcal", etc.
+                // Note: Using 'as any' here is necessary because react-hook-form's types
+                // don't perfectly handle dynamic field paths constructed at runtime.
+                // The path is validated by the regex match above, so this is type-safe in practice.
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 form.setError(`meals.${mealIndex}.${fieldPath}` as any, {
                   type: "validation",
                   message: errorMessage,
@@ -409,7 +421,7 @@ export function useMealPlanEditor({ mealPlanId }: UseMealPlanEditorProps): UseMe
         setError({ key: "An error occurred while saving. Please try again." });
       }
     }
-  }, [form, dailySummary, mode, sessionId, startupData, mealPlanId]);
+  }, [form, dailySummary, mode, sessionId, startupData, mealPlanId, scrollToField, t]);
 
   /**
    * Handles export button click (Edit Mode only).

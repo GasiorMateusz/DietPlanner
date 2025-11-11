@@ -122,41 +122,42 @@ export default function MealPlanEditor({ mealPlanId }: MealPlanEditorProps) {
           <Controller
             name="planName"
             control={form.control}
-            render={({ field, fieldState }) => (
-              <>
-                <Input
-                  id="plan-name"
-                  {...field}
-                  placeholder={t("editor.planNamePlaceholder")}
-                  aria-invalid={fieldState.invalid}
-                  data-testid="meal-plan-editor-plan-name-input"
-                />
-                {fieldState.error && (
-                  <p className="text-sm text-destructive mt-1">
-                    {(() => {
-                      const errorMessage = fieldState.error.message;
-                      if (!errorMessage) return null;
+            render={({ field, fieldState }) => {
+              const errorId = "plan-name-error";
+              const errorMessage = fieldState.error?.message;
+              let displayMessage: string | null = null;
 
-                      // Check if it's a translation key
-                      if (
-                        errorMessage.startsWith("editor.validation.") ||
-                        errorMessage.startsWith("common.")
-                      ) {
-                        return t(errorMessage as TranslationKey);
-                      }
+              if (errorMessage) {
+                // Check if it's a translation key
+                if (errorMessage.startsWith("editor.validation.") || errorMessage.startsWith("common.")) {
+                  displayMessage = t(errorMessage as TranslationKey);
+                } else if (errorMessage === "Plan name is required") {
+                  // Check if it's a known English error message and translate it
+                  displayMessage = t("editor.validation.planNameRequired");
+                } else {
+                  // Return the error message as-is
+                  displayMessage = errorMessage;
+                }
+              }
 
-                      // Check if it's a known English error message and translate it
-                      if (errorMessage === "Plan name is required") {
-                        return t("editor.validation.planNameRequired");
-                      }
-
-                      // Return the error message as-is
-                      return errorMessage;
-                    })()}
-                  </p>
-                )}
-              </>
-            )}
+              return (
+                <>
+                  <Input
+                    id="plan-name"
+                    {...field}
+                    placeholder={t("editor.planNamePlaceholder")}
+                    aria-invalid={fieldState.invalid}
+                    aria-describedby={fieldState.error ? errorId : undefined}
+                    data-testid="meal-plan-editor-plan-name-input"
+                  />
+                  {displayMessage && (
+                    <p id={errorId} className="text-sm text-destructive mt-1" role="alert">
+                      {displayMessage}
+                    </p>
+                  )}
+                </>
+              );
+            }}
           />
         </div>
 

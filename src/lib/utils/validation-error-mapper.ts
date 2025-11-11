@@ -1,5 +1,3 @@
-import type { ZodError } from "zod";
-
 /**
  * Maps Zod error paths to user-friendly field names for translation.
  */
@@ -122,7 +120,7 @@ export interface FormattedValidationError {
  * @returns Array of formatted error messages
  */
 export function formatValidationErrors(
-  errors: Array<{ path?: (string | number)[]; message?: string; code?: string }>
+  errors: { path?: (string | number)[]; message?: string; code?: string }[]
 ): FormattedValidationError[] {
   return errors.map((error) => {
     if (!error.path || error.path.length === 0) {
@@ -224,7 +222,6 @@ export function getFieldSelector(fieldPath?: string): string | null {
       return `#meal-preparation-${mealIndex}`;
     }
     if (field.startsWith("summary.")) {
-      const summaryField = field.replace("summary.", "");
       // Summary fields are read-only, so we'll scroll to the meal card
       return `[data-meal-index="${mealIndex}"]`;
     }
@@ -237,4 +234,3 @@ export function getFieldSelector(fieldPath?: string): string | null {
 
   return null;
 }
-

@@ -7,6 +7,41 @@ import type { MealPlanFormData } from "../lib/validation/meal-plan-form.schema";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import type { TranslationKey } from "@/lib/i18n/types";
 
+/**
+ * Helper function to safely extract error message from nested summary errors.
+ * React Hook Form's error types don't perfectly handle deeply nested structures,
+ * so we need to safely access the error messages.
+ */
+function getSummaryErrorMessage(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  summaryErrors: any,
+  fieldStateError?: { message?: string }
+): string | null {
+  if (fieldStateError?.message) {
+    return fieldStateError.message;
+  }
+
+  if (!summaryErrors || typeof summaryErrors !== "object") {
+    return null;
+  }
+
+  // Safely check for nested field errors (kcal, p, f, c)
+  const errorFields = ["kcal", "p", "f", "c"] as const;
+  for (const field of errorFields) {
+    const fieldError = summaryErrors[field];
+    if (
+      fieldError &&
+      typeof fieldError === "object" &&
+      "message" in fieldError &&
+      typeof fieldError.message === "string"
+    ) {
+      return fieldError.message;
+    }
+  }
+
+  return null;
+}
+
 interface MealCardProps {
   mealIndex: number;
   control: Control<MealPlanFormData>;
@@ -41,44 +76,42 @@ export function MealCard({ mealIndex, control, isRemoveable, onRemove }: MealCar
         <Controller
           name={`meals.${mealIndex}.name`}
           control={control}
-          render={({ field, fieldState }) => (
-            <>
-              <Input
-                id={`meal-name-${mealIndex}`}
-                {...field}
-                placeholder={t("editor.mealNamePlaceholder")}
-                aria-invalid={fieldState.invalid}
-                data-testid={`meal-card-name-input-${mealIndex}`}
-              />
-              {fieldState.error && (
-                <p className="text-sm text-destructive mt-1">
-                  {(() => {
-                    const errorMessage = fieldState.error.message;
-                    if (!errorMessage) return null;
+          render={({ field, fieldState }) => {
+            const errorId = `meal-name-${mealIndex}-error`;
+            const errorMessage = fieldState.error?.message;
+            let displayMessage: string | null = null;
 
-                    // Check if it's a translation key
-                    if (
-                      errorMessage.startsWith("editor.validation.") ||
-                      errorMessage.startsWith("common.")
-                    ) {
-                      return t(errorMessage as TranslationKey);
-                    }
+            if (errorMessage) {
+              // Check if it's a translation key
+              if (errorMessage.startsWith("editor.validation.") || errorMessage.startsWith("common.")) {
+                displayMessage = t(errorMessage as TranslationKey);
+              } else if (errorMessage === "Meal name is required") {
+                // Check if it's a known English error message and translate it
+                displayMessage = t("editor.validation.mealNameRequired").replace(/\{index\}/g, String(mealIndex + 1));
+              } else {
+                // Return the error message as-is
+                displayMessage = errorMessage;
+              }
+            }
 
-                    // Check if it's a known English error message and translate it
-                    if (errorMessage === "Meal name is required") {
-                      return t("editor.validation.mealNameRequired").replace(
-                        /\{index\}/g,
-                        String(mealIndex + 1)
-                      );
-                    }
-
-                    // Return the error message as-is
-                    return errorMessage;
-                  })()}
-                </p>
-              )}
-            </>
-          )}
+            return (
+              <>
+                <Input
+                  id={`meal-name-${mealIndex}`}
+                  {...field}
+                  placeholder={t("editor.mealNamePlaceholder")}
+                  aria-invalid={fieldState.invalid}
+                  aria-describedby={fieldState.error ? errorId : undefined}
+                  data-testid={`meal-card-name-input-${mealIndex}`}
+                />
+                {displayMessage && (
+                  <p id={errorId} className="text-sm text-destructive mt-1" role="alert">
+                    {displayMessage}
+                  </p>
+                )}
+              </>
+            );
+          }}
         />
       </div>
 
@@ -146,27 +179,19 @@ export function MealCard({ mealIndex, control, isRemoveable, onRemove }: MealCar
                   </div>
                 </div>
                 {/* Show summary field errors if any */}
-                {hasSummaryError && (
-                  <p className="text-sm text-destructive mt-2">
-                    {(() => {
-                      // Get error message from nested field or parent
-                      const errorMessage =
-                        (summaryErrors as any)?.kcal?.message ||
-                        (summaryErrors as any)?.p?.message ||
-                        (summaryErrors as any)?.f?.message ||
-                        (summaryErrors as any)?.c?.message ||
-                        fieldState.error?.message;
+                {hasSummaryError &&
+                  (() => {
+                    const errorMessage = getSummaryErrorMessage(summaryErrors, fieldState.error);
+                    if (!errorMessage) return null;
 
-                      if (!errorMessage) return null;
-
-                      return errorMessage &&
-                        (errorMessage.startsWith("editor.validation.") ||
-                          errorMessage.startsWith("common."))
-                        ? t(errorMessage as TranslationKey)
-                        : errorMessage;
-                    })()}
-                  </p>
-                )}
+                    return (
+                      <p className="text-sm text-destructive mt-2">
+                        {errorMessage.startsWith("editor.validation.") || errorMessage.startsWith("common.")
+                          ? t(errorMessage as TranslationKey)
+                          : errorMessage}
+                      </p>
+                    );
+                  })()}
               </>
             );
           }}
