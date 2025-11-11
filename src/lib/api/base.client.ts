@@ -55,10 +55,16 @@ export async function handleApiResponse<T>(response: Response): Promise<T> {
     // Format error message with details if available
     let errorMessage = errorData.error || "An error occurred";
 
-    // If there are validation details, format them into a readable message
+    // If there are validation details, attach them to the error for structured handling
     if (errorData.details && Array.isArray(errorData.details) && errorData.details.length > 0) {
+      // Create a custom error that includes the structured details
+      const error = new Error(errorMessage);
+      (error as any).validationDetails = errorData.details;
+      (error as any).isValidationError = true;
+
+      // Also format them into a readable message for backward compatibility
       const validationErrors = errorData.details
-        .map((detail: { path?: (string | number)[]; message?: string }) => {
+        .map((detail: { path?: (string | number)[]; message?: string; code?: string }) => {
           if (!detail.path || detail.path.length === 0) {
             return detail.message || "Invalid value";
           }
@@ -83,6 +89,8 @@ export async function handleApiResponse<T>(response: Response): Promise<T> {
         .join("; ");
 
       errorMessage = `${errorMessage}. ${validationErrors}`;
+      error.message = errorMessage;
+      throw error;
     } else if (errorData.details && typeof errorData.details === "string") {
       // If details is a string, append it
       errorMessage = `${errorMessage}. ${errorData.details}`;

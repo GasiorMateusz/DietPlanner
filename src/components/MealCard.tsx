@@ -5,6 +5,7 @@ import { Textarea } from "./ui/textarea";
 import { Button } from "./ui/button";
 import type { MealPlanFormData } from "../lib/validation/meal-plan-form.schema";
 import { useTranslation } from "@/lib/i18n/useTranslation";
+import type { TranslationKey } from "@/lib/i18n/types";
 
 interface MealCardProps {
   mealIndex: number;
@@ -41,13 +42,24 @@ export function MealCard({ mealIndex, control, isRemoveable, onRemove }: MealCar
           name={`meals.${mealIndex}.name`}
           control={control}
           render={({ field, fieldState }) => (
-            <Input
-              id={`meal-name-${mealIndex}`}
-              {...field}
-              placeholder={t("editor.mealNamePlaceholder")}
-              aria-invalid={fieldState.invalid}
-              data-testid={`meal-card-name-input-${mealIndex}`}
-            />
+            <>
+              <Input
+                id={`meal-name-${mealIndex}`}
+                {...field}
+                placeholder={t("editor.mealNamePlaceholder")}
+                aria-invalid={fieldState.invalid}
+                data-testid={`meal-card-name-input-${mealIndex}`}
+              />
+              {fieldState.error && (
+                <p className="text-sm text-destructive mt-1">
+                  {fieldState.error.message &&
+                  (fieldState.error.message.startsWith("editor.validation.") ||
+                    fieldState.error.message.startsWith("common."))
+                    ? t(fieldState.error.message as TranslationKey)
+                    : fieldState.error.message}
+                </p>
+              )}
+            </>
           )}
         />
       </div>
@@ -85,31 +97,61 @@ export function MealCard({ mealIndex, control, isRemoveable, onRemove }: MealCar
       </div>
 
       {/* Read-only meal summary */}
-      <div className="border-t pt-4 mt-4">
+      <div className="border-t pt-4 mt-4" data-meal-index={mealIndex}>
         <div className="text-sm font-medium mb-2">{t("editor.mealSummary")}</div>
         <Controller
           name={`meals.${mealIndex}.summary`}
           control={control}
-          render={({ field }) => (
-            <div className="grid grid-cols-4 gap-4 text-sm">
-              <div>
-                <div className="text-muted-foreground">{t("summary.kcal")}</div>
-                <div className="font-semibold">{field.value.kcal}</div>
-              </div>
-              <div>
-                <div className="text-muted-foreground">{t("summary.proteins")}</div>
-                <div className="font-semibold">{field.value.p}g</div>
-              </div>
-              <div>
-                <div className="text-muted-foreground">{t("summary.fats")}</div>
-                <div className="font-semibold">{field.value.f}g</div>
-              </div>
-              <div>
-                <div className="text-muted-foreground">{t("summary.carbs")}</div>
-                <div className="font-semibold">{field.value.c}g</div>
-              </div>
-            </div>
-          )}
+          render={({ field, fieldState, formState }) => {
+            // Check for nested errors on summary fields (kcal, p, f, c)
+            const summaryErrors = formState.errors.meals?.[mealIndex]?.summary;
+            const hasSummaryError = fieldState.error || summaryErrors;
+
+            return (
+              <>
+                <div className="grid grid-cols-4 gap-4 text-sm">
+                  <div>
+                    <div className="text-muted-foreground">{t("summary.kcal")}</div>
+                    <div className="font-semibold">{field.value.kcal}</div>
+                  </div>
+                  <div>
+                    <div className="text-muted-foreground">{t("summary.proteins")}</div>
+                    <div className="font-semibold">{field.value.p}g</div>
+                  </div>
+                  <div>
+                    <div className="text-muted-foreground">{t("summary.fats")}</div>
+                    <div className="font-semibold">{field.value.f}g</div>
+                  </div>
+                  <div>
+                    <div className="text-muted-foreground">{t("summary.carbs")}</div>
+                    <div className="font-semibold">{field.value.c}g</div>
+                  </div>
+                </div>
+                {/* Show summary field errors if any */}
+                {hasSummaryError && (
+                  <p className="text-sm text-destructive mt-2">
+                    {(() => {
+                      // Get error message from nested field or parent
+                      const errorMessage =
+                        (summaryErrors as any)?.kcal?.message ||
+                        (summaryErrors as any)?.p?.message ||
+                        (summaryErrors as any)?.f?.message ||
+                        (summaryErrors as any)?.c?.message ||
+                        fieldState.error?.message;
+
+                      if (!errorMessage) return null;
+
+                      return errorMessage &&
+                        (errorMessage.startsWith("editor.validation.") ||
+                          errorMessage.startsWith("common."))
+                        ? t(errorMessage as TranslationKey)
+                        : errorMessage;
+                    })()}
+                  </p>
+                )}
+              </>
+            );
+          }}
         />
       </div>
     </div>

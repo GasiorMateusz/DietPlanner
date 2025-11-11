@@ -5,6 +5,9 @@ import { mealPlanFormSchema, type MealPlanFormData } from "@/lib/validation/meal
 import { mealPlansApi } from "@/lib/api/meal-plans.client";
 import { parseXmlMealPlan } from "@/lib/utils/meal-plan-parser";
 import { resolveDailySummary } from "@/lib/utils/meal-plan-calculations";
+import { formatValidationErrors, getFieldSelector, type FormattedValidationError } from "@/lib/utils/validation-error-mapper";
+import { useTranslation } from "@/lib/i18n/useTranslation";
+import type { TranslationKey } from "@/lib/i18n/types";
 import type {
   MealPlanContentDailySummary,
   MealPlanStartupData,
@@ -28,7 +31,8 @@ interface UseMealPlanEditorProps {
 
 interface ErrorInfo {
   key: string;
-  params?: Record<string, string>;
+  params?: Record<string, string | number>;
+  fieldErrors?: Map<string, FormattedValidationError>; // Map of field paths to errors for inline display
 }
 
 interface UseMealPlanEditorReturn {
@@ -51,6 +55,7 @@ interface UseMealPlanEditorReturn {
  * Handles form state, dynamic meal array, and API operations.
  */
 export function useMealPlanEditor({ mealPlanId }: UseMealPlanEditorProps): UseMealPlanEditorReturn {
+  const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<ErrorInfo | null>(null);
   const [dailySummary, setDailySummary] = useState<MealPlanContentDailySummary>({
@@ -274,11 +279,108 @@ export function useMealPlanEditor({ mealPlanId }: UseMealPlanEditorProps): UseMe
         window.location.href = "/app/dashboard";
       }
     } catch (err) {
-      // For API errors, store the raw message (not a translation key)
-      // These are typically server errors that don't have translations
-      const errorMessage = err instanceof Error ? err.message : "An error occurred while saving. Please try again.";
-      setError({ key: errorMessage });
       setIsLoading(false);
+
+      // Check if this is a validation error with structured details
+      if (err instanceof Error && (err as any).isValidationError && (err as any).validationDetails) {
+        const validationDetails = (err as any).validationDetails as Array<{
+          path?: (string | number)[];
+          message?: string;
+          code?: string;
+        }>;
+
+        // Format validation errors using the mapper
+        const formattedErrors = formatValidationErrors(validationDetails);
+
+        // Create a map of field paths to errors for inline display
+        const fieldErrorsMap = new Map<string, FormattedValidationError>();
+        formattedErrors.forEach((error) => {
+          if (error.fieldPath) {
+            fieldErrorsMap.set(error.fieldPath, error);
+          }
+        });
+
+        // Set form field errors for inline display
+        formattedErrors.forEach((formattedError) => {
+          if (formattedError.fieldPath) {
+            // Format error message with translated field names
+            let errorMessage = t(formattedError.translationKey as TranslationKey);
+            if (formattedError.params) {
+              // Replace placeholders in the translated message
+              for (const [key, value] of Object.entries(formattedError.params)) {
+                if (key === "fieldKey" && typeof value === "string") {
+                  // Translate the field name and replace {field} placeholder
+                  const translatedField = t(value as TranslationKey);
+                  errorMessage = errorMessage.replace(/\{field\}/g, translatedField);
+                } else {
+                  // Replace other placeholders
+                  errorMessage = errorMessage.replace(new RegExp(`\\{${key}\\}`, "g"), String(value));
+                }
+              }
+            }
+
+            // Map field path to react-hook-form path
+            if (formattedError.fieldPath.startsWith("meals.")) {
+              // Extract meal index and field (handles both direct fields and nested summary fields)
+              const match = formattedError.fieldPath.match(/^meals\.(\d+)\.(.+)$/);
+              if (match) {
+                const mealIndex = parseInt(match[1], 10);
+                const fieldPath = match[2]; // This could be "name", "ingredients", "preparation", or "summary.kcal", etc.
+                form.setError(`meals.${mealIndex}.${fieldPath}` as any, {
+                  type: "validation",
+                  message: errorMessage,
+                });
+              }
+            } else if (formattedError.fieldPath === "name" || formattedError.fieldPath === "planName") {
+              form.setError("planName", {
+                type: "validation",
+                message: errorMessage,
+              });
+            }
+          }
+        });
+
+        // Scroll to first error field
+        const firstError = formattedErrors[0];
+        if (firstError?.fieldPath) {
+          const selector = getFieldSelector(firstError.fieldPath);
+          if (selector) {
+            const element = document.querySelector(selector);
+            if (element) {
+              element.scrollIntoView({ behavior: "smooth", block: "center" });
+              if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) {
+                setTimeout(() => element.focus(), 100);
+              }
+            }
+          }
+        }
+
+        // Set general error message
+        setError({
+          key: "editor.validation.fixMealErrors",
+          params: {},
+          fieldErrors: fieldErrorsMap,
+        });
+        return;
+      }
+
+      // For other API errors
+      if (err instanceof Error) {
+        const errorMessage = err.message;
+
+        // Check if it's a validation error (but without structured details)
+        if (errorMessage.includes("Validation failed") || errorMessage.includes("→")) {
+          setError({
+            key: "editor.validation.fixMealErrors",
+            params: {},
+          });
+        } else {
+          // Other API errors
+          setError({ key: errorMessage });
+        }
+      } else {
+        setError({ key: "An error occurred while saving. Please try again." });
+      }
     }
   }, [form, dailySummary, mode, sessionId, startupData, mealPlanId]);
 
