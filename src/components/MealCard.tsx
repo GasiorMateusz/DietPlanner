@@ -41,16 +41,13 @@ export function MealCard({ mealIndex, control, isRemoveable, onRemove }: MealCar
           name={`meals.${mealIndex}.name`}
           control={control}
           render={({ field, fieldState }) => (
-            <>
-              <Input
-                id={`meal-name-${mealIndex}`}
-                {...field}
-                placeholder={t("editor.mealNamePlaceholder")}
-                aria-invalid={fieldState.invalid}
-                data-testid={`meal-card-name-input-${mealIndex}`}
-              />
-              {fieldState.error && <p className="text-sm text-destructive">{fieldState.error.message}</p>}
-            </>
+            <Input
+              id={`meal-name-${mealIndex}`}
+              {...field}
+              placeholder={t("editor.mealNamePlaceholder")}
+              aria-invalid={fieldState.invalid}
+              data-testid={`meal-card-name-input-${mealIndex}`}
+            />
           )}
         />
       </div>

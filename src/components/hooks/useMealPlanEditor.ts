@@ -26,13 +26,18 @@ interface UseMealPlanEditorProps {
   mealPlanId?: string;
 }
 
+interface ErrorInfo {
+  key: string;
+  params?: Record<string, string>;
+}
+
 interface UseMealPlanEditorReturn {
   form: ReturnType<typeof useForm<MealPlanFormData>>;
   fields: ReturnType<typeof useFieldArray<MealPlanFormData, "meals">>["fields"];
   append: ReturnType<typeof useFieldArray<MealPlanFormData, "meals">>["append"];
   remove: ReturnType<typeof useFieldArray<MealPlanFormData, "meals">>["remove"];
   isLoading: boolean;
-  error: string | null;
+  error: ErrorInfo | null;
   dailySummary: MealPlanContentDailySummary;
   startupData: MealPlanStartupData | null;
   sessionId: string | null;
@@ -47,7 +52,7 @@ interface UseMealPlanEditorReturn {
  */
 export function useMealPlanEditor({ mealPlanId }: UseMealPlanEditorProps): UseMealPlanEditorReturn {
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<ErrorInfo | null>(null);
   const [dailySummary, setDailySummary] = useState<MealPlanContentDailySummary>({
     kcal: 0,
     proteins: 0,
@@ -148,7 +153,7 @@ export function useMealPlanEditor({ mealPlanId }: UseMealPlanEditorProps): UseMe
         }
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : "Failed to initialize editor. Please try again.";
-        setError(errorMessage);
+        setError({ key: errorMessage });
       } finally {
         setIsLoading(false);
       }
@@ -158,20 +163,72 @@ export function useMealPlanEditor({ mealPlanId }: UseMealPlanEditorProps): UseMe
   }, [mealPlanId, loadMealPlanFromApi, loadMealPlanFromBridge]);
 
   /**
+   * Scrolls to an element by its selector and focuses it.
+   */
+  const scrollToField = (selector: string, errorKey: string, params?: Record<string, string>) => {
+    const element = document.querySelector(selector);
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth", block: "center" });
+      // Focus the input if it's an input element
+      if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) {
+        setTimeout(() => element.focus(), 100);
+      }
+      setError({ key: errorKey, params });
+    }
+  };
+
+  /**
    * Handles form submission (save).
    */
   const handleSave = useCallback(async () => {
     const isValid = await form.trigger();
     if (!isValid) {
       const errors = form.formState.errors;
+
+      // Check plan name error first
       if (errors.planName) {
-        setError(errors.planName.message || "Plan name is required");
-      } else if (errors.meals) {
-        setError(errors.meals.message || "At least one meal is required");
-      } else {
-        setError("Please fix form errors before saving");
+        scrollToField("#plan-name", "editor.validation.planNameRequired");
+        return;
       }
-      return;
+
+      // Check meals errors
+      if (errors.meals) {
+        // Check if it's an array-level error (e.g., "at least one meal required")
+        if (errors.meals.message) {
+          setError({ key: "editor.validation.mealsRequired" });
+          // Scroll to meals section
+          const mealsSection = document.querySelector('[data-testid="meal-plan-editor-meals-section"]');
+          if (mealsSection) {
+            mealsSection.scrollIntoView({ behavior: "smooth", block: "center" });
+          }
+          return;
+        }
+
+        // Check individual meal name errors
+        // In react-hook-form, field array errors are accessed by index as object keys
+        const mealsError = errors.meals as Record<number, { name?: { message?: string } }> | undefined;
+        if (mealsError) {
+          // Iterate through numeric keys (meal indices)
+          for (const key in mealsError) {
+            const index = Number(key);
+            if (!isNaN(index) && mealsError[index]?.name) {
+              scrollToField(`#meal-name-${index}`, "editor.validation.mealNameRequired", { index: String(index + 1) });
+              return;
+            }
+          }
+        }
+
+        // Fallback for meals error
+        setError({ key: "editor.validation.fixMealErrors" });
+        const mealsSection = document.querySelector('[data-testid="meal-plan-editor-meals-section"]');
+        if (mealsSection) {
+          mealsSection.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+        return;
+      }
+
+      // Fallback error
+      setError({ key: "editor.validation.fixFormErrors" });
     }
 
     setIsLoading(true);
@@ -217,8 +274,10 @@ export function useMealPlanEditor({ mealPlanId }: UseMealPlanEditorProps): UseMe
         window.location.href = "/app/dashboard";
       }
     } catch (err) {
+      // For API errors, store the raw message (not a translation key)
+      // These are typically server errors that don't have translations
       const errorMessage = err instanceof Error ? err.message : "An error occurred while saving. Please try again.";
-      setError(errorMessage);
+      setError({ key: errorMessage });
       setIsLoading(false);
     }
   }, [form, dailySummary, mode, sessionId, startupData, mealPlanId]);
@@ -246,7 +305,7 @@ export function useMealPlanEditor({ mealPlanId }: UseMealPlanEditorProps): UseMe
       document.body.removeChild(a);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to export meal plan";
-      setError(errorMessage);
+      setError({ key: errorMessage });
     }
   }, [mealPlanId]);
 
