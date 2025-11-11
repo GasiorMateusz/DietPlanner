@@ -7,12 +7,7 @@ import type {
   UpdateMealPlanResponseDto,
   ExportOptions,
 } from "@/types";
-import {
-  getAuthHeaders,
-  getAuthHeadersWithoutContentType,
-  handleApiResponse,
-  handleApiBlobResponse,
-} from "./base.client";
+import { getAuthHeaders, getAuthHeadersWithoutContentType, handleApiResponse } from "./base.client";
 
 /**
  * API client for meal plan operations.
@@ -146,7 +141,7 @@ export const mealPlansApi = {
       const filenameMatch =
         contentDisposition.match(/filename\*=UTF-8''(.+?)(?:;|$)/i) ||
         contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/i);
-      
+
       if (filenameMatch && filenameMatch[1]) {
         // Decode URI-encoded filename (for RFC 5987 format) or remove quotes
         try {

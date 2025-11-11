@@ -83,7 +83,10 @@ export class HtmlGeneratorService {
    * @param t - Translation function
    * @returns HTML string for daily summary section
    */
-  private generateDailySummarySection(summary: MealPlanContentDailySummary, t: ReturnType<typeof getExportTranslations>): string {
+  private generateDailySummarySection(
+    summary: MealPlanContentDailySummary,
+    t: ReturnType<typeof getExportTranslations>
+  ): string {
     return `
     <section class="daily-summary-section" data-collapsible>
       <div class="section-header">
@@ -123,7 +126,11 @@ export class HtmlGeneratorService {
    * @param t - Translation function
    * @returns HTML string for meals section
    */
-  private generateMealsSection(meals: MealPlanMeal[], options: ExportContentOptions, t: ReturnType<typeof getExportTranslations>): string {
+  private generateMealsSection(
+    meals: MealPlanMeal[],
+    options: ExportContentOptions,
+    t: ReturnType<typeof getExportTranslations>
+  ): string {
     // Handle empty meals array
     if (!meals || meals.length === 0) {
       return `
@@ -159,7 +166,12 @@ export class HtmlGeneratorService {
    * @param t - Translation function
    * @returns HTML string for single meal
    */
-  private generateMealSection(meal: MealPlanMeal, index: number, options: ExportContentOptions, t: ReturnType<typeof getExportTranslations>): string {
+  private generateMealSection(
+    meal: MealPlanMeal,
+    index: number,
+    options: ExportContentOptions,
+    t: ReturnType<typeof getExportTranslations>
+  ): string {
     if (!meal) {
       return "";
     }
@@ -512,7 +524,7 @@ export class HtmlGeneratorService {
     // Escape JavaScript string literals to prevent injection
     const collapseText = this.escapeJsString(t["export.collapse"]);
     const expandText = this.escapeJsString(t["export.expand"]);
-    
+
     return `
     (function() {
       function initCollapsible() {
@@ -588,4 +600,3 @@ export class HtmlGeneratorService {
     return sanitizeFilenameFromDoc(name);
   }
 }
-

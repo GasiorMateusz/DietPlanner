@@ -24,8 +24,9 @@ interface MealPlanEditorProps {
 export default function MealPlanEditor({ mealPlanId }: MealPlanEditorProps) {
   const { t } = useTranslation();
   const [isExportModalOpen, setIsExportModalOpen] = useState<boolean>(false);
-  const { form, fields, append, remove, isLoading, error, dailySummary, mode, handleSave } =
-    useMealPlanEditor({ mealPlanId });
+  const { form, fields, append, remove, isLoading, error, dailySummary, mode, handleSave } = useMealPlanEditor({
+    mealPlanId,
+  });
 
   /**
    * Handles cancel button click - navigates back to dashboard.

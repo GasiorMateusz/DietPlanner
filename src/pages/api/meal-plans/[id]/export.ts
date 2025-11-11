@@ -86,7 +86,12 @@ export const GET: APIRoute = async (context) => {
     };
 
     // Validate that at least one content option is enabled
-    if (!contentOptions.dailySummary && !contentOptions.mealsSummary && !contentOptions.ingredients && !contentOptions.preparation) {
+    if (
+      !contentOptions.dailySummary &&
+      !contentOptions.mealsSummary &&
+      !contentOptions.ingredients &&
+      !contentOptions.preparation
+    ) {
       return new Response(
         JSON.stringify({
           error: "At least one content option must be selected",

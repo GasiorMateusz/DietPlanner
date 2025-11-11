@@ -1,12 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "./ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "./ui/dialog";
 import { Button } from "./ui/button";
 import { Checkbox } from "./ui/checkbox";
 import { Label } from "./ui/label";
@@ -83,17 +76,14 @@ export function ExportOptionsModal({
   /**
    * Handles checkbox toggle for content options.
    */
-  const handleContentOptionToggle = useCallback(
-    (option: keyof ExportContentOptions) => {
-      setContentOptions((prev) => ({
-        ...prev,
-        [option]: !prev[option],
-      }));
-      // Clear error when user makes a change
-      setError(null);
-    },
-    []
-  );
+  const handleContentOptionToggle = useCallback((option: keyof ExportContentOptions) => {
+    setContentOptions((prev) => ({
+      ...prev,
+      [option]: !prev[option],
+    }));
+    // Clear error when user makes a change
+    setError(null);
+  }, []);
 
   /**
    * Handles format selection change.
@@ -216,12 +206,7 @@ export function ExportOptionsModal({
             <Label htmlFor="format-select" className="text-base font-semibold">
               {t("export.modal.formatOptions")}
             </Label>
-            <Select
-              id="format-select"
-              value={format}
-              onChange={handleFormatChange}
-              disabled={isExporting}
-            >
+            <Select id="format-select" value={format} onChange={handleFormatChange} disabled={isExporting}>
               <option value="doc">{t("export.modal.formatDoc")}</option>
               <option value="html">{t("export.modal.formatHtml")}</option>
             </Select>
@@ -247,4 +232,3 @@ export function ExportOptionsModal({
     </Dialog>
   );
 }
-

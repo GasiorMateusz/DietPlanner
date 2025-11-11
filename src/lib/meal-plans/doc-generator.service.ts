@@ -20,7 +20,11 @@ import { getExportTranslations } from "../i18n/export-translations.ts";
  * @param options - Export content options
  * @param language - Language code for translations
  */
-function generateDocumentChildren(mealPlan: TypedMealPlanRow, options: ExportContentOptions, language: LanguageCode): (Paragraph | Table)[] {
+function generateDocumentChildren(
+  mealPlan: TypedMealPlanRow,
+  options: ExportContentOptions,
+  language: LanguageCode
+): (Paragraph | Table)[] {
   const t = getExportTranslations(language);
   const children: (Paragraph | Table)[] = [];
 
@@ -35,7 +39,7 @@ function generateDocumentChildren(mealPlan: TypedMealPlanRow, options: ExportCon
   );
 
   // Startup Data Section
-  children.push(...formatStartupData(mealPlan, t));
+  children.push(...formatStartupData(mealPlan));
 
   // Daily Summary Section (if enabled)
   if (options.dailySummary) {
@@ -55,7 +59,11 @@ function generateDocumentChildren(mealPlan: TypedMealPlanRow, options: ExportCon
  * @param language - Language code for translations (default: "en")
  * @returns Buffer containing the .doc file data
  */
-export async function generateDoc(mealPlan: TypedMealPlanRow, options: ExportContentOptions, language: LanguageCode = "en"): Promise<Buffer> {
+export async function generateDoc(
+  mealPlan: TypedMealPlanRow,
+  options: ExportContentOptions,
+  language: LanguageCode = "en"
+): Promise<Buffer> {
   const children = generateDocumentChildren(mealPlan, options, language);
   const doc = new Document({
     sections: [
@@ -72,9 +80,8 @@ export async function generateDoc(mealPlan: TypedMealPlanRow, options: ExportCon
 /**
  * Formats the startup data section.
  * @param mealPlan - The complete meal plan row from database
- * @param t - Translation function (not used for startup data, but kept for consistency)
  */
-function formatStartupData(mealPlan: TypedMealPlanRow, t: ReturnType<typeof getExportTranslations>): (Paragraph | Table)[] {
+function formatStartupData(mealPlan: TypedMealPlanRow): (Paragraph | Table)[] {
   const paragraphs: (Paragraph | Table)[] = [];
 
   paragraphs.push(
@@ -174,7 +181,10 @@ function formatStartupData(mealPlan: TypedMealPlanRow, t: ReturnType<typeof getE
  * @param mealPlan - The complete meal plan row from database
  * @param t - Translation function
  */
-function formatDailySummary(mealPlan: TypedMealPlanRow, t: ReturnType<typeof getExportTranslations>): (Paragraph | Table)[] {
+function formatDailySummary(
+  mealPlan: TypedMealPlanRow,
+  t: ReturnType<typeof getExportTranslations>
+): (Paragraph | Table)[] {
   const paragraphs: (Paragraph | Table)[] = [];
   const summary = mealPlan.plan_content.daily_summary;
 
@@ -249,7 +259,11 @@ function formatDailySummary(mealPlan: TypedMealPlanRow, t: ReturnType<typeof get
  * @param options - Export content options
  * @param t - Translation function
  */
-function formatMeals(meals: MealPlanMeal[], options: ExportContentOptions, t: ReturnType<typeof getExportTranslations>): Paragraph[] {
+function formatMeals(
+  meals: MealPlanMeal[],
+  options: ExportContentOptions,
+  t: ReturnType<typeof getExportTranslations>
+): Paragraph[] {
   const paragraphs: Paragraph[] = [];
 
   paragraphs.push(
@@ -291,7 +305,10 @@ function formatMeals(meals: MealPlanMeal[], options: ExportContentOptions, t: Re
     if (options.ingredients) {
       paragraphs.push(
         new Paragraph({
-          children: [new TextRun({ text: `${t["editor.ingredients"]}: `, bold: true }), new TextRun({ text: meal.ingredients })],
+          children: [
+            new TextRun({ text: `${t["editor.ingredients"]}: `, bold: true }),
+            new TextRun({ text: meal.ingredients }),
+          ],
           spacing: { after: 200 },
         })
       );
@@ -301,7 +318,10 @@ function formatMeals(meals: MealPlanMeal[], options: ExportContentOptions, t: Re
     if (options.preparation) {
       paragraphs.push(
         new Paragraph({
-          children: [new TextRun({ text: `${t["editor.preparation"]}: `, bold: true }), new TextRun({ text: meal.preparation })],
+          children: [
+            new TextRun({ text: `${t["editor.preparation"]}: `, bold: true }),
+            new TextRun({ text: meal.preparation }),
+          ],
           spacing: { after: 200 },
         })
       );

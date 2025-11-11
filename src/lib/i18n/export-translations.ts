@@ -74,4 +74,3 @@ export function getExportTranslation(key: ExportTranslationKey, language: Langua
 export function getExportTranslations(language: LanguageCode): Record<ExportTranslationKey, string> {
   return translations[language];
 }
-
