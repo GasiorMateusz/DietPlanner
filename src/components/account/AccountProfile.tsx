@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { TermsAndPrivacyModal } from "@/components/terms/TermsAndPrivacyModal";
 import { DeleteAccountConfirmationDialog } from "@/components/auth/DeleteAccountConfirmationDialog";
-import { formatRelativeTime, formatDate } from "@/lib/utils/date";
+import { formatDate } from "@/lib/utils/date";
 import { getAuthToken } from "@/lib/auth/get-auth-token";
 import { supabaseClient as supabase } from "@/db/supabase.client";
 
@@ -106,13 +106,9 @@ export function AccountProfile({ userEmail, termsAccepted, termsAcceptedAt }: Ac
             <div className="space-y-2">
               <div className="text-sm text-muted-foreground">{t("account.acceptedAt")}</div>
               <div className="text-base">
-                {termsAccepted && termsAcceptedAt ? (
-                  formatRelativeTime(termsAcceptedAt, t)
-                ) : (
-                  <span className="text-muted-foreground">{t("account.notAccepted")}</span>
-                )}
+                {t("account.accepted")}
               </div>
-              {termsAccepted && termsAcceptedAt && (
+              {termsAcceptedAt && (
                 <div className="text-xs text-muted-foreground">{formatDate(termsAcceptedAt)}</div>
               )}
             </div>
