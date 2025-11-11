@@ -3,7 +3,7 @@ import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { mealPlanFormSchema, type MealPlanFormData } from "@/lib/validation/meal-plan-form.schema";
 import { mealPlansApi } from "@/lib/api/meal-plans.client";
-import { parseXmlMealPlan } from "@/lib/utils/meal-plan-parser";
+import { parseJsonMealPlan } from "@/lib/utils/meal-plan-parser";
 import { resolveDailySummary } from "@/lib/utils/meal-plan-calculations";
 import {
   formatValidationErrors,
@@ -129,10 +129,10 @@ export function useMealPlanEditor({ mealPlanId }: UseMealPlanEditorProps): UseMe
     const bridge: StateBridge = JSON.parse(storedData);
     sessionStorage.removeItem("mealPlanBridge");
 
-    // Parse XML structure from AI message
-    const { meals, dailySummary: parsedDailySummary } = parseXmlMealPlan(bridge.lastAssistantMessage);
+    // Parse JSON structure from AI message
+    const { meals, dailySummary: parsedDailySummary } = parseJsonMealPlan(bridge.lastAssistantMessage);
 
-    // If daily summary from XML is empty, fall back to calculated values
+    // If daily summary from JSON is empty, fall back to calculated values
     const finalDailySummary = resolveDailySummary(parsedDailySummary, bridge.startupData);
 
     setDailySummary(finalDailySummary);

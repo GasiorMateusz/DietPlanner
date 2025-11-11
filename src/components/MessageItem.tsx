@@ -1,10 +1,10 @@
-import { extractComments, removeXmlTags } from "../lib/utils/meal-plan-parser";
+import { extractComments, removeJsonFromMessage } from "../lib/utils/meal-plan-parser";
 import type { ChatMessage } from "../types";
 
 /**
  * Individual message bubble component.
  * Renders either a user or assistant message with appropriate styling.
- * For assistant messages, removes XML tags to show clean text (preserves comments).
+ * For assistant messages, removes JSON structure to show clean text (preserves comments).
  */
 export function MessageItem({ message }: { message: ChatMessage }) {
   if (message.role === "user") {
@@ -18,7 +18,7 @@ export function MessageItem({ message }: { message: ChatMessage }) {
   }
 
   const comments = extractComments(message.content);
-  const cleanedContent = removeXmlTags(message.content);
+  const cleanedContent = removeJsonFromMessage(message.content);
   const displayText = comments || cleanedContent || "Meal plan updated above.";
 
   return (

@@ -1,4 +1,4 @@
-import { parseXmlMealPlan } from "./meal-plan-parser";
+import { parseJsonMealPlan } from "./meal-plan-parser";
 import type {
   ChatMessage,
   AssistantChatMessage,
@@ -46,13 +46,9 @@ export function extractCurrentMealPlan(messageHistory: ChatMessage[]): ParsedMea
   }
 
   try {
-    const parsed = parseXmlMealPlan(lastAssistantMessage.content);
-    // Only return if we actually found meals (not the fallback empty structure)
-    if (
-      parsed.meals.length > 0 &&
-      parsed.meals[0].name !== "" &&
-      parsed.meals[0].preparation !== lastAssistantMessage.content
-    ) {
+    const parsed = parseJsonMealPlan(lastAssistantMessage.content);
+    // Only return if we actually found meals (validation ensures non-empty array)
+    if (parsed.meals.length > 0 && parsed.meals[0].name !== "") {
       return parsed;
     }
   } catch (error) {

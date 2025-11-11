@@ -1,168 +1,291 @@
 import type { MealPlanMeal, MealPlanContentDailySummary } from "../../types";
 
 /**
- * Parses XML tags from AI message to extract daily summary and meals.
- * Returns both parsed meals and daily summary.
+ * JSON structure expected from AI responses.
  */
-export function parseXmlMealPlan(message: string): {
+interface JsonMealPlanResponse {
+  meal_plan: {
+    daily_summary: {
+      kcal: number;
+      proteins: number;
+      fats: number;
+      carbs: number;
+    };
+    meals: {
+      name: string;
+      ingredients: string;
+      preparation: string;
+      summary: {
+        kcal: number;
+        protein: number; // Note: "protein" not "p" in JSON
+        fat: number; // Note: "fat" not "f" in JSON
+        carb: number; // Note: "carb" not "c" in JSON
+      };
+    }[];
+  };
+  comments?: string; // Optional comments field
+}
+
+/**
+ * Validation error with field path information.
+ */
+interface ValidationError {
+  field: string;
+  message: string;
+}
+
+/**
+ * Parses JSON meal plan from AI message.
+ * Extracts daily summary and meals from JSON structure.
+ * Maps JSON field names (protein, fat, carb) to internal types (p, f, c).
+ *
+ * @param message - The AI message containing JSON meal plan
+ * @returns Parsed meals and daily summary
+ * @throws Error if JSON is malformed or structure is invalid
+ */
+export function parseJsonMealPlan(message: string): {
   meals: MealPlanMeal[];
   dailySummary: MealPlanContentDailySummary;
 } {
-  // Extract daily_summary from XML
-  const dailySummaryMatch = message.match(/<daily_summary>([\s\S]*?)<\/daily_summary>/);
-  let dailySummary: MealPlanContentDailySummary = {
-    kcal: 0,
-    proteins: 0,
-    fats: 0,
-    carbs: 0,
-  };
+  // Try to extract JSON from message
+  // Look for JSON object starting with { or containing "meal_plan" key
+  let jsonString = message.trim();
 
-  if (dailySummaryMatch) {
-    const summaryContent = dailySummaryMatch[1];
-
-    const extractTag = (tagName: string): number => {
-      const regex = new RegExp(`<${tagName}>([\\s\\S]*?)<\\/${tagName}>`, "i");
-      const match = summaryContent.match(regex);
-      if (match) {
-        const value = parseFloat(match[1].trim());
-        return isNaN(value) ? 0 : Math.round(value);
-      }
-      return 0;
-    };
-
-    dailySummary = {
-      kcal: extractTag("kcal"),
-      proteins: extractTag("proteins"),
-      fats: extractTag("fats"),
-      carbs: extractTag("carbs"),
-    };
+  // If message doesn't start with {, try to find JSON object
+  if (!jsonString.startsWith("{")) {
+    const jsonMatch = jsonString.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      jsonString = jsonMatch[0];
+    } else {
+      throw new Error("No valid JSON structure found in message. Expected JSON object with 'meal_plan' key.");
+    }
   }
 
-  // Extract all meals from XML
-  const mealsMatch = message.match(/<meals>([\s\S]*?)<\/meals>/);
-  const meals: MealPlanMeal[] = [];
+  // Parse JSON
+  let parsed: JsonMealPlanResponse;
+  try {
+    parsed = JSON.parse(jsonString);
+  } catch (error) {
+    const syntaxError = error instanceof SyntaxError ? error.message : "Unknown JSON syntax error";
+    throw new Error(`Failed to parse JSON: ${syntaxError}. Please ensure the response is valid JSON.`);
+  }
 
-  if (mealsMatch) {
-    const mealsContent = mealsMatch[1];
+  // Validate structure
+  const validationErrors: ValidationError[] = [];
 
-    // Extract individual meal tags
-    const mealRegex = /<meal>([\s\S]*?)<\/meal>/g;
-    let mealMatch;
+  if (!parsed.meal_plan) {
+    validationErrors.push({ field: "meal_plan", message: "Missing required field: meal_plan" });
+  } else {
+    // Validate daily_summary
+    if (!parsed.meal_plan.daily_summary) {
+      validationErrors.push({
+        field: "meal_plan.daily_summary",
+        message: "Missing required field: meal_plan.daily_summary",
+      });
+    } else {
+      const ds = parsed.meal_plan.daily_summary;
+      if (typeof ds.kcal !== "number" || ds.kcal <= 0) {
+        validationErrors.push({
+          field: "meal_plan.daily_summary.kcal",
+          message: "daily_summary.kcal must be a positive number",
+        });
+      }
+      if (typeof ds.proteins !== "number" || ds.proteins < 0) {
+        validationErrors.push({
+          field: "meal_plan.daily_summary.proteins",
+          message: "daily_summary.proteins must be a non-negative number",
+        });
+      }
+      if (typeof ds.fats !== "number" || ds.fats < 0) {
+        validationErrors.push({
+          field: "meal_plan.daily_summary.fats",
+          message: "daily_summary.fats must be a non-negative number",
+        });
+      }
+      if (typeof ds.carbs !== "number" || ds.carbs < 0) {
+        validationErrors.push({
+          field: "meal_plan.daily_summary.carbs",
+          message: "daily_summary.carbs must be a non-negative number",
+        });
+      }
+    }
 
-    while ((mealMatch = mealRegex.exec(mealsContent)) !== null) {
-      const mealContent = mealMatch[1];
+    // Validate meals array
+    if (!Array.isArray(parsed.meal_plan.meals)) {
+      validationErrors.push({ field: "meal_plan.meals", message: "meal_plan.meals must be an array" });
+    } else if (parsed.meal_plan.meals.length === 0) {
+      validationErrors.push({ field: "meal_plan.meals", message: "meal_plan.meals array cannot be empty" });
+    } else {
+      // Validate each meal
+      parsed.meal_plan.meals.forEach((meal, index) => {
+        const mealPrefix = `meal_plan.meals[${index}]`;
 
-      const extractMealTag = (tagName: string): string => {
-        const regex = new RegExp(`<${tagName}>([\\s\\S]*?)<\\/${tagName}>`, "i");
-        const match = mealContent.match(regex);
-        if (!match) return "";
-
-        let content = match[1].trim();
-
-        // Remove YAML-like tags from ingredients and preparation
-        if (tagName === "ingredients") {
-          // Remove <item> and </item> tags
-          content = content.replace(/<item>/gi, "").replace(/<\/item>/g, "");
-          // Clean up leading whitespace on each line
-          content = content
-            .split("\n")
-            .map((line) => line.trim())
-            .filter((line) => line.length > 0)
-            .join("\n");
-        } else if (tagName === "preparation") {
-          // Remove <step> and </step> tags
-          content = content.replace(/<step>/gi, "").replace(/<\/step>/g, "");
-          // Clean up leading whitespace on each line
-          content = content
-            .split("\n")
-            .map((line) => line.trim())
-            .filter((line) => line.length > 0)
-            .join("\n");
+        if (typeof meal.name !== "string" || meal.name.trim() === "") {
+          validationErrors.push({ field: `${mealPrefix}.name`, message: "Meal name must be a non-empty string" });
+        }
+        if (typeof meal.ingredients !== "string") {
+          validationErrors.push({ field: `${mealPrefix}.ingredients`, message: "Meal ingredients must be a string" });
+        }
+        if (typeof meal.preparation !== "string") {
+          validationErrors.push({ field: `${mealPrefix}.preparation`, message: "Meal preparation must be a string" });
         }
 
-        return content;
-      };
-
-      const extractSummaryTag = (tagName: string): number => {
-        const summaryMatch = mealContent.match(/<summary>([\s\S]*?)<\/summary>/i);
-        if (summaryMatch) {
-          const summaryContent = summaryMatch[1];
-          const regex = new RegExp(`<${tagName}>([\\s\\S]*?)<\\/${tagName}>`, "i");
-          const match = summaryContent.match(regex);
-          if (match) {
-            const value = parseFloat(match[1].trim());
-            return isNaN(value) ? 0 : Math.round(value);
+        if (!meal.summary) {
+          validationErrors.push({ field: `${mealPrefix}.summary`, message: "Missing required field: meal.summary" });
+        } else {
+          if (typeof meal.summary.kcal !== "number" || meal.summary.kcal <= 0) {
+            validationErrors.push({
+              field: `${mealPrefix}.summary.kcal`,
+              message: "Meal summary.kcal must be a positive number",
+            });
+          }
+          if (typeof meal.summary.protein !== "number" || meal.summary.protein < 0) {
+            validationErrors.push({
+              field: `${mealPrefix}.summary.protein`,
+              message: "Meal summary.protein must be a non-negative number",
+            });
+          }
+          if (typeof meal.summary.fat !== "number" || meal.summary.fat < 0) {
+            validationErrors.push({
+              field: `${mealPrefix}.summary.fat`,
+              message: "Meal summary.fat must be a non-negative number",
+            });
+          }
+          if (typeof meal.summary.carb !== "number" || meal.summary.carb < 0) {
+            validationErrors.push({
+              field: `${mealPrefix}.summary.carb`,
+              message: "Meal summary.carb must be a non-negative number",
+            });
           }
         }
-        return 0;
-      };
-
-      meals.push({
-        name: extractMealTag("name"),
-        ingredients: extractMealTag("ingredients"),
-        preparation: extractMealTag("preparation"),
-        summary: {
-          kcal: extractSummaryTag("kcal"),
-          p: extractSummaryTag("protein"),
-          f: extractSummaryTag("fat"),
-          c: extractSummaryTag("carb"),
-        },
       });
     }
   }
 
-  // If no meals found in XML, return empty structure
-  if (meals.length === 0) {
-    return {
-      meals: [
-        {
-          name: "",
-          ingredients: "",
-          preparation: message,
-          summary: {
-            kcal: 0,
-            p: 0,
-            f: 0,
-            c: 0,
-          },
-        },
-      ],
-      dailySummary,
-    };
+  // If validation errors exist, throw with details
+  if (validationErrors.length > 0) {
+    const errorDetails = validationErrors.map((e) => `${e.field}: ${e.message}`).join("; ");
+    throw new Error(`Meal plan structure is invalid. ${errorDetails}`);
   }
+
+  // Map JSON structure to internal types
+  const dailySummary: MealPlanContentDailySummary = {
+    kcal: Math.round(parsed.meal_plan.daily_summary.kcal),
+    proteins: Math.round(parsed.meal_plan.daily_summary.proteins),
+    fats: Math.round(parsed.meal_plan.daily_summary.fats),
+    carbs: Math.round(parsed.meal_plan.daily_summary.carbs),
+  };
+
+  const meals: MealPlanMeal[] = parsed.meal_plan.meals.map((meal) => ({
+    name: meal.name.trim(),
+    ingredients: meal.ingredients.trim(),
+    preparation: meal.preparation.trim(),
+    summary: {
+      kcal: Math.round(meal.summary.kcal),
+      p: Math.round(meal.summary.protein), // Map "protein" → "p"
+      f: Math.round(meal.summary.fat), // Map "fat" → "f"
+      c: Math.round(meal.summary.carb), // Map "carb" → "c"
+    },
+  }));
 
   return { meals, dailySummary };
 }
 
 /**
- * Extracts comments from XML tags in a message.
- * Returns the comments text if found, or null if no comments tag exists.
+ * Extracts comments from JSON structure in a message.
+ * Looks for the "comments" field in the parsed JSON object.
+ * Returns the comments text if found, or null if no comments field exists.
+ *
+ * @param message - The AI message containing JSON meal plan
+ * @returns Comments text or null if not found
  */
 export function extractComments(message: string): string | null {
-  const commentsMatch = message.match(/<comments>([\s\S]*?)<\/comments>/i);
-  if (commentsMatch) {
-    return commentsMatch[1].trim();
+  // Try to extract JSON from message
+  let jsonString = message.trim();
+
+  // Find the JSON object by matching braces
+  let jsonStartIndex = -1;
+  let jsonEndIndex = -1;
+
+  // Find the first {
+  jsonStartIndex = jsonString.indexOf("{");
+  if (jsonStartIndex === -1) {
+    return null;
   }
+
+  // Find the matching closing brace
+  let braceCount = 0;
+  for (let i = jsonStartIndex; i < jsonString.length; i++) {
+    if (jsonString[i] === "{") braceCount++;
+    if (jsonString[i] === "}") braceCount--;
+    if (braceCount === 0) {
+      jsonEndIndex = i;
+      break;
+    }
+  }
+
+  if (jsonEndIndex === -1) {
+    return null;
+  }
+
+  // Extract just the JSON part
+  jsonString = jsonString.slice(jsonStartIndex, jsonEndIndex + 1);
+
+  // Try to parse JSON and extract comments
+  try {
+    const parsed = JSON.parse(jsonString) as { comments?: string };
+    if (parsed.comments && typeof parsed.comments === "string") {
+      return parsed.comments.trim();
+    }
+  } catch {
+    // If JSON parsing fails, return null (not a JSON message or malformed)
+    return null;
+  }
+
   return null;
 }
 
 /**
- * Removes XML tags from a message string, keeping only the text content.
- * This is used to display clean messages in the chat without XML clutter.
- * Preserves comments content but removes the XML tags around it.
+ * Removes JSON structure from a message string, keeping only the text content.
+ * This is used to display clean messages in the chat without JSON clutter.
+ * Preserves comments content but removes the JSON meal plan structure.
+ *
+ * @param message - The AI message containing JSON meal plan
+ * @returns Clean message text with JSON structure removed, comments preserved
  */
-export function removeXmlTags(message: string): string {
-  // Extract comments first before removing tags
+export function removeJsonFromMessage(message: string): string {
+  // Extract comments first before removing JSON
   const comments = extractComments(message);
 
-  // Remove meal_plan tags and their content
-  let cleaned = message.replace(/<meal_plan>[\s\S]*?<\/meal_plan>/gi, "");
+  // Try to find and remove JSON structure
+  let cleaned = message.trim();
 
-  // Remove comments tags but preserve the content
-  cleaned = cleaned.replace(/<comments>([\s\S]*?)<\/comments>/gi, "$1");
+  // If message starts with {, try to remove the entire JSON object
+  if (cleaned.startsWith("{")) {
+    // Find the matching closing brace
+    let braceCount = 0;
+    let jsonEndIndex = -1;
+    for (let i = 0; i < cleaned.length; i++) {
+      if (cleaned[i] === "{") braceCount++;
+      if (cleaned[i] === "}") braceCount--;
+      if (braceCount === 0) {
+        jsonEndIndex = i;
+        break;
+      }
+    }
 
-  // Remove any remaining XML tags
-  cleaned = cleaned.replace(/<[^>]*>/g, "");
+    if (jsonEndIndex !== -1) {
+      // Remove the JSON object
+      cleaned = cleaned.slice(jsonEndIndex + 1).trim();
+    }
+  } else {
+    // Try to find JSON object in the message
+    const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      // Remove the JSON match
+      cleaned = cleaned.replace(/\{[\s\S]*\}/, "").trim();
+    }
+  }
 
   // Clean up extra whitespace
   cleaned = cleaned.trim().replace(/\n\s*\n\s*\n/g, "\n\n");
@@ -172,5 +295,5 @@ export function removeXmlTags(message: string): string {
     cleaned = comments + (cleaned ? "\n\n" + cleaned : "");
   }
 
-  return cleaned.trim();
+  return cleaned.trim() || "Meal plan updated above.";
 }
