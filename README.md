@@ -51,6 +51,7 @@ The project uses the following technologies:
 ### AI
 
 - **Openrouter.ai** - Access to a wide range of AI models (OpenAI, Anthropic, Google, etc.) to power the meal plan generation
+- **Model Configuration** - The AI model used for conversations is centralized in `src/lib/ai/openrouter.service.ts` as the `DEFAULT_AI_MODEL` constant. Currently set to `openai/gpt-4.1-nano`. To change the model, update this constant only.
 
 ### Testing
 
@@ -127,6 +128,7 @@ To set up and run this project on your local machine, follow these steps.
    - `SUPABASE_SERVICE_ROLE_KEY` is required for account deletion functionality
    - Find it in Supabase Dashboard → Settings → API → "service_role" key (keep it secret!)
    - The anon key (`SUPABASE_KEY` / `PUBLIC_SUPABASE_KEY`) is NOT sufficient for admin operations
+   - The AI model used for conversations can be configured by editing the `DEFAULT_AI_MODEL` constant in `src/lib/ai/openrouter.service.ts` (default: `openai/gpt-4.1-nano`)
 
 5. **Run the development server:**
    ```bash
