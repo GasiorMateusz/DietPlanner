@@ -1,10 +1,12 @@
-import { parseJsonMealPlan } from "./meal-plan-parser";
+import { parseJsonMealPlan, parseJsonMultiDayPlan } from "./meal-plan-parser";
 import type {
   ChatMessage,
   AssistantChatMessage,
   MealPlanStartupData,
+  MultiDayStartupFormData,
   MealPlanMeal,
   MealPlanContentDailySummary,
+  MultiDayPlanChatData,
 } from "../../types";
 
 /**
@@ -14,6 +16,7 @@ export interface StateBridge {
   sessionId: string;
   lastAssistantMessage: string;
   startupData?: MealPlanStartupData;
+  planName?: string;
 }
 
 /**
@@ -54,6 +57,57 @@ export function extractCurrentMealPlan(messageHistory: ChatMessage[]): ParsedMea
   } catch (error) {
     // eslint-disable-next-line no-console
     console.error("Failed to parse meal plan:", error);
+  }
+
+  return null;
+}
+
+export function extractCurrentMultiDayPlan(messageHistory: ChatMessage[]): MultiDayPlanChatData | null {
+  const lastAssistantMessage = messageHistory
+    .filter((msg): msg is AssistantChatMessage => msg.role === "assistant")
+    .pop();
+
+  if (!lastAssistantMessage) {
+    // eslint-disable-next-line no-console
+    console.log("[extractCurrentMultiDayPlan] No assistant message found");
+    return null;
+  }
+
+  try {
+    // eslint-disable-next-line no-console
+    console.log("[extractCurrentMultiDayPlan] Parsing message, length:", lastAssistantMessage.content.length);
+    const parsed = parseJsonMultiDayPlan(lastAssistantMessage.content);
+    
+    // eslint-disable-next-line no-console
+    console.log("[extractCurrentMultiDayPlan] Parsed successfully:", {
+      days_count: parsed.days.length,
+      day_numbers: parsed.days.map((d) => d.day_number),
+      summary_number_of_days: parsed.summary.number_of_days,
+    });
+
+    if (parsed.days.length > 0 && parsed.days[0].plan_content.meals.length > 0) {
+      // eslint-disable-next-line no-console
+      console.log("[extractCurrentMultiDayPlan] Returning valid multi-day plan");
+      return {
+        days: parsed.days,
+        summary: parsed.summary,
+      };
+    } else {
+      // eslint-disable-next-line no-console
+      console.warn("[extractCurrentMultiDayPlan] Parsed but invalid - no days or no meals");
+    }
+  } catch (error) {
+    // Log the error and the first 500 chars of the message for debugging
+    const messagePreview = lastAssistantMessage.content.substring(0, 500);
+    // eslint-disable-next-line no-console
+    console.error("[extractCurrentMultiDayPlan] Failed to parse multi-day meal plan:", error);
+    // eslint-disable-next-line no-console
+    console.debug("[extractCurrentMultiDayPlan] Message preview:", messagePreview);
+    // Check if it might be a single-day plan format instead
+    if (lastAssistantMessage.content.includes('"meal_plan"') && !lastAssistantMessage.content.includes('"multi_day_plan"')) {
+      // eslint-disable-next-line no-console
+      console.warn("[extractCurrentMultiDayPlan] AI returned single-day format instead of multi-day format. Please create a new session.");
+    }
   }
 
   return null;

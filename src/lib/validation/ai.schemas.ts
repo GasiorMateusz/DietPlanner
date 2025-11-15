@@ -13,6 +13,7 @@ const targetMacroDistributionSchema = z.object({
  * Schema for validating the CreateAiSessionCommand request body.
  * All fields match the MealPlanStartupData type and are optional/nullable
  * as they may not all be required by the form.
+ * Also includes multi-day plan fields (number_of_days, etc.)
  */
 export const createAiSessionSchema = z.object({
   patient_age: z.number().int().positive().nullable().optional(),
@@ -23,6 +24,11 @@ export const createAiSessionSchema = z.object({
   target_macro_distribution: targetMacroDistributionSchema.nullable().optional(),
   meal_names: z.string().nullable().optional(),
   exclusions_guidelines: z.string().nullable().optional(),
+  // Multi-day plan fields
+  number_of_days: z.number().int().min(1).max(7).optional(),
+  ensure_meal_variety: z.boolean().optional(),
+  different_guidelines_per_day: z.boolean().optional(),
+  per_day_guidelines: z.string().max(2000).nullable().optional(),
 });
 
 /**

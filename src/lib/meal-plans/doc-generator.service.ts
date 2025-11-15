@@ -10,7 +10,12 @@ import {
   TableRow,
   TableCell,
 } from "docx";
-import type { TypedMealPlanRow, MealPlanMeal, ExportContentOptions } from "../../types.ts";
+import type {
+  TypedMealPlanRow,
+  MealPlanMeal,
+  ExportContentOptions,
+  GetMultiDayPlanByIdResponseDto,
+} from "../../types.ts";
 import type { LanguageCode } from "../i18n/types.ts";
 import { getExportTranslations } from "../i18n/export-translations.ts";
 
@@ -338,6 +343,76 @@ function formatMeals(
   });
 
   return paragraphs;
+}
+
+export async function generateMultiDayDoc(
+  multiDayPlan: GetMultiDayPlanByIdResponseDto,
+  options: ExportContentOptions,
+  language: LanguageCode = "en"
+): Promise<Buffer> {
+  const t = getExportTranslations(language);
+  const children: (Paragraph | Table)[] = [];
+
+  children.push(
+    new Paragraph({
+      text: multiDayPlan.name,
+      heading: HeadingLevel.TITLE,
+      alignment: AlignmentType.CENTER,
+      spacing: { after: 400 },
+    })
+  );
+
+  children.push(
+    new Paragraph({
+      text: language === "pl" ? `Liczba dni: ${multiDayPlan.number_of_days}` : `Number of Days: ${multiDayPlan.number_of_days}`,
+      spacing: { after: 200 },
+    })
+  );
+
+  if (multiDayPlan.common_exclusions_guidelines) {
+    children.push(
+      new Paragraph({
+        text: language === "pl" ? "Wspólne wytyczne" : "Common Guidelines",
+        heading: HeadingLevel.HEADING_2,
+        spacing: { before: 300, after: 100 },
+      })
+    );
+    children.push(
+      new Paragraph({
+        text: multiDayPlan.common_exclusions_guidelines,
+        spacing: { after: 300 },
+      })
+    );
+  }
+
+  const sortedDays = [...multiDayPlan.days].sort((a, b) => a.day_number - b.day_number);
+
+  for (const day of sortedDays) {
+    children.push(
+      new Paragraph({
+        text: `${language === "pl" ? "Dzień" : "Day"} ${day.day_number}${day.day_plan.name ? `: ${day.day_plan.name}` : ""}`,
+        heading: HeadingLevel.HEADING_2,
+        spacing: { before: 400, after: 200 },
+      })
+    );
+
+    if (options.dailySummary) {
+      children.push(...formatDailySummary(day.day_plan, t));
+    }
+
+    children.push(...formatMeals(day.day_plan.plan_content.meals, options, t));
+  }
+
+  const doc = new Document({
+    sections: [
+      {
+        children,
+      },
+    ],
+  });
+
+  const buffer = await Packer.toBuffer(doc);
+  return buffer as Buffer;
 }
 
 /**

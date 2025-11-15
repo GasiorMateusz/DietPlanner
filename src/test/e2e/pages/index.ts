@@ -6,5 +6,6 @@ export { LoginPage } from "./LoginPage";
 export { DashboardPage } from "./DashboardPage";
 export { StartupFormDialog } from "./StartupFormDialog";
 export { AIChatPage } from "./AIChatPage";
-export { MealPlanEditorPage } from "./MealPlanEditorPage";
+// MealPlanEditorPage removed - editor functionality moved to AI chat interface
 export { MealPlanListPage } from "./MealPlanListPage";
+export { MultiDayPlanViewPage } from "./MultiDayPlanViewPage";

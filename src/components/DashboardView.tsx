@@ -1,13 +1,13 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { getAuthHeaders, handleApiResponse } from "@/lib/api/base.client";
-import { useMealPlansList } from "./hooks/useMealPlansList";
+import { multiDayPlansApi } from "@/lib/api/multi-day-plans.client";
+import { useMultiDayPlansList } from "./hooks/useMultiDayPlansList";
 import { useDebounce } from "./hooks/useDebounce";
 import { DashboardHeader } from "./DashboardHeader";
 import { MealPlanList } from "./MealPlanList";
 import { StartupFormDialog } from "./StartupFormDialog";
 import { DeleteConfirmationDialog } from "./DeleteConfirmationDialog";
 import { ExportOptionsModal } from "./ExportOptionsModal";
-import type { MealPlanStartupData } from "../types";
+import type { MultiDayStartupFormData } from "../types";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 
 /**
@@ -33,8 +33,8 @@ export default function DashboardView() {
   const [selectedMealPlanId, setSelectedMealPlanId] = useState<string | null>(null);
   const hasInitiallyFetched = useRef<boolean>(false);
 
-  // Use custom hook for meal plans list management
-  const { mealPlans, isLoading, error, refetch, search } = useMealPlansList();
+  // Use custom hook for multi-day meal plans list management
+  const { plans: multiDayPlans, isLoading, error, refetch, search } = useMultiDayPlansList();
 
   // Debounce search query
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
@@ -70,10 +70,17 @@ export default function DashboardView() {
   }, []);
 
   /**
-   * Handles edit/view button click - navigates to editor.
+   * Handles view button click - navigates to view page.
+   */
+  const handleView = useCallback((id: string) => {
+    window.location.href = `/app/view/${id}`;
+  }, []);
+
+  /**
+   * Handles edit button click - navigates to edit page.
    */
   const handleEdit = useCallback((id: string) => {
-    window.location.href = `/app/editor/${id}`;
+    window.location.href = `/app/edit/${id}`;
   }, []);
 
   /**
@@ -96,7 +103,7 @@ export default function DashboardView() {
   }, []);
 
   /**
-   * Handles delete confirmation - deletes meal plan and refreshes list.
+   * Handles delete confirmation - deletes multi-day meal plan and refreshes list.
    */
   const handleDeleteConfirm = useCallback(
     async (id: string) => {
@@ -104,13 +111,7 @@ export default function DashboardView() {
       setDeleteError(null);
 
       try {
-        const headers = await getAuthHeaders();
-        const response = await fetch(`/api/meal-plans/${id}`, {
-          method: "DELETE",
-          headers,
-        });
-
-        await handleApiResponse(response);
+        await multiDayPlansApi.delete(id);
 
         // Close dialog and refresh list
         setDeleteDialogState({
@@ -132,7 +133,7 @@ export default function DashboardView() {
   /**
    * Handles startup form submission - navigates to create page.
    */
-  const handleStartupFormSubmit = useCallback((data: MealPlanStartupData) => {
+  const handleStartupFormSubmit = useCallback((data: MultiDayStartupFormData) => {
     // Store startup data in sessionStorage (read by AIChatInterface to initiate AI session)
     sessionStorage.setItem("mealPlanStartupData", JSON.stringify(data));
     setIsStartupDialogOpen(false);
@@ -156,10 +157,11 @@ export default function DashboardView() {
 
       {/* Meal Plans List */}
       <MealPlanList
-        mealPlans={mealPlans}
+        multiDayPlans={multiDayPlans}
         isLoading={isLoading}
         error={error}
         onEdit={handleEdit}
+        onView={handleView}
         onExport={handleExport}
         onDelete={handleDelete}
         onCreateClick={handleCreateClick}

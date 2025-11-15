@@ -1,0 +1,15 @@
+---
+import PrivateLayout from "../../../layouts/PrivateLayout.astro";
+import { MultiDayPlanViewWrapper } from "../../../components/MultiDayPlanViewWrapper";
+
+const { id } = Astro.params;
+
+if (!id) {
+  return Astro.redirect("/app/dashboard");
+}
+---
+
+<PrivateLayout title="View Meal Plan - Diet Planner">
+  <MultiDayPlanViewWrapper planId={id} client:load />
+</PrivateLayout>
+

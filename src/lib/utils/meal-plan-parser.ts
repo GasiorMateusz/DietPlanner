@@ -297,3 +297,323 @@ export function removeJsonFromMessage(message: string): string {
 
   return cleaned.trim() || "Meal plan updated above.";
 }
+
+interface JsonMultiDayPlanResponse {
+  multi_day_plan: {
+    days: Array<{
+      day_number: number;
+      name?: string;
+      meal_plan: {
+        daily_summary: {
+          kcal: number;
+          proteins: number;
+          fats: number;
+          carbs: number;
+        };
+        meals: {
+          name: string;
+          ingredients: string;
+          preparation: string;
+          summary: {
+            kcal: number;
+            protein: number;
+            fat: number;
+            carb: number;
+          };
+        }[];
+      };
+    }>;
+    summary: {
+      number_of_days: number;
+      average_kcal: number;
+      average_proteins: number;
+      average_fats: number;
+      average_carbs: number;
+    };
+  };
+  comments?: string; // Optional comments field
+}
+
+export function parseJsonMultiDayPlan(message: string): {
+  days: Array<{
+    day_number: number;
+    plan_content: {
+      daily_summary: MealPlanContentDailySummary;
+      meals: MealPlanMeal[];
+    };
+    name?: string;
+  }>;
+  summary: {
+    number_of_days: number;
+    average_kcal: number;
+    average_proteins: number;
+    average_fats: number;
+    average_carbs: number;
+  };
+} {
+  let jsonString = message.trim();
+
+  if (!jsonString.startsWith("{")) {
+    const jsonMatch = jsonString.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      jsonString = jsonMatch[0];
+    } else {
+      throw new Error("No valid JSON structure found in message. Expected JSON object with 'multi_day_plan' key.");
+    }
+  }
+
+  let parsed: JsonMultiDayPlanResponse;
+  try {
+    parsed = JSON.parse(jsonString);
+  } catch (error) {
+    const syntaxError = error instanceof SyntaxError ? error.message : "Unknown JSON syntax error";
+    throw new Error(`Failed to parse JSON: ${syntaxError}. Please ensure the response is valid JSON.`);
+  }
+
+  // Validate structure
+  const validationErrors: ValidationError[] = [];
+
+  if (!parsed.multi_day_plan) {
+    validationErrors.push({ field: "multi_day_plan", message: "Missing required field: multi_day_plan" });
+  } else {
+    if (!Array.isArray(parsed.multi_day_plan.days)) {
+      validationErrors.push({ field: "multi_day_plan.days", message: "multi_day_plan.days must be an array" });
+    } else if (parsed.multi_day_plan.days.length === 0) {
+      validationErrors.push({ field: "multi_day_plan.days", message: "multi_day_plan.days array cannot be empty" });
+    } else {
+      parsed.multi_day_plan.days.forEach((day, dayIndex) => {
+        const dayPrefix = `multi_day_plan.days[${dayIndex}]`;
+
+        if (typeof day.day_number !== "number" || day.day_number < 1 || day.day_number > 7) {
+          validationErrors.push({
+            field: `${dayPrefix}.day_number`,
+            message: "day_number must be a number between 1 and 7",
+          });
+        }
+
+        if (!day.meal_plan) {
+          validationErrors.push({ field: `${dayPrefix}.meal_plan`, message: "Missing required field: meal_plan" });
+        } else {
+          if (!day.meal_plan.daily_summary) {
+            validationErrors.push({
+              field: `${dayPrefix}.meal_plan.daily_summary`,
+              message: "Missing required field: meal_plan.daily_summary",
+            });
+          } else {
+            const ds = day.meal_plan.daily_summary;
+            if (typeof ds.kcal !== "number" || ds.kcal <= 0) {
+              validationErrors.push({
+                field: `${dayPrefix}.meal_plan.daily_summary.kcal`,
+                message: "daily_summary.kcal must be a positive number",
+              });
+            }
+            if (typeof ds.proteins !== "number" || ds.proteins < 0) {
+              validationErrors.push({
+                field: `${dayPrefix}.meal_plan.daily_summary.proteins`,
+                message: "daily_summary.proteins must be a non-negative number",
+              });
+            }
+            if (typeof ds.fats !== "number" || ds.fats < 0) {
+              validationErrors.push({
+                field: `${dayPrefix}.meal_plan.daily_summary.fats`,
+                message: "daily_summary.fats must be a non-negative number",
+              });
+            }
+            if (typeof ds.carbs !== "number" || ds.carbs < 0) {
+              validationErrors.push({
+                field: `${dayPrefix}.meal_plan.daily_summary.carbs`,
+                message: "daily_summary.carbs must be a non-negative number",
+              });
+            }
+          }
+
+          // Validate meals array
+          if (!Array.isArray(day.meal_plan.meals)) {
+            validationErrors.push({
+              field: `${dayPrefix}.meal_plan.meals`,
+              message: "meal_plan.meals must be an array",
+            });
+          } else if (day.meal_plan.meals.length === 0) {
+            validationErrors.push({
+              field: `${dayPrefix}.meal_plan.meals`,
+              message: "meal_plan.meals array cannot be empty",
+            });
+          } else {
+            day.meal_plan.meals.forEach((meal, mealIndex) => {
+              const mealPrefix = `${dayPrefix}.meal_plan.meals[${mealIndex}]`;
+
+              if (typeof meal.name !== "string" || meal.name.trim() === "") {
+                validationErrors.push({
+                  field: `${mealPrefix}.name`,
+                  message: "Meal name must be a non-empty string",
+                });
+              }
+              if (typeof meal.ingredients !== "string") {
+                validationErrors.push({
+                  field: `${mealPrefix}.ingredients`,
+                  message: "Meal ingredients must be a string",
+                });
+              }
+              if (typeof meal.preparation !== "string") {
+                validationErrors.push({
+                  field: `${mealPrefix}.preparation`,
+                  message: "Meal preparation must be a string",
+                });
+              }
+
+              if (!meal.summary) {
+                validationErrors.push({
+                  field: `${mealPrefix}.summary`,
+                  message: "Missing required field: meal.summary",
+                });
+              } else {
+                if (typeof meal.summary.kcal !== "number" || meal.summary.kcal <= 0) {
+                  validationErrors.push({
+                    field: `${mealPrefix}.summary.kcal`,
+                    message: "Meal summary.kcal must be a positive number",
+                  });
+                }
+                if (typeof meal.summary.protein !== "number" || meal.summary.protein < 0) {
+                  validationErrors.push({
+                    field: `${mealPrefix}.summary.protein`,
+                    message: "Meal summary.protein must be a non-negative number",
+                  });
+                }
+                if (typeof meal.summary.fat !== "number" || meal.summary.fat < 0) {
+                  validationErrors.push({
+                    field: `${mealPrefix}.summary.fat`,
+                    message: "Meal summary.fat must be a non-negative number",
+                  });
+                }
+                if (typeof meal.summary.carb !== "number" || meal.summary.carb < 0) {
+                  validationErrors.push({
+                    field: `${mealPrefix}.summary.carb`,
+                    message: "Meal summary.carb must be a non-negative number",
+                  });
+                }
+              }
+            });
+          }
+        }
+      });
+    }
+
+    if (!parsed.multi_day_plan.summary) {
+      validationErrors.push({
+        field: "multi_day_plan.summary",
+        message: "Missing required field: multi_day_plan.summary",
+      });
+    } else {
+      const s = parsed.multi_day_plan.summary;
+      if (typeof s.number_of_days !== "number" || s.number_of_days < 1 || s.number_of_days > 7) {
+        validationErrors.push({
+          field: "multi_day_plan.summary.number_of_days",
+          message: "summary.number_of_days must be a number between 1 and 7",
+        });
+      }
+      if (typeof s.average_kcal !== "number" || s.average_kcal < 0) {
+        validationErrors.push({
+          field: "multi_day_plan.summary.average_kcal",
+          message: "summary.average_kcal must be a non-negative number",
+        });
+      }
+      if (typeof s.average_proteins !== "number" || s.average_proteins < 0) {
+        validationErrors.push({
+          field: "multi_day_plan.summary.average_proteins",
+          message: "summary.average_proteins must be a non-negative number",
+        });
+      }
+      if (typeof s.average_fats !== "number" || s.average_fats < 0) {
+        validationErrors.push({
+          field: "multi_day_plan.summary.average_fats",
+          message: "summary.average_fats must be a non-negative number",
+        });
+      }
+      if (typeof s.average_carbs !== "number" || s.average_carbs < 0) {
+        validationErrors.push({
+          field: "multi_day_plan.summary.average_carbs",
+          message: "summary.average_carbs must be a non-negative number",
+        });
+      }
+    }
+  }
+
+  // If validation errors exist, throw with details
+  if (validationErrors.length > 0) {
+    const errorDetails = validationErrors.map((e) => `${e.field}: ${e.message}`).join("; ");
+    throw new Error(`Multi-day meal plan structure is invalid. ${errorDetails}`);
+  }
+
+  // Debug: Log the parsed structure before mapping
+  // eslint-disable-next-line no-console
+  console.log("[parseJsonMultiDayPlan] Parsed structure:", {
+    total_days: parsed.multi_day_plan.days.length,
+    days_info: parsed.multi_day_plan.days.map((d) => ({
+      day_number: d.day_number,
+      name: d.name,
+      meals_count: d.meal_plan?.meals?.length || 0,
+      meal_names: d.meal_plan?.meals?.map((m) => m.name) || [],
+    })),
+  });
+
+  const days = parsed.multi_day_plan.days.map((day) => {
+    const dailySummary: MealPlanContentDailySummary = {
+      kcal: Math.round(day.meal_plan.daily_summary.kcal),
+      proteins: Math.round(day.meal_plan.daily_summary.proteins),
+      fats: Math.round(day.meal_plan.daily_summary.fats),
+      carbs: Math.round(day.meal_plan.daily_summary.carbs),
+    };
+
+    const meals: MealPlanMeal[] = day.meal_plan.meals.map((meal) => ({
+      name: meal.name.trim(),
+      ingredients: meal.ingredients.trim(),
+      preparation: meal.preparation.trim(),
+      summary: {
+        kcal: Math.round(meal.summary.kcal),
+        p: Math.round(meal.summary.protein),
+        f: Math.round(meal.summary.fat),
+        c: Math.round(meal.summary.carb),
+      },
+    }));
+
+    // Debug: Log each day being created
+    // eslint-disable-next-line no-console
+    console.log("[parseJsonMultiDayPlan] Creating day:", {
+      day_number: day.day_number,
+      name: day.name,
+      meals_count: meals.length,
+      meal_names: meals.map((m) => m.name),
+    });
+
+    return {
+      day_number: day.day_number,
+      plan_content: {
+        daily_summary: dailySummary,
+        meals,
+      },
+      name: day.name?.trim(),
+    };
+  });
+
+  const summary = {
+    number_of_days: parsed.multi_day_plan.summary.number_of_days,
+    average_kcal: Math.round(parsed.multi_day_plan.summary.average_kcal),
+    average_proteins: Math.round(parsed.multi_day_plan.summary.average_proteins),
+    average_fats: Math.round(parsed.multi_day_plan.summary.average_fats),
+    average_carbs: Math.round(parsed.multi_day_plan.summary.average_carbs),
+  };
+
+  // Debug: Log final result
+  // eslint-disable-next-line no-console
+  console.log("[parseJsonMultiDayPlan] Final parsed result:", {
+    days_count: days.length,
+    days_summary: days.map((d) => ({
+      day_number: d.day_number,
+      name: d.name,
+      meals_count: d.plan_content.meals.length,
+    })),
+    summary_number_of_days: summary.number_of_days,
+  });
+
+  return { days, summary };
+}

@@ -1,12 +1,12 @@
 import { test } from "@playwright/test";
-import { LoginPage, DashboardPage, AIChatPage, MealPlanEditorPage } from "./pages";
+import { LoginPage, DashboardPage, AIChatPage, MultiDayPlanViewPage } from "./pages";
 import { getTestUserId, cleanupMealPlansByNamePattern } from "./utils/test-cleanup";
 
-test.describe("Meal Plan Creation and Editing Flow", () => {
-  const TEST_MEAL_PLAN_NAME = "test meal plan";
+test.describe("Multi-Day Meal Plan Creation and Editing Flow", () => {
+  const TEST_MEAL_PLAN_NAME = "test multi-day meal plan";
 
   // Increase timeout for this test suite due to AI operations
-  test.setTimeout(180 * 1000); // 3 minutes
+  test.setTimeout(300 * 1000); // 5 minutes (increased for multi-day operations)
 
   test.beforeEach(async () => {
     // Ensure we have test credentials before running tests
@@ -62,7 +62,7 @@ test.describe("Meal Plan Creation and Editing Flow", () => {
     }
   });
 
-  test("should create meal plan, modify via AI chat, edit and save", async ({ page }) => {
+  test("should create 3-day plan, make it vegetarian, edit to 4 days, and view", async ({ page }) => {
     const E2E_USERNAME = process.env.E2E_USERNAME;
     const E2E_PASSWORD = process.env.E2E_PASSWORD;
 
@@ -75,7 +75,7 @@ test.describe("Meal Plan Creation and Editing Flow", () => {
     const loginPage = new LoginPage(page);
     const dashboardPage = new DashboardPage(page);
     const aiChatPage = new AIChatPage(page);
-    const editorPage = new MealPlanEditorPage(page);
+    const viewPage = new MultiDayPlanViewPage(page);
 
     // Step 0: Login to application (already waits for redirect)
     await loginPage.login(E2E_USERNAME, E2E_PASSWORD);
@@ -83,7 +83,7 @@ test.describe("Meal Plan Creation and Editing Flow", () => {
     // Step 1: Open "create new meal plan" dialog
     await dashboardPage.openCreateMealPlanDialog();
 
-    // Step 2: Fill the form with correct data
+    // Step 2: Fill the form with 3-day plan data
     await dashboardPage.startupFormDialog.fillForm({
       age: 20,
       weight: 70,
@@ -97,6 +97,9 @@ test.describe("Meal Plan Creation and Editing Flow", () => {
       },
       mealNames: "Breakfast, Lunch, Dinner, Snack",
       exclusionsGuidelines: "No nuts, gluten-free preferred",
+      numberOfDays: 3,
+      ensureMealVariety: true,
+      differentGuidelinesPerDay: false,
     });
 
     // Step 3: Submit form and navigate to conversation
@@ -107,27 +110,40 @@ test.describe("Meal Plan Creation and Editing Flow", () => {
     await aiChatPage.waitForInitialization();
 
     // Step 5: Give instruction in chat to make the plan vegetarian
-    // Step 6: Wait for response and accept
-    await aiChatPage.sendMessageAndAccept("make the plan vegetarian");
+    // Step 6: Wait for response and accept (opens modal)
+    await aiChatPage.sendMessage("make the plan vegetarian");
+    await aiChatPage.waitForAIResponse();
+    await aiChatPage.accept();
 
-    // Step 7: Add plan meal name
-    await editorPage.waitForLoad();
-    await editorPage.fillPlanName(TEST_MEAL_PLAN_NAME);
+    // Step 7: Fill plan name in modal and save (navigates to view page)
+    await aiChatPage.fillPlanNameInModal(TEST_MEAL_PLAN_NAME);
+    await aiChatPage.submitPlanNameModal();
+    await viewPage.waitForLoad();
 
-    // Step 8: Change first meal name to "changed meal name"
-    await editorPage.fillMealName(0, "changed meal name");
-
-    // Step 9: Save changes using "save changes"
-    await editorPage.saveAndWaitForDashboard();
-
-    // Step 10: Find this meal plan in the list and open it with Edit/view
+    // Step 8: Navigate back to dashboard
+    await viewPage.navigateToDashboard();
     await dashboardPage.waitForDashboard();
     await dashboardPage.verifyMealPlanVisible(TEST_MEAL_PLAN_NAME);
-    await dashboardPage.mealPlanList.openMealPlanInEditor(TEST_MEAL_PLAN_NAME);
 
-    // Verify we're on the editor page and data is correct
-    await editorPage.waitForLoad();
-    await editorPage.verifyPlanName(TEST_MEAL_PLAN_NAME);
-    await editorPage.verifyMealName(0, "changed meal name");
+    // Step 9: Click Edit button (navigates to /app/edit/[id] - AI chat in edit mode)
+    await dashboardPage.mealPlanList.clickEdit(TEST_MEAL_PLAN_NAME);
+    await dashboardPage.mealPlanList.waitForNavigationToEditPage();
+
+    // Step 10: Wait for AI chat to initialize in edit mode
+    await aiChatPage.waitForInitialization();
+
+    // Step 11: Ask to make it 4 days and accept (opens modal in edit mode)
+    await aiChatPage.sendMessage("make it 4 days");
+    await aiChatPage.waitForAIResponse();
+    await aiChatPage.accept();
+    
+    // Step 12: In edit mode, accepting opens a modal with plan name pre-filled
+    // The checkbox "Create as new plan" is unchecked by default, so it will overwrite the existing plan
+    await aiChatPage.waitForSavePlanModal();
+    // Plan name should already be filled with existing plan name
+    // Just submit the modal to overwrite the existing plan
+    await aiChatPage.submitPlanNameModal();
+    // Wait for navigation to view page - test ends here successfully after saving changes
+    await viewPage.waitForLoad();
   });
 });

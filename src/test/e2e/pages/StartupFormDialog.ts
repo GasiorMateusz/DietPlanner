@@ -18,6 +18,10 @@ export class StartupFormDialog {
   readonly carbsPercInput: Locator;
   readonly mealNamesInput: Locator;
   readonly exclusionsGuidelinesTextarea: Locator;
+  readonly numberOfDaysSelect: Locator;
+  readonly ensureMealVarietyCheckbox: Locator;
+  readonly differentGuidelinesPerDayCheckbox: Locator;
+  readonly perDayGuidelinesTextarea: Locator;
   readonly cancelButton: Locator;
   readonly generateButton: Locator;
 
@@ -35,6 +39,10 @@ export class StartupFormDialog {
     this.carbsPercInput = page.locator("#c_perc");
     this.mealNamesInput = page.locator("#meal_names");
     this.exclusionsGuidelinesTextarea = page.locator("#exclusions_guidelines");
+    this.numberOfDaysSelect = page.getByTestId("startup-form-number-of-days");
+    this.ensureMealVarietyCheckbox = page.getByTestId("startup-form-meal-variety");
+    this.differentGuidelinesPerDayCheckbox = page.getByTestId("startup-form-different-guidelines");
+    this.perDayGuidelinesTextarea = page.getByTestId("startup-form-per-day-guidelines");
     this.cancelButton = page.getByTestId("startup-form-cancel-button");
     this.generateButton = page.getByTestId("startup-form-generate-button");
   }
@@ -132,6 +140,40 @@ export class StartupFormDialog {
   }
 
   /**
+   * Sets the number of days for multi-day plans.
+   */
+  async setNumberOfDays(days: number): Promise<void> {
+    await this.numberOfDaysSelect.selectOption(days.toString());
+  }
+
+  /**
+   * Toggles the "ensure meal variety" checkbox.
+   */
+  async setEnsureMealVariety(checked: boolean): Promise<void> {
+    const isChecked = await this.ensureMealVarietyCheckbox.isChecked();
+    if (isChecked !== checked) {
+      await this.ensureMealVarietyCheckbox.click();
+    }
+  }
+
+  /**
+   * Toggles the "different guidelines per day" checkbox.
+   */
+  async setDifferentGuidelinesPerDay(checked: boolean): Promise<void> {
+    const isChecked = await this.differentGuidelinesPerDayCheckbox.isChecked();
+    if (isChecked !== checked) {
+      await this.differentGuidelinesPerDayCheckbox.click();
+    }
+  }
+
+  /**
+   * Fills the per-day guidelines textarea.
+   */
+  async fillPerDayGuidelines(text: string): Promise<void> {
+    await this.perDayGuidelinesTextarea.fill(text);
+  }
+
+  /**
    * Fills the form with standard test data.
    */
   async fillForm(data: {
@@ -143,6 +185,10 @@ export class StartupFormDialog {
     macroDistribution?: { protein?: number; fat?: number; carbs?: number };
     mealNames?: string;
     exclusionsGuidelines?: string;
+    numberOfDays?: number;
+    ensureMealVariety?: boolean;
+    differentGuidelinesPerDay?: boolean;
+    perDayGuidelines?: string;
   }): Promise<void> {
     if (data.age !== undefined) {
       await this.fillPatientAge(data.age);
@@ -167,6 +213,18 @@ export class StartupFormDialog {
     }
     if (data.exclusionsGuidelines !== undefined) {
       await this.fillExclusionsGuidelines(data.exclusionsGuidelines);
+    }
+    if (data.numberOfDays !== undefined) {
+      await this.setNumberOfDays(data.numberOfDays);
+    }
+    if (data.ensureMealVariety !== undefined) {
+      await this.setEnsureMealVariety(data.ensureMealVariety);
+    }
+    if (data.differentGuidelinesPerDay !== undefined) {
+      await this.setDifferentGuidelinesPerDay(data.differentGuidelinesPerDay);
+    }
+    if (data.perDayGuidelines !== undefined) {
+      await this.fillPerDayGuidelines(data.perDayGuidelines);
     }
   }
 

@@ -71,6 +71,7 @@ export type Database = {
           created_at: string
           exclusions_guidelines: string | null
           id: string
+          is_day_plan: boolean
           meal_names: string | null
           name: string
           patient_age: number | null
@@ -90,6 +91,7 @@ export type Database = {
           created_at?: string
           exclusions_guidelines?: string | null
           id?: string
+          is_day_plan?: boolean
           meal_names?: string | null
           name: string
           patient_age?: number | null
@@ -109,6 +111,7 @@ export type Database = {
           created_at?: string
           exclusions_guidelines?: string | null
           id?: string
+          is_day_plan?: boolean
           meal_names?: string | null
           name?: string
           patient_age?: number | null
@@ -124,6 +127,104 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "meal_plans_source_chat_session_id_fkey"
+            columns: ["source_chat_session_id"]
+            isOneToOne: false
+            referencedRelation: "ai_chat_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      multi_day_plan_days: {
+        Row: {
+          created_at: string
+          day_number: number
+          day_plan_id: string
+          id: string
+          multi_day_plan_id: string
+        }
+        Insert: {
+          created_at?: string
+          day_number: number
+          day_plan_id: string
+          id?: string
+          multi_day_plan_id: string
+        }
+        Update: {
+          created_at?: string
+          day_number?: number
+          day_plan_id?: string
+          id?: string
+          multi_day_plan_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "multi_day_plan_days_day_plan_id_fkey"
+            columns: ["day_plan_id"]
+            isOneToOne: true
+            referencedRelation: "meal_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "multi_day_plan_days_multi_day_plan_id_fkey"
+            columns: ["multi_day_plan_id"]
+            isOneToOne: false
+            referencedRelation: "multi_day_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      multi_day_plans: {
+        Row: {
+          average_carbs: number | null
+          average_fats: number | null
+          average_kcal: number | null
+          average_proteins: number | null
+          common_allergens: Json | null
+          common_exclusions_guidelines: string | null
+          created_at: string
+          id: string
+          is_draft: boolean
+          name: string
+          number_of_days: number
+          source_chat_session_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          average_carbs?: number | null
+          average_fats?: number | null
+          average_kcal?: number | null
+          average_proteins?: number | null
+          common_allergens?: Json | null
+          common_exclusions_guidelines?: string | null
+          created_at?: string
+          id?: string
+          is_draft?: boolean
+          name: string
+          number_of_days: number
+          source_chat_session_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          average_carbs?: number | null
+          average_fats?: number | null
+          average_kcal?: number | null
+          average_proteins?: number | null
+          common_allergens?: Json | null
+          common_exclusions_guidelines?: string | null
+          created_at?: string
+          id?: string
+          is_draft?: boolean
+          name?: string
+          number_of_days?: number
+          source_chat_session_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "multi_day_plans_source_chat_session_id_fkey"
             columns: ["source_chat_session_id"]
             isOneToOne: false
             referencedRelation: "ai_chat_sessions"
@@ -159,21 +260,17 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "user_preferences_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: true
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      recalculate_multi_day_plan_summary: {
+        Args: { p_multi_day_plan_id: string }
+        Returns: undefined
+      }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
     }

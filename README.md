@@ -1,6 +1,6 @@
 # Diet Planner (MVP)
 
-A web application designed to streamline the work of dietitians by automating and accelerating the creation of personalized, 1-day meal plans using AI.
+A web application designed to streamline the work of dietitians by automating and accelerating the creation of personalized meal plans (1-day and multi-day) using AI.
 
 ## Table of Contents
 
@@ -18,13 +18,13 @@ A web application designed to streamline the work of dietitians by automating an
 
 ## Project Description
 
-Diet Planner is a Minimum Viable Product (MVP) web application built to assist dietitians. It automates the initial creation of personalized, 1-day meal plans by integrating with an AI language model (via OpenRouter).
+Diet Planner is a Minimum Viable Product (MVP) web application built to assist dietitians. It automates the initial creation of personalized meal plans (1-day and multi-day) by integrating with an AI language model (via OpenRouter).
 
-The core workflow is a three-step process:
+The core workflow is a multi-step process:
 
-1. **Form Input**: The dietitian fills out a structured form with patient parameters, caloric goals, macronutrients, and exclusions.
-2. **AI Generation**: The AI generates a 1-day meal plan in a conversational interface, allowing for iterative corrections (e.g., "Change dinner to be dairy-free").
-3. **Manual Edit & Export**: Once accepted, the plan is transferred to a text editor for final manual modifications, saving, and exporting to a .doc file.
+1. **Form Input**: The dietitian fills out a structured form with patient parameters, caloric goals, macronutrients, and exclusions. For multi-day plans (1-7 days), the form includes options for number of days, meal variety across days, and per-day guidelines.
+2. **AI Generation & Save**: The AI generates a meal plan (single-day or multi-day) in a conversational interface, allowing for iterative corrections (e.g., "Change dinner to be dairy-free" or "Reduce this plan to 2 days"). Once accepted, the plan is saved and can be exported to a .doc or HTML file.
+3. **Edit Plans**: Saved plans can be edited through the AI chat interface, allowing modifications while preserving the original plan structure. Users can choose to overwrite the existing plan or create a new one.
 
 This application is intended exclusively for use by professional dietitians.
 
@@ -34,8 +34,8 @@ The project uses the following technologies:
 
 ### Frontend
 
-- **Astro 4** - Fast, performant static site generation with minimal JavaScript
-- **React 19** - Interactive components (e.g., chat, editor)
+- **Astro 5** - Fast, performant static site generation with minimal JavaScript
+- **React 19** - Interactive components (e.g., chat interface)
 - **React Hook Form** - Efficient form state management and validation
 - **TypeScript 5** - Static type checking
 - **Tailwind 4** - Utility-first CSS styling
@@ -175,12 +175,18 @@ The `package.json` file includes the following scripts for development and maint
 ### Key Features
 
 - **User Authentication** - Dietitian registration and login (email/password)
-- **Dashboard** - View, search, and delete all saved meal plans
+- **Dashboard** - View, search, sort, and delete all saved meal plans (single-day and multi-day)
 - **Meal Plan Creation**:
-  - **Startup Form** - Collects all necessary patient data and dietary guidelines
-  - **AI Chat** - Generates a plan and allows for iterative conversational corrections
-  - **Manual Editor** - A structured editor to finalize the plan's details
-  - **Export** - Export the final meal plan to a .doc file
+  - **Startup Form** - Collects all necessary patient data and dietary guidelines. For multi-day plans, includes options for number of days (1-7), meal variety, and per-day guidelines.
+  - **AI Chat** - Generates a plan (single-day or multi-day) and allows for iterative conversational corrections
+  - **Save & Export** - Save the plan directly from the conversation and export to .doc or HTML file with customizable content options
+- **Multi-Day Meal Plans** - Full support for creating and managing meal plans spanning 1-7 days:
+  - Automatic calculation of average macros across all days
+  - Day-by-day view with scrollable list
+  - Plan summary showing number of days and average calories
+  - Export all days in a single document
+- **Plan Editing** - Edit existing plans (single-day or multi-day) through the AI chat interface with options to overwrite or create new plans
+- **Plan Viewing** - View saved meal plans with detailed day-by-day breakdown. Multi-day plans show all days with individual meal details and summary statistics
 
 ### Out of Scope (MVP Boundaries)
 
@@ -189,9 +195,7 @@ The following features are not included in this MVP version:
 - Integration with external recipe databases or URL imports.
 - Social features (sharing, commenting, etc.).
 - A dedicated mobile application.
-- Creation or management of multi-day meal plans.
 - A separate "Patient" entity (plans are identified by name).
-- Automatic recalculation of nutrition values after manual edits in the editor.
 
 ## Project Status
 

@@ -1,18 +1,19 @@
 import { Controller } from "react-hook-form";
-import type { MealPlanStartupData } from "../types";
+import type { MultiDayStartupFormData } from "../types";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "./ui/dialog";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Select } from "./ui/select";
 import { Textarea } from "./ui/textarea";
+import { Checkbox } from "./ui/checkbox";
 import { useStartupForm } from "./hooks/useStartupForm";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 
 interface StartupFormDialogProps {
   open: boolean;
   onClose: () => void;
-  onSubmit: (data: MealPlanStartupData) => void;
+  onSubmit: (data: MultiDayStartupFormData) => void;
 }
 
 /**
@@ -227,7 +228,7 @@ export function StartupFormDialog({ open, onClose, onSubmit }: StartupFormDialog
                         min="0"
                         max="100"
                         placeholder={t("startup.macroPercentPlaceholder")}
-                        value={field.value ?? ""}
+                        value={field.value && field.value > 0 ? field.value : ""}
                         onChange={(e) => {
                           const val = e.target.value === "" ? null : parseFloat(e.target.value);
                           if (e.target.value === "" || (val !== null && !isNaN(val) && val >= 0 && val <= 100)) {
@@ -284,7 +285,7 @@ export function StartupFormDialog({ open, onClose, onSubmit }: StartupFormDialog
                         min="0"
                         max="100"
                         placeholder={t("startup.macroPercentPlaceholder")}
-                        value={field.value ?? ""}
+                        value={field.value && field.value > 0 ? field.value : ""}
                         onChange={(e) => {
                           const val = e.target.value === "" ? null : parseFloat(e.target.value);
                           if (e.target.value === "" || (val !== null && !isNaN(val) && val >= 0 && val <= 100)) {
@@ -341,7 +342,7 @@ export function StartupFormDialog({ open, onClose, onSubmit }: StartupFormDialog
                         min="0"
                         max="100"
                         placeholder={t("startup.macroPercentPlaceholder")}
-                        value={field.value ?? ""}
+                        value={field.value && field.value > 0 ? field.value : ""}
                         onChange={(e) => {
                           const val = e.target.value === "" ? null : parseFloat(e.target.value);
                           if (e.target.value === "" || (val !== null && !isNaN(val) && val >= 0 && val <= 100)) {
@@ -417,6 +418,108 @@ export function StartupFormDialog({ open, onClose, onSubmit }: StartupFormDialog
                 </>
               )}
             />
+          </div>
+
+          <div className="space-y-4 border-t pt-4">
+            <h3 className="text-lg font-semibold">{t("startup.multiDayOptions")}</h3>
+
+            <div className="space-y-2">
+              <Label htmlFor="number_of_days">{t("startup.numberOfDays")}</Label>
+              <Controller
+                name="number_of_days"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <>
+                    <Select
+                      id="number_of_days"
+                      value={field.value?.toString() ?? "1"}
+                      onChange={(e) => field.onChange(parseInt(e.target.value, 10))}
+                      onBlur={field.onBlur}
+                      aria-invalid={fieldState.invalid}
+                      data-testid="startup-form-number-of-days"
+                    >
+                      {[1, 2, 3, 4, 5, 6, 7].map((num) => (
+                        <option key={num} value={num.toString()}>
+                          {num} {num === 1 ? t("startup.day") : t("startup.days")}
+                        </option>
+                      ))}
+                    </Select>
+                    {fieldState.error && <p className="text-sm text-destructive">{fieldState.error.message}</p>}
+                  </>
+                )}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Controller
+                name="ensure_meal_variety"
+                control={form.control}
+                render={({ field }) => (
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="ensure_meal_variety"
+                      checked={field.value ?? true}
+                      onCheckedChange={(checked) => field.onChange(checked === true)}
+                      data-testid="startup-form-meal-variety"
+                    />
+                    <Label htmlFor="ensure_meal_variety" className="cursor-pointer">
+                      {t("startup.ensureMealVariety")}
+                    </Label>
+                  </div>
+                )}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Controller
+                name="different_guidelines_per_day"
+                control={form.control}
+                render={({ field }) => (
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="different_guidelines_per_day"
+                      checked={field.value ?? false}
+                      onCheckedChange={(checked) => {
+                        field.onChange(checked === true);
+                        // Clear per_day_guidelines when unchecked
+                        if (!checked) {
+                          form.setValue("per_day_guidelines", null);
+                        }
+                      }}
+                      data-testid="startup-form-different-guidelines"
+                    />
+                    <Label htmlFor="different_guidelines_per_day" className="cursor-pointer">
+                      {t("startup.differentGuidelinesPerDay")}
+                    </Label>
+                  </div>
+                )}
+              />
+            </div>
+
+            {form.watch("different_guidelines_per_day") && (
+              <div className="space-y-2">
+                <Label htmlFor="per_day_guidelines">{t("startup.perDayGuidelines")}</Label>
+                <Controller
+                  name="per_day_guidelines"
+                  control={form.control}
+                  render={({ field, fieldState }) => (
+                    <>
+                      <Textarea
+                        id="per_day_guidelines"
+                        placeholder={t("startup.perDayGuidelinesPlaceholder")}
+                        maxLength={2000}
+                        rows={4}
+                        {...field}
+                        value={field.value ?? ""}
+                        aria-invalid={fieldState.invalid}
+                        data-testid="startup-form-per-day-guidelines"
+                      />
+                      {fieldState.error && <p className="text-sm text-destructive">{fieldState.error.message}</p>}
+                    </>
+                  )}
+                />
+              </div>
+            )}
           </div>
 
           <DialogFooter>

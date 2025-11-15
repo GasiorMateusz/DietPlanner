@@ -2,7 +2,7 @@ Project Technology Stack
 
 Frontend - Astro with React for interactive components
 
-Astro 4 allows for the creation of fast, performant websites and applications with minimal JavaScript.
+Astro 5 allows for the creation of fast, performant websites and applications with minimal JavaScript.
 
 React 19 provides interactivity where it's needed.
 
