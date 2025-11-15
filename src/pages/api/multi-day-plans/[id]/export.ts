@@ -80,11 +80,7 @@ export const GET: APIRoute = async (context) => {
       );
     }
 
-    const multiDayPlan = await MultiDayPlanService.getMultiDayPlanById(
-      paramValidation.data.id,
-      user.id,
-      supabase
-    );
+    const multiDayPlan = await MultiDayPlanService.getMultiDayPlanById(paramValidation.data.id, user.id, supabase);
 
     const languagePreference = await UserPreferenceService.getUserLanguagePreference(user.id, supabase);
     const language = languagePreference.language;
@@ -119,14 +115,10 @@ export const GET: APIRoute = async (context) => {
         },
       });
     } else {
-      const docBuffer = await DocumentGeneratorService.generateMultiDayDoc(
-        multiDayPlan,
-        contentOptions,
-        language
-      );
+      const docBuffer = await DocumentGeneratorService.generateMultiDayDoc(multiDayPlan, contentOptions, language);
       const filename = `${sanitizedFilename}.doc`;
 
-      return new Response(docBuffer as any, {
+      return new Response(docBuffer as Buffer, {
         status: 200,
         headers: {
           "Content-Type": "application/msword",
@@ -187,4 +179,3 @@ export const GET: APIRoute = async (context) => {
     );
   }
 };
-

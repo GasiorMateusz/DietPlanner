@@ -360,6 +360,8 @@ export interface AiModel {
   combinedPrice: number;
   /** Power ranking (1-10, where 10 is highest power) */
   powerRank: number;
+  /** Speed score (1-10, where 10 is fastest, based on tokens per second benchmarks) */
+  speed: number;
 }
 
 /**
@@ -454,11 +456,11 @@ export interface MultiDayStartupFormData extends MealPlanStartupData {
  * Represents a complete multi-day plan with all days and summary.
  */
 export interface MultiDayPlanChatData {
-  days: Array<{
+  days: {
     day_number: number;
     plan_content: MealPlanContent;
     name?: string; // Optional day plan name
-  }>;
+  }[];
   summary: {
     number_of_days: number;
     average_kcal: number;
@@ -478,12 +480,12 @@ export interface CreateMultiDayPlanCommand {
   number_of_days: number;
   common_exclusions_guidelines: string | null;
   common_allergens: string[] | null;
-  day_plans: Array<{
+  day_plans: {
     day_number: number;
     plan_content: MealPlanContent;
     startup_data: MealPlanStartupData;
     name?: string; // Optional day plan name
-  }>;
+  }[];
 }
 
 /**
@@ -491,10 +493,10 @@ export interface CreateMultiDayPlanCommand {
  * @Endpoint `POST /api/multi-day-plans`
  */
 export type CreateMultiDayPlanResponseDto = TypedMultiDayPlanRow & {
-  days: Array<{
+  days: {
     day_number: number;
     day_plan: TypedMealPlanRow;
-  }>;
+  }[];
 };
 
 /**
@@ -502,10 +504,10 @@ export type CreateMultiDayPlanResponseDto = TypedMultiDayPlanRow & {
  * @Endpoint `GET /api/multi-day-plans/{id}`
  */
 export type GetMultiDayPlanByIdResponseDto = TypedMultiDayPlanRow & {
-  days: Array<{
+  days: {
     day_number: number;
     day_plan: TypedMealPlanRow;
-  }>;
+  }[];
 };
 
 /**
@@ -514,12 +516,12 @@ export type GetMultiDayPlanByIdResponseDto = TypedMultiDayPlanRow & {
  */
 export interface UpdateMultiDayPlanCommand {
   name?: string;
-  day_plans?: Array<{
+  day_plans?: {
     day_number: number;
     plan_content: MealPlanContent;
     startup_data: MealPlanStartupData;
     name?: string;
-  }>;
+  }[];
   common_exclusions_guidelines?: string | null;
   common_allergens?: string[] | null;
 }
@@ -528,7 +530,7 @@ export interface UpdateMultiDayPlanCommand {
  * **DTO**: The response for listing multi-day meal plans.
  * @Endpoint `GET /api/multi-day-plans`
  */
-export type GetMultiDayPlansResponseDto = Array<{
+export type GetMultiDayPlansResponseDto = {
   id: string;
   name: string;
   number_of_days: number;
@@ -538,13 +540,13 @@ export type GetMultiDayPlansResponseDto = Array<{
   average_carbs: number;
   created_at: string;
   updated_at: string;
-}>;
+}[];
 
 /**
  * **DTO**: Represents a single multi-day plan item in the list.
  * @Endpoint `GET /api/multi-day-plans` (Array Item)
  */
-export type MultiDayPlanListItemDto = {
+export interface MultiDayPlanListItemDto {
   id: string;
   name: string;
   number_of_days: number;
@@ -552,7 +554,7 @@ export type MultiDayPlanListItemDto = {
   common_exclusions_guidelines: string | null;
   created_at: string;
   updated_at: string;
-};
+}
 
 /**
  * **Command**: The request payload for initiating a new multi-day AI chat session.
@@ -583,10 +585,10 @@ export interface MultiDayPlanViewData {
   average_carbs: number;
   common_exclusions_guidelines: string | null;
   common_allergens: string[] | null;
-  days: Array<{
+  days: {
     day_number: number;
     day_plan: TypedMealPlanRow;
-  }>;
+  }[];
   created_at: string;
   updated_at: string;
 }

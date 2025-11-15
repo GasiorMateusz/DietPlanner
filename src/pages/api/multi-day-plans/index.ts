@@ -1,10 +1,7 @@
 import type { APIRoute } from "astro";
 import { DatabaseError, UnauthorizedError, ValidationError } from "../../../lib/errors.ts";
 import * as MultiDayPlanService from "../../../lib/multi-day-plans/multi-day-plan.service.ts";
-import {
-  createMultiDayPlanSchema,
-  listMultiDayPlansQuerySchema,
-} from "../../../lib/validation/meal-plans.schemas.ts";
+import { createMultiDayPlanSchema, listMultiDayPlansQuerySchema } from "../../../lib/validation/meal-plans.schemas.ts";
 import type { CreateMultiDayPlanCommand } from "../../../types.ts";
 import { getUserFromRequest } from "@/lib/auth/session.service.js";
 
@@ -204,4 +201,3 @@ export const POST: APIRoute = async (context) => {
     );
   }
 };
-

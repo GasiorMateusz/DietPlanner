@@ -255,11 +255,18 @@ Focus solely on creating accurate, practical meal plans. Always use the JSON str
  */
 function formatUserPrompt(command: CreateAiSessionCommand, language: LanguageCode, isMultiDay: boolean): string {
   const parts: string[] = [];
-  const multiDayCommand = command as CreateAiSessionCommand & { number_of_days?: number; ensure_meal_variety?: boolean; different_guidelines_per_day?: boolean; per_day_guidelines?: string | null };
+  const multiDayCommand = command as CreateAiSessionCommand & {
+    number_of_days?: number;
+    ensure_meal_variety?: boolean;
+    different_guidelines_per_day?: boolean;
+    per_day_guidelines?: string | null;
+  };
 
   if (language === "pl") {
     if (isMultiDay && multiDayCommand.number_of_days) {
-      parts.push(`Proszę utwórz ${multiDayCommand.number_of_days}-dniowy plan żywieniowy z następującymi specyfikacjami:\n`);
+      parts.push(
+        `Proszę utwórz ${multiDayCommand.number_of_days}-dniowy plan żywieniowy z następującymi specyfikacjami:\n`
+      );
     } else {
       parts.push("Proszę utwórz 1-dniowy plan żywieniowy z następującymi specyfikacjami:\n");
     }
@@ -329,7 +336,9 @@ function formatUserPrompt(command: CreateAiSessionCommand, language: LanguageCod
   } else {
     // English version (default)
     if (isMultiDay && multiDayCommand.number_of_days) {
-      parts.push(`Please create a ${multiDayCommand.number_of_days}-day meal plan with the following specifications:\n`);
+      parts.push(
+        `Please create a ${multiDayCommand.number_of_days}-day meal plan with the following specifications:\n`
+      );
     } else {
       parts.push("Please create a 1-day meal plan with the following specifications:\n");
     }

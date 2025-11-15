@@ -242,6 +242,7 @@
   "account.sortBy": "Sort by",
   "account.sortByPrice": "Price",
   "account.sortByPower": "Power",
+  "account.sortBySpeed": "Speed",
   "export.modal.title": "Export Meal Plan",
   "export.modal.description": "Select what to include in your export",
   "export.modal.contentOptions": "Content Options",

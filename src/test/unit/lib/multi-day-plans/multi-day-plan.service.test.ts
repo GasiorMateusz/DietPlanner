@@ -9,6 +9,7 @@ import {
 } from "@/lib/multi-day-plans/multi-day-plan.service";
 import { DatabaseError, NotFoundError } from "@/lib/errors";
 import * as MealPlanService from "@/lib/meal-plans/meal-plan.service";
+import type { TypedMealPlanRow } from "@/types";
 
 // Mock MealPlanService
 vi.mock("@/lib/meal-plans/meal-plan.service", () => ({
@@ -150,11 +151,8 @@ describe("multi-day-plan.service", () => {
       (mockSupabase.from as ReturnType<typeof vi.fn>).mockReturnValue(queryBuilder);
 
       await expect(listMultiDayPlans(userId, {}, mockSupabase)).rejects.toThrow(DatabaseError);
-      await expect(listMultiDayPlans(userId, {}, mockSupabase)).rejects.toThrow(
-        "Failed to list multi-day plans"
-      );
+      await expect(listMultiDayPlans(userId, {}, mockSupabase)).rejects.toThrow("Failed to list multi-day plans");
     });
-
   });
 
   describe("createMultiDayPlan", () => {
@@ -286,8 +284,8 @@ describe("multi-day-plan.service", () => {
       });
 
       vi.mocked(MealPlanService.createMealPlan)
-        .mockResolvedValueOnce(mockDayPlan1 as any)
-        .mockResolvedValueOnce(mockDayPlan2 as any);
+        .mockResolvedValueOnce(mockDayPlan1 as TypedMealPlanRow)
+        .mockResolvedValueOnce(mockDayPlan2 as TypedMealPlanRow);
 
       const result = await createMultiDayPlan(validCommand, userId, mockSupabase);
 
@@ -321,8 +319,8 @@ describe("multi-day-plan.service", () => {
       });
 
       vi.mocked(MealPlanService.createMealPlan)
-        .mockResolvedValueOnce(mockDayPlan1 as any)
-        .mockResolvedValueOnce(mockDayPlan2 as any);
+        .mockResolvedValueOnce(mockDayPlan1 as TypedMealPlanRow)
+        .mockResolvedValueOnce(mockDayPlan2 as TypedMealPlanRow);
 
       await createMultiDayPlan(validCommand, userId, mockSupabase);
 
@@ -353,8 +351,8 @@ describe("multi-day-plan.service", () => {
       });
 
       vi.mocked(MealPlanService.createMealPlan)
-        .mockResolvedValueOnce(mockDayPlan1 as any)
-        .mockResolvedValueOnce(mockDayPlan2 as any);
+        .mockResolvedValueOnce(mockDayPlan1 as TypedMealPlanRow)
+        .mockResolvedValueOnce(mockDayPlan2 as TypedMealPlanRow);
 
       await createMultiDayPlan(validCommand, userId, mockSupabase);
 
@@ -387,8 +385,8 @@ describe("multi-day-plan.service", () => {
       });
 
       vi.mocked(MealPlanService.createMealPlan)
-        .mockResolvedValueOnce(mockDayPlan1 as any)
-        .mockResolvedValueOnce(mockDayPlan2 as any);
+        .mockResolvedValueOnce(mockDayPlan1 as TypedMealPlanRow)
+        .mockResolvedValueOnce(mockDayPlan2 as TypedMealPlanRow);
 
       await createMultiDayPlan(validCommand, userId, mockSupabase);
 
@@ -430,8 +428,8 @@ describe("multi-day-plan.service", () => {
       };
 
       vi.mocked(MealPlanService.createMealPlan)
-        .mockResolvedValueOnce(mockDayPlan2 as any)
-        .mockResolvedValueOnce(mockDayPlan1 as any);
+        .mockResolvedValueOnce(mockDayPlan2 as TypedMealPlanRow)
+        .mockResolvedValueOnce(mockDayPlan1 as TypedMealPlanRow);
 
       const result = await createMultiDayPlan(commandWithUnsortedDays, userId, mockSupabase);
 
@@ -472,7 +470,7 @@ describe("multi-day-plan.service", () => {
         return createQueryBuilder();
       });
 
-      vi.mocked(MealPlanService.createMealPlan).mockResolvedValueOnce(mockDayPlan1 as any);
+      vi.mocked(MealPlanService.createMealPlan).mockResolvedValueOnce(mockDayPlan1 as TypedMealPlanRow);
 
       await createMultiDayPlan(commandWithoutNames, userId, mockSupabase);
 
@@ -512,9 +510,7 @@ describe("multi-day-plan.service", () => {
 
       (mockSupabase.from as ReturnType<typeof vi.fn>).mockReturnValue(insertBuilder);
 
-      vi.mocked(MealPlanService.createMealPlan).mockRejectedValueOnce(
-        new DatabaseError("Failed to create meal plan")
-      );
+      vi.mocked(MealPlanService.createMealPlan).mockRejectedValueOnce(new DatabaseError("Failed to create meal plan"));
 
       await expect(createMultiDayPlan(validCommand, userId, mockSupabase)).rejects.toThrow(DatabaseError);
     });
@@ -544,7 +540,7 @@ describe("multi-day-plan.service", () => {
         return createQueryBuilder();
       });
 
-      vi.mocked(MealPlanService.createMealPlan).mockResolvedValue(mockDayPlan1 as any);
+      vi.mocked(MealPlanService.createMealPlan).mockResolvedValue(mockDayPlan1 as TypedMealPlanRow);
 
       const error = await createMultiDayPlan(validCommand, userId, mockSupabase).catch((e) => e);
       expect(error).toBeInstanceOf(DatabaseError);
@@ -576,7 +572,7 @@ describe("multi-day-plan.service", () => {
         return createQueryBuilder();
       });
 
-      vi.mocked(MealPlanService.createMealPlan).mockResolvedValue(mockDayPlan1 as any);
+      vi.mocked(MealPlanService.createMealPlan).mockResolvedValue(mockDayPlan1 as TypedMealPlanRow);
 
       const error = await createMultiDayPlan(validCommand, userId, mockSupabase).catch((e) => e);
       expect(error).toBeInstanceOf(DatabaseError);
@@ -646,8 +642,8 @@ describe("multi-day-plan.service", () => {
       });
 
       vi.mocked(MealPlanService.getMealPlanById)
-        .mockResolvedValueOnce(mockDayPlan1 as any)
-        .mockResolvedValueOnce(mockDayPlan2 as any);
+        .mockResolvedValueOnce(mockDayPlan1 as TypedMealPlanRow)
+        .mockResolvedValueOnce(mockDayPlan2 as TypedMealPlanRow);
 
       const result = await getMultiDayPlanById("multi-day-plan-id", userId, mockSupabase);
 
@@ -681,8 +677,8 @@ describe("multi-day-plan.service", () => {
       });
 
       vi.mocked(MealPlanService.getMealPlanById)
-        .mockResolvedValueOnce(mockDayPlan2 as any)
-        .mockResolvedValueOnce(mockDayPlan1 as any);
+        .mockResolvedValueOnce(mockDayPlan2 as TypedMealPlanRow)
+        .mockResolvedValueOnce(mockDayPlan1 as TypedMealPlanRow);
 
       const result = await getMultiDayPlanById("multi-day-plan-id", userId, mockSupabase);
 
@@ -706,9 +702,7 @@ describe("multi-day-plan.service", () => {
         select: vi.fn().mockReturnThis(),
         eq: vi.fn().mockReturnThis(),
         order: vi.fn().mockResolvedValue({
-          data: [
-            { day_number: 1, day_plan_id: "day-plan-1" },
-          ],
+          data: [{ day_number: 1, day_plan_id: "day-plan-1" }],
           error: null,
         }),
       };
@@ -719,7 +713,7 @@ describe("multi-day-plan.service", () => {
         return createQueryBuilder();
       });
 
-      vi.mocked(MealPlanService.getMealPlanById).mockResolvedValueOnce(mockDayPlan1 as any);
+      vi.mocked(MealPlanService.getMealPlanById).mockResolvedValueOnce(mockDayPlan1 as TypedMealPlanRow);
 
       const result = await getMultiDayPlanById("multi-day-plan-id", userId, mockSupabase);
 
@@ -742,9 +736,7 @@ describe("multi-day-plan.service", () => {
         select: vi.fn().mockReturnThis(),
         eq: vi.fn().mockReturnThis(),
         order: vi.fn().mockResolvedValue({
-          data: [
-            { day_number: 1, day_plan_id: "day-plan-1" },
-          ],
+          data: [{ day_number: 1, day_plan_id: "day-plan-1" }],
           error: null,
         }),
       };
@@ -755,7 +747,7 @@ describe("multi-day-plan.service", () => {
         return createQueryBuilder();
       });
 
-      vi.mocked(MealPlanService.getMealPlanById).mockResolvedValueOnce(mockDayPlan1 as any);
+      vi.mocked(MealPlanService.getMealPlanById).mockResolvedValueOnce(mockDayPlan1 as TypedMealPlanRow);
 
       const result = await getMultiDayPlanById("multi-day-plan-id", userId, mockSupabase);
 
@@ -778,9 +770,7 @@ describe("multi-day-plan.service", () => {
         select: vi.fn().mockReturnThis(),
         eq: vi.fn().mockReturnThis(),
         order: vi.fn().mockResolvedValue({
-          data: [
-            { day_number: 1, day_plan_id: "day-plan-1" },
-          ],
+          data: [{ day_number: 1, day_plan_id: "day-plan-1" }],
           error: null,
         }),
       };
@@ -791,7 +781,7 @@ describe("multi-day-plan.service", () => {
         return createQueryBuilder();
       });
 
-      vi.mocked(MealPlanService.getMealPlanById).mockResolvedValueOnce(mockDayPlan1 as any);
+      vi.mocked(MealPlanService.getMealPlanById).mockResolvedValueOnce(mockDayPlan1 as TypedMealPlanRow);
 
       const result = await getMultiDayPlanById("multi-day-plan-id", userId, mockSupabase);
 
@@ -906,9 +896,7 @@ describe("multi-day-plan.service", () => {
         select: vi.fn().mockReturnThis(),
         eq: vi.fn().mockReturnThis(),
         order: vi.fn().mockResolvedValue({
-          data: [
-            { day_number: 1, day_plan_id: "day-plan-1" },
-          ],
+          data: [{ day_number: 1, day_plan_id: "day-plan-1" }],
           error: null,
         }),
       };
@@ -941,14 +929,9 @@ describe("multi-day-plan.service", () => {
         return createQueryBuilder();
       });
 
-      vi.mocked(MealPlanService.getMealPlanById).mockResolvedValue(mockDayPlan1 as any);
+      vi.mocked(MealPlanService.getMealPlanById).mockResolvedValue(mockDayPlan1 as TypedMealPlanRow);
 
-      const result = await updateMultiDayPlan(
-        "multi-day-plan-id",
-        { name: "Updated Name" },
-        userId,
-        mockSupabase
-      );
+      const result = await updateMultiDayPlan("multi-day-plan-id", { name: "Updated Name" }, userId, mockSupabase);
 
       expect(updateBuilder.update).toHaveBeenCalledWith({ name: "Updated Name" });
       expect(result.name).toBe("Updated Name");
@@ -988,10 +971,7 @@ describe("multi-day-plan.service", () => {
       const linksBuilder = {
         select: vi.fn().mockReturnThis(),
         eq: vi.fn().mockResolvedValue({
-          data: [
-            { day_plan_id: "day-plan-1" },
-            { day_plan_id: "day-plan-2" },
-          ],
+          data: [{ day_plan_id: "day-plan-1" }, { day_plan_id: "day-plan-2" }],
           error: null,
         }),
       };
@@ -1188,4 +1168,3 @@ describe("multi-day-plan.service", () => {
     });
   });
 });
-

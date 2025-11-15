@@ -1,4 +1,4 @@
-import type { MealPlanContentDailySummary, MultiDayPlanListItemDto } from "../types";
+import type { MealPlanContentDailySummary } from "../types";
 import { formatRelativeTime } from "../lib/utils/date";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 
@@ -39,7 +39,8 @@ export function MealPlanInfo({ name, createdAt, updatedAt, dailySummary, multiDa
           <div className="flex flex-wrap gap-4 text-sm">
             <div className="flex items-center gap-1">
               <span className="text-muted-foreground">
-                {multiDaySummary.number_of_days} {multiDaySummary.number_of_days === 1 ? t("startup.day") : t("startup.days")}
+                {multiDaySummary.number_of_days}{" "}
+                {multiDaySummary.number_of_days === 1 ? t("startup.day") : t("startup.days")}
               </span>
             </div>
             <div className="flex items-center gap-1">

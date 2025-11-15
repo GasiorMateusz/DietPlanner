@@ -242,6 +242,7 @@
   "account.sortBy": "Sortuj według",
   "account.sortByPrice": "Ceny",
   "account.sortByPower": "Mocy",
+  "account.sortBySpeed": "Szybkości",
   "export.modal.title": "Eksportuj plan żywieniowy",
   "export.modal.description": "Wybierz, co uwzględnić w eksporcie",
   "export.modal.contentOptions": "Opcje zawartości",

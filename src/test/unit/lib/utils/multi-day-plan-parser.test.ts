@@ -329,7 +329,6 @@ describe("multi-day-plan-parser", () => {
 
         expect(() => parseJsonMultiDayPlan(validMessage)).not.toThrow();
       });
-
     });
 
     describe("JSON extraction from messages", () => {
@@ -804,4 +803,3 @@ describe("multi-day-plan-parser", () => {
     });
   });
 });
-

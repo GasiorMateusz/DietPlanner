@@ -547,4 +547,3 @@ describe("multi-day-plans schemas", () => {
     });
   });
 });
-

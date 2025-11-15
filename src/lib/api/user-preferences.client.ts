@@ -176,9 +176,7 @@ export const userPreferencesApi = {
    * @returns Updated AI model preference
    * @throws {Error} If the request fails
    */
-  async updateAiModelPreference(
-    command: UpdateAiModelPreferenceCommand
-  ): Promise<GetAiModelPreferenceResponseDto> {
+  async updateAiModelPreference(command: UpdateAiModelPreferenceCommand): Promise<GetAiModelPreferenceResponseDto> {
     const allPreferences = await this.updatePreferences({ ai_model: command.model });
     return { model: allPreferences.ai_model ?? DEFAULT_AI_MODEL };
   },

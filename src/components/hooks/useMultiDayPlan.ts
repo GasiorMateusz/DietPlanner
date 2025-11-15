@@ -41,4 +41,3 @@ export function useMultiDayPlan(planId: string): UseMultiDayPlanReturn {
 
   return { planData, isLoading, error, refetch: fetchPlan };
 }
-

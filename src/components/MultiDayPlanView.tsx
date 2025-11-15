@@ -81,4 +81,3 @@ export function MultiDayPlanView({ planId }: MultiDayPlanViewProps) {
     </div>
   );
 }
-

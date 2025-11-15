@@ -136,7 +136,7 @@ test.describe("Multi-Day Meal Plan Creation and Editing Flow", () => {
     await aiChatPage.sendMessage("make it 4 days");
     await aiChatPage.waitForAIResponse();
     await aiChatPage.accept();
-    
+
     // Step 12: In edit mode, accepting opens a modal with plan name pre-filled
     // The checkbox "Create as new plan" is unchecked by default, so it will overwrite the existing plan
     await aiChatPage.waitForSavePlanModal();

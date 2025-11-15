@@ -36,7 +36,7 @@ export function AccountProfile({ userEmail, termsAccepted, termsAcceptedAt }: Ac
   const [modelSuccess, setModelSuccess] = React.useState(false);
   const [hasLoadedModel, setHasLoadedModel] = React.useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = React.useState(false);
-  const [sortBy, setSortBy] = React.useState<"price" | "power">("price");
+  const [sortBy, setSortBy] = React.useState<"price" | "power" | "speed">("price");
 
   // Load AI model preference on mount (only once)
   React.useEffect(() => {
@@ -59,7 +59,8 @@ export function AccountProfile({ userEmail, termsAccepted, termsAcceptedAt }: Ac
           // eslint-disable-next-line no-console
           console.error("Failed to load AI model preference:", error);
         }
-        setModelError(t("account.modelLoadError"));
+        // Set error translation key - will be translated in render
+        setModelError("account.modelLoadError");
         // Set defaults
         setSelectedModel(DEFAULT_AI_MODEL);
         setSavedModel(DEFAULT_AI_MODEL);
@@ -70,8 +71,7 @@ export function AccountProfile({ userEmail, termsAccepted, termsAcceptedAt }: Ac
     };
 
     loadAiModelPreference();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Empty dependency array - only run once on mount
+  }, []); // Empty array - only run once on mount. Guard prevents re-loading if already loaded
 
   // Handle Escape key to close dropdown
   React.useEffect(() => {
@@ -164,9 +164,12 @@ export function AccountProfile({ userEmail, termsAccepted, termsAcceptedAt }: Ac
     if (sortBy === "price") {
       // Sort by price (ascending - cheapest first)
       return models.sort((a, b) => a.combinedPrice - b.combinedPrice);
-    } else {
+    } else if (sortBy === "power") {
       // Sort by power (descending - highest power first)
       return models.sort((a, b) => b.powerRank - a.powerRank);
+    } else {
+      // Sort by speed (descending - fastest first)
+      return models.sort((a, b) => b.speed - a.speed);
     }
   }, [sortBy]);
 
@@ -259,7 +262,7 @@ export function AccountProfile({ userEmail, termsAccepted, termsAcceptedAt }: Ac
                       name="sort-type"
                       value="price"
                       checked={sortBy === "price"}
-                      onChange={(e) => setSortBy(e.target.value as "price" | "power")}
+                      onChange={(e) => setSortBy(e.target.value as "price" | "power" | "speed")}
                       className="cursor-pointer"
                     />
                     <span>{t("account.sortByPrice")}</span>
@@ -270,10 +273,21 @@ export function AccountProfile({ userEmail, termsAccepted, termsAcceptedAt }: Ac
                       name="sort-type"
                       value="power"
                       checked={sortBy === "power"}
-                      onChange={(e) => setSortBy(e.target.value as "price" | "power")}
+                      onChange={(e) => setSortBy(e.target.value as "price" | "power" | "speed")}
                       className="cursor-pointer"
                     />
                     <span>{t("account.sortByPower")}</span>
+                  </label>
+                  <label className="flex items-center gap-1.5 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="sort-type"
+                      value="speed"
+                      checked={sortBy === "speed"}
+                      onChange={(e) => setSortBy(e.target.value as "price" | "power" | "speed")}
+                      className="cursor-pointer"
+                    />
+                    <span>{t("account.sortBySpeed")}</span>
                   </label>
                 </div>
               </div>
@@ -292,7 +306,7 @@ export function AccountProfile({ userEmail, termsAccepted, termsAcceptedAt }: Ac
                   >
                     <span className="truncate">
                       {selectedModelData
-                        ? `${selectedModelData.name} (${selectedModelData.provider}) - $${selectedModelData.combinedPrice.toFixed(2)} - Power: ${selectedModelData.powerRank}`
+                        ? `${selectedModelData.name} (${selectedModelData.provider}) - $${selectedModelData.combinedPrice.toFixed(2)} - Power: ${selectedModelData.powerRank} - Speed: ${selectedModelData.speed}`
                         : t("account.selectModel")}
                     </span>
                     <svg
@@ -310,19 +324,16 @@ export function AccountProfile({ userEmail, termsAccepted, termsAcceptedAt }: Ac
                   </Button>
                   {isDropdownOpen && (
                     <>
-                      <div
-                        className="fixed inset-0 z-10"
-                        onClick={() => setIsDropdownOpen(false)}
-                        aria-hidden="true"
-                      />
+                      <div className="fixed inset-0 z-10" onClick={() => setIsDropdownOpen(false)} aria-hidden="true" />
                       <div className="absolute z-20 mt-1 w-full rounded-md border bg-popover shadow-lg">
                         <div className="max-h-[400px] overflow-auto p-1">
                           {/* Table Header */}
-                          <div className="sticky top-0 z-10 grid grid-cols-[2fr_1fr_1fr_0.8fr] gap-2 border-b bg-background px-3 py-2 text-xs font-semibold text-muted-foreground">
+                          <div className="sticky top-0 z-10 grid grid-cols-[2fr_1fr_1fr_0.8fr_0.8fr] gap-2 border-b bg-background px-3 py-2 text-xs font-semibold text-muted-foreground">
                             <div>Model</div>
                             <div>Provider</div>
                             <div className="text-right">Price</div>
                             <div className="text-right">Power</div>
+                            <div className="text-right">Speed</div>
                           </div>
                           {/* Table Rows */}
                           {sortedModels.map((model) => {
@@ -332,7 +343,7 @@ export function AccountProfile({ userEmail, termsAccepted, termsAcceptedAt }: Ac
                                 key={model.id}
                                 type="button"
                                 onClick={() => handleModelSelect(model.id)}
-                                className={`w-full grid grid-cols-[2fr_1fr_1fr_0.8fr] gap-2 rounded-sm px-3 py-2 text-left text-sm transition-colors hover:bg-accent hover:text-accent-foreground ${
+                                className={`w-full grid grid-cols-[2fr_1fr_1fr_0.8fr_0.8fr] gap-2 rounded-sm px-3 py-2 text-left text-sm transition-colors hover:bg-accent hover:text-accent-foreground ${
                                   isSelected ? "bg-accent text-accent-foreground" : ""
                                 }`}
                               >
@@ -340,6 +351,7 @@ export function AccountProfile({ userEmail, termsAccepted, termsAcceptedAt }: Ac
                                 <div className="text-muted-foreground truncate">{model.provider}</div>
                                 <div className="text-right font-medium">${model.combinedPrice.toFixed(2)}</div>
                                 <div className="text-right font-medium">{model.powerRank}</div>
+                                <div className="text-right font-medium">{model.speed}</div>
                               </button>
                             );
                           })}
@@ -350,7 +362,7 @@ export function AccountProfile({ userEmail, termsAccepted, termsAcceptedAt }: Ac
                   {modelSuccess && (
                     <div className="mt-2 text-sm text-green-600 dark:text-green-400">{t("account.modelSaved")}</div>
                   )}
-                  {modelError && <div className="mt-2 text-sm text-destructive">{modelError}</div>}
+                  {modelError && <div className="mt-2 text-sm text-destructive">{t(modelError)}</div>}
                 </div>
               )}
             </div>
@@ -372,7 +384,7 @@ export function AccountProfile({ userEmail, termsAccepted, termsAcceptedAt }: Ac
           <CardTitle>{t("account.accountManagement")}</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
+          <div className="flex flex-col sm:flex-row gap-4">
             <Button variant="outline" onClick={handleChangePassword} className="w-full sm:w-auto">
               {t("account.changePassword")}
             </Button>

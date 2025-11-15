@@ -13,6 +13,7 @@ export const AVAILABLE_AI_MODELS: AiModel[] = [
     outputPrice: 0.4,
     combinedPrice: 0.1 * 0.2 + 0.4 * 0.8, // 0.34
     powerRank: 7, // Reversed from 4: higher is better
+    speed: 10, // Very fast, optimized for speed (highest throughput)
   },
   {
     id: "openai/gpt-4.1-nano",
@@ -22,6 +23,7 @@ export const AVAILABLE_AI_MODELS: AiModel[] = [
     outputPrice: 0.4,
     combinedPrice: 0.1 * 0.2 + 0.4 * 0.8, // 0.34
     powerRank: 5, // Changed from 5.5 to 6, then reversed: higher is better
+    speed: 9, // Very fast, small model architecture
   },
   {
     id: "meta-llama/llama-4-scout",
@@ -31,6 +33,7 @@ export const AVAILABLE_AI_MODELS: AiModel[] = [
     outputPrice: 0.59,
     combinedPrice: 0.18 * 0.2 + 0.59 * 0.8, // 0.508
     powerRank: 4, // Reversed from 7: higher is better
+    speed: 8, // Fast, efficient smaller model
   },
   {
     id: "xai/grok-code-fast-1",
@@ -40,6 +43,7 @@ export const AVAILABLE_AI_MODELS: AiModel[] = [
     outputPrice: 1.5,
     combinedPrice: 0.2 * 0.2 + 1.5 * 0.8, // 1.24
     powerRank: 10, // Reversed from 1: higher is better (best)
+    speed: 10, // Optimized for speed, high throughput
   },
   {
     id: "openai/gpt-5-mini",
@@ -49,6 +53,7 @@ export const AVAILABLE_AI_MODELS: AiModel[] = [
     outputPrice: 2.0,
     combinedPrice: 0.25 * 0.2 + 2.0 * 0.8, // 1.65
     powerRank: 2, // Reversed from 9: higher is better (worst)
+    speed: 7, // Fast-medium, newer architecture but more capable
   },
   {
     id: "google/gemini-2.5-flash",
@@ -58,6 +63,7 @@ export const AVAILABLE_AI_MODELS: AiModel[] = [
     outputPrice: 2.5,
     combinedPrice: 0.3 * 0.2 + 2.5 * 0.8, // 2.06
     powerRank: 8, // Reversed from 3: higher is better
+    speed: 9, // Very fast, Flash-optimized architecture
   },
   {
     id: "openai/gpt-4.1-mini",
@@ -67,6 +73,7 @@ export const AVAILABLE_AI_MODELS: AiModel[] = [
     outputPrice: 1.6,
     combinedPrice: 0.4 * 0.2 + 1.6 * 0.8, // 1.36
     powerRank: 5, // Reversed from 6: higher is better
+    speed: 7, // Medium-fast, balanced performance
   },
   {
     id: "openai/gpt-4o-mini",
@@ -76,6 +83,7 @@ export const AVAILABLE_AI_MODELS: AiModel[] = [
     outputPrice: 2.4,
     combinedPrice: 0.6 * 0.2 + 2.4 * 0.8, // 2.04
     powerRank: 6, // Reversed from 5: higher is better
+    speed: 6, // Medium speed, good balance
   },
   {
     id: "anthropic/claude-sonnet-4",
@@ -85,6 +93,7 @@ export const AVAILABLE_AI_MODELS: AiModel[] = [
     outputPrice: 15.0,
     combinedPrice: 3.0 * 0.2 + 15.0 * 0.8, // 12.6
     powerRank: 3, // Reversed from 8: higher is better
+    speed: 4, // Slower but highly capable, prioritizing quality over speed
   },
   {
     id: "anthropic/claude-sonnet-4.5",
@@ -94,6 +103,7 @@ export const AVAILABLE_AI_MODELS: AiModel[] = [
     outputPrice: 15.0,
     combinedPrice: 3.0 * 0.2 + 15.0 * 0.8, // 12.6
     powerRank: 9, // Reversed from 2: higher is better (second best)
+    speed: 3, // Slowest but most capable, maximum quality over speed
   },
 ];
 
@@ -119,4 +129,3 @@ export function getModelById(modelId: string): AiModel | undefined {
 export function isValidModelId(modelId: string): boolean {
   return AVAILABLE_AI_MODELS.some((model) => model.id === modelId);
 }
-

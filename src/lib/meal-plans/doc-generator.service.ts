@@ -364,7 +364,10 @@ export async function generateMultiDayDoc(
 
   children.push(
     new Paragraph({
-      text: language === "pl" ? `Liczba dni: ${multiDayPlan.number_of_days}` : `Number of Days: ${multiDayPlan.number_of_days}`,
+      text:
+        language === "pl"
+          ? `Liczba dni: ${multiDayPlan.number_of_days}`
+          : `Number of Days: ${multiDayPlan.number_of_days}`,
       spacing: { after: 200 },
     })
   );

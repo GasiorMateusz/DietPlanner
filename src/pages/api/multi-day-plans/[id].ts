@@ -1,10 +1,7 @@
 import type { APIRoute } from "astro";
 import { DatabaseError, NotFoundError, UnauthorizedError, ValidationError } from "../../../lib/errors.ts";
 import * as MultiDayPlanService from "../../../lib/multi-day-plans/multi-day-plan.service.ts";
-import {
-  multiDayPlanIdParamSchema,
-  updateMultiDayPlanSchema,
-} from "../../../lib/validation/meal-plans.schemas.ts";
+import { multiDayPlanIdParamSchema, updateMultiDayPlanSchema } from "../../../lib/validation/meal-plans.schemas.ts";
 import type { UpdateMultiDayPlanCommand } from "../../../types.ts";
 import { getUserFromRequest } from "@/lib/auth/session.service.js";
 
@@ -152,12 +149,7 @@ export const PUT: APIRoute = async (context) => {
       user_id: user.id,
     });
 
-    const plan = await MultiDayPlanService.updateMultiDayPlan(
-      paramValidation.data.id,
-      command,
-      user.id,
-      supabase
-    );
+    const plan = await MultiDayPlanService.updateMultiDayPlan(paramValidation.data.id, command, user.id, supabase);
 
     return new Response(JSON.stringify(plan), {
       status: 200,
@@ -308,4 +300,3 @@ export const DELETE: APIRoute = async (context) => {
     );
   }
 };
-

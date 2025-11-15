@@ -2,10 +2,10 @@ import type { MultiDayPlanViewData } from "../types";
 import { DayPlanView } from "./DayPlanView";
 
 interface DaysListProps {
-  days: Array<{
+  days: {
     day_number: number;
     day_plan: MultiDayPlanViewData["days"][0]["day_plan"];
-  }>;
+  }[];
   viewMode?: "scroll" | "tabs";
 }
 
@@ -21,4 +21,3 @@ export function DaysList({ days, viewMode = "scroll" }: DaysListProps) {
     </div>
   );
 }
-

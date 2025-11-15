@@ -300,7 +300,7 @@ export function removeJsonFromMessage(message: string): string {
 
 interface JsonMultiDayPlanResponse {
   multi_day_plan: {
-    days: Array<{
+    days: {
       day_number: number;
       name?: string;
       meal_plan: {
@@ -322,7 +322,7 @@ interface JsonMultiDayPlanResponse {
           };
         }[];
       };
-    }>;
+    }[];
     summary: {
       number_of_days: number;
       average_kcal: number;
@@ -335,14 +335,14 @@ interface JsonMultiDayPlanResponse {
 }
 
 export function parseJsonMultiDayPlan(message: string): {
-  days: Array<{
+  days: {
     day_number: number;
     plan_content: {
       daily_summary: MealPlanContentDailySummary;
       meals: MealPlanMeal[];
     };
     name?: string;
-  }>;
+  }[];
   summary: {
     number_of_days: number;
     average_kcal: number;

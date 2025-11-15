@@ -15,12 +15,15 @@ export const themeSchema = z.enum(["light", "dark"]);
  * Schema for validating AI model identifier.
  * Validates that the model ID exists in the available models list.
  */
-export const aiModelSchema = z.string().min(1, "Model is required").refine(
-  (modelId) => isValidModelId(modelId),
-  (modelId) => ({
-    message: `Invalid model ID: ${modelId}. Model must be one of the available models.`,
-  })
-);
+export const aiModelSchema = z
+  .string()
+  .min(1, "Model is required")
+  .refine(
+    (modelId) => isValidModelId(modelId),
+    (modelId) => ({
+      message: `Invalid model ID: ${modelId}. Model must be one of the available models.`,
+    })
+  );
 
 /**
  * Schema for validating the GET /api/user-preferences response (language only).
