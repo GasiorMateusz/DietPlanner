@@ -3,6 +3,7 @@ import type { Database } from "../../db/database.types.ts";
 import { DatabaseError } from "../errors.ts";
 import type { LanguageCode } from "../i18n/types";
 import type { Theme } from "../../types.ts";
+import { DEFAULT_AI_MODEL } from "../ai/models.config.ts";
 
 /**
  * Gets the user's language preference from the database.
@@ -145,20 +146,98 @@ export async function updateUserThemePreference(
 }
 
 /**
- * Gets all user preferences (language, theme, and terms acceptance) from the database.
+ * Gets the user's AI model preference from the database.
+ * Returns default model if no preference exists.
+ * @param userId - The authenticated user's ID
+ * @param supabase - The Supabase client instance
+ * @returns AI model preference (defaults to DEFAULT_AI_MODEL if not set)
+ * @throws {DatabaseError} If the database query fails
+ */
+export async function getUserAiModelPreference(
+  userId: string,
+  supabase: SupabaseClient<Database>
+): Promise<{ model: string }> {
+  const { data, error } = await supabase
+    .from("user_preferences")
+    .select("ai_model")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (error) {
+    throw new DatabaseError({
+      message: "Failed to fetch user AI model preference",
+      originalError: error,
+    });
+  }
+
+  // If no preference exists, return default
+  if (!data || !data.ai_model) {
+    return { model: DEFAULT_AI_MODEL };
+  }
+
+  return { model: data.ai_model };
+}
+
+/**
+ * Updates or creates the user's AI model preference in the database.
+ * Uses upsert to handle both insert and update cases.
+ * @param userId - The authenticated user's ID
+ * @param model - The OpenRouter model identifier to set
+ * @param supabase - The Supabase client instance
+ * @returns Updated AI model preference
+ * @throws {DatabaseError} If the database operation fails
+ */
+export async function updateUserAiModelPreference(
+  userId: string,
+  model: string,
+  supabase: SupabaseClient<Database>
+): Promise<{ model: string }> {
+  const { data, error } = await supabase
+    .from("user_preferences")
+    .upsert(
+      {
+        user_id: userId,
+        ai_model: model,
+        updated_at: new Date().toISOString(),
+      },
+      {
+        onConflict: "user_id",
+      }
+    )
+    .select("ai_model")
+    .single();
+
+  if (error) {
+    throw new DatabaseError({
+      message: "Failed to update user AI model preference",
+      originalError: error,
+    });
+  }
+
+  return { model: data.ai_model ?? DEFAULT_AI_MODEL };
+}
+
+/**
+ * Gets all user preferences (language, theme, terms acceptance, and AI model) from the database.
  * Returns defaults if no preference exists.
  * @param userId - The authenticated user's ID
  * @param supabase - The Supabase client instance
- * @returns All user preferences (defaults to "en", "light", and terms_accepted: false if not set)
+ * @returns All user preferences (defaults to "en", "light", terms_accepted: false, and DEFAULT_AI_MODEL if not set)
  * @throws {DatabaseError} If the database query fails
  */
 export async function getAllUserPreferences(
   userId: string,
   supabase: SupabaseClient<Database>
-): Promise<{ language: LanguageCode; theme: Theme; terms_accepted: boolean; terms_accepted_at: string | null }> {
+): Promise<{
+  language: LanguageCode;
+  theme: Theme;
+  terms_accepted: boolean;
+  terms_accepted_at: string | null;
+  ai_model: string | null;
+}> {
   const { data, error } = await supabase
     .from("user_preferences")
-    .select("language, theme, terms_accepted, terms_accepted_at")
+    .select("language, theme, terms_accepted, terms_accepted_at, ai_model")
     .eq("user_id", userId)
     .maybeSingle();
 
@@ -171,7 +250,13 @@ export async function getAllUserPreferences(
 
   // If no preference exists, return defaults
   if (!data) {
-    return { language: "en", theme: "light", terms_accepted: false, terms_accepted_at: null };
+    return {
+      language: "en",
+      theme: "light",
+      terms_accepted: false,
+      terms_accepted_at: null,
+      ai_model: null,
+    };
   }
 
   return {
@@ -179,24 +264,36 @@ export async function getAllUserPreferences(
     theme: data.theme as Theme,
     terms_accepted: (data.terms_accepted as boolean) ?? false,
     terms_accepted_at: (data.terms_accepted_at as string | null) ?? null,
+    ai_model: (data.ai_model as string | null) ?? null,
   };
 }
 
 /**
- * Updates or creates user preferences (language, theme, and/or terms acceptance) in the database.
+ * Updates or creates user preferences (language, theme, terms acceptance, and/or AI model) in the database.
  * Uses upsert to handle both insert and update cases.
  * Accepts partial updates - only provided fields are updated.
  * @param userId - The authenticated user's ID
- * @param preferences - Partial preferences object (language, theme, and/or terms_accepted)
+ * @param preferences - Partial preferences object (language, theme, terms_accepted, and/or ai_model)
  * @param supabase - The Supabase client instance
- * @returns Updated preferences (includes language, theme, terms_accepted, and terms_accepted_at)
+ * @returns Updated preferences (includes language, theme, terms_accepted, terms_accepted_at, and ai_model)
  * @throws {DatabaseError} If the database operation fails
  */
 export async function updateUserPreferences(
   userId: string,
-  preferences: { language?: LanguageCode; theme?: Theme; terms_accepted?: boolean },
+  preferences: {
+    language?: LanguageCode;
+    theme?: Theme;
+    terms_accepted?: boolean;
+    ai_model?: string;
+  },
   supabase: SupabaseClient<Database>
-): Promise<{ language: LanguageCode; theme: Theme; terms_accepted: boolean; terms_accepted_at: string | null }> {
+): Promise<{
+  language: LanguageCode;
+  theme: Theme;
+  terms_accepted: boolean;
+  terms_accepted_at: string | null;
+  ai_model: string | null;
+}> {
   // First, get current preferences to preserve values not being updated
   const current = await getAllUserPreferences(userId, supabase);
 
@@ -207,6 +304,7 @@ export async function updateUserPreferences(
     language: preferences.language ?? current.language,
     theme: preferences.theme ?? current.theme,
     terms_accepted: preferences.terms_accepted ?? current.terms_accepted,
+    ai_model: preferences.ai_model ?? current.ai_model,
     updated_at: new Date().toISOString(),
   };
 
@@ -215,7 +313,7 @@ export async function updateUserPreferences(
     .upsert(updatedPreferences, {
       onConflict: "user_id",
     })
-    .select("language, theme, terms_accepted, terms_accepted_at")
+    .select("language, theme, terms_accepted, terms_accepted_at, ai_model")
     .single();
 
   if (error) {
@@ -230,5 +328,6 @@ export async function updateUserPreferences(
     theme: data.theme as Theme,
     terms_accepted: (data.terms_accepted as boolean) ?? false,
     terms_accepted_at: (data.terms_accepted_at as string | null) ?? null,
+    ai_model: (data.ai_model as string | null) ?? null,
   };
 }

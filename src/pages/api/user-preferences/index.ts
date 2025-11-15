@@ -12,16 +12,17 @@ export const prerender = false;
 /**
  * GET /api/user-preferences
  *
- * Retrieves the authenticated user's preferences (language, theme, and terms acceptance).
- * Returns defaults ("en", "light", and terms_accepted: false) if no preference exists.
+ * Retrieves the authenticated user's preferences (language, theme, terms acceptance, and AI model).
+ * Returns defaults ("en", "light", terms_accepted: false, and ai_model: null) if no preference exists.
  *
  * Response includes:
  * - language: Language code ("en" or "pl")
  * - theme: Theme preference ("light" or "dark")
  * - terms_accepted: Boolean indicating if user has accepted Terms and Privacy Policy
  * - terms_accepted_at: Timestamp when user accepted terms (null if not accepted)
+ * - ai_model: OpenRouter model identifier (null if not set, defaults to "openai/gpt-4.1-nano" in service layer)
  *
- * @returns 200 OK with user preferences (language, theme, terms_accepted, terms_accepted_at)
+ * @returns 200 OK with user preferences (language, theme, terms_accepted, terms_accepted_at, ai_model)
  * @returns 401 Unauthorized if authentication fails
  * @returns 500 Internal Server Error for database failures
  */
@@ -101,7 +102,7 @@ export const GET: APIRoute = async (context) => {
 /**
  * PUT /api/user-preferences
  *
- * Updates the authenticated user's preferences (language, theme, and/or terms acceptance).
+ * Updates the authenticated user's preferences (language, theme, terms acceptance, and/or AI model).
  * Creates a new preference record if one doesn't exist.
  * Accepts partial updates - only provided fields are updated.
  *
@@ -109,20 +110,23 @@ export const GET: APIRoute = async (context) => {
  * - language (optional): Language code ("en" or "pl")
  * - theme (optional): Theme ("light" or "dark")
  * - terms_accepted (optional): Boolean indicating acceptance of Terms and Privacy Policy
+ * - ai_model (optional): OpenRouter model identifier (must be a valid model ID from available models)
  * At least one field must be provided.
  *
  * Notes:
  * - When terms_accepted is set to true, terms_accepted_at is automatically set by database trigger
  * - When terms_accepted is set to false, terms_accepted_at is automatically cleared by database trigger
  * - terms_accepted_at cannot be set directly via API - it's managed by the database trigger
+ * - ai_model must be validated against available models list
  *
  * Response includes:
  * - language: Language code ("en" or "pl")
  * - theme: Theme preference ("light" or "dark")
  * - terms_accepted: Boolean indicating if user has accepted Terms and Privacy Policy
  * - terms_accepted_at: Timestamp when user accepted terms (null if not accepted, set automatically)
+ * - ai_model: OpenRouter model identifier (null if not set)
  *
- * @returns 200 OK with updated preferences (language, theme, terms_accepted, terms_accepted_at)
+ * @returns 200 OK with updated preferences (language, theme, terms_accepted, terms_accepted_at, ai_model)
  * @returns 400 Bad Request if request body fails validation
  * @returns 401 Unauthorized if authentication fails
  * @returns 500 Internal Server Error for database failures
@@ -166,7 +170,19 @@ export const PUT: APIRoute = async (context) => {
     }
 
     // Call service to update preferences
-    const preferences = await UserPreferenceService.updateUserPreferences(user.id, validation.data, supabase);
+    // Map ai_model from request to service parameter
+    const servicePreferences: {
+      language?: string;
+      theme?: string;
+      terms_accepted?: boolean;
+      ai_model?: string;
+    } = {
+      language: validation.data.language,
+      theme: validation.data.theme,
+      terms_accepted: validation.data.terms_accepted,
+      ai_model: validation.data.ai_model,
+    };
+    const preferences = await UserPreferenceService.updateUserPreferences(user.id, servicePreferences, supabase);
 
     // Validate response
     const responseValidation = getAllPreferencesResponseSchema.safeParse(preferences);

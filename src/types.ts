@@ -295,7 +295,7 @@ export interface UpdateThemePreferenceResponseDto {
 }
 
 /**
- * **DTO**: The response for retrieving all user preferences (language, theme, and terms acceptance).
+ * **DTO**: The response for retrieving all user preferences (language, theme, terms acceptance, and AI model).
  * @Endpoint `GET /api/user-preferences`
  */
 export interface GetAllPreferencesResponseDto {
@@ -303,16 +303,18 @@ export interface GetAllPreferencesResponseDto {
   theme: Theme;
   terms_accepted: boolean;
   terms_accepted_at: string | null;
+  ai_model: string | null;
 }
 
 /**
- * **Command**: The request payload for updating user preferences (language, theme, and/or terms acceptance).
+ * **Command**: The request payload for updating user preferences (language, theme, terms acceptance, and/or AI model).
  * @Endpoint `PUT /api/user-preferences`
  */
 export interface UpdatePreferencesCommand {
   language?: "en" | "pl";
   theme?: Theme;
   terms_accepted?: boolean;
+  ai_model?: string;
 }
 
 /**
@@ -324,6 +326,7 @@ export interface UpdatePreferencesResponseDto {
   theme: Theme;
   terms_accepted: boolean;
   terms_accepted_at: string | null;
+  ai_model: string | null;
 }
 
 /**
@@ -335,6 +338,46 @@ export interface GetUserPreferencesResponseDto {
   theme: Theme;
   terms_accepted: boolean;
   terms_accepted_at: string | null;
+}
+
+// --- AI Model Selection ---
+
+/**
+ * Available AI models with their metadata.
+ */
+export interface AiModel {
+  /** OpenRouter model identifier (e.g., "openai/gpt-4.1-nano") */
+  id: string;
+  /** Display name */
+  name: string;
+  /** Provider name (e.g., "Google", "OpenAI") */
+  provider: string;
+  /** Price per 1M input tokens */
+  inputPrice: number;
+  /** Price per 1M output tokens */
+  outputPrice: number;
+  /** Calculated combined price using formula: (inputPrice * 0.2) + (outputPrice * 0.8) */
+  combinedPrice: number;
+  /** Power ranking (1-10, where 10 is highest power) */
+  powerRank: number;
+}
+
+/**
+ * **DTO**: The response for retrieving the user's AI model preference.
+ * @Endpoint `GET /api/user-preferences`
+ */
+export interface GetAiModelPreferenceResponseDto {
+  /** OpenRouter model identifier */
+  model: string;
+}
+
+/**
+ * **Command**: The request payload for updating the user's AI model preference.
+ * @Endpoint `PUT /api/user-preferences`
+ */
+export interface UpdateAiModelPreferenceCommand {
+  /** OpenRouter model identifier */
+  model: string;
 }
 
 // --- Export Options ---
