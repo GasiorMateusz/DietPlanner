@@ -1,14 +1,16 @@
-import type { MealPlanListItemDto } from "../types";
+import type { MealPlanListItemDto, MultiDayPlanListItemDto } from "../types";
 import { Alert, AlertDescription } from "./ui/alert";
 import { Skeleton } from "./ui/skeleton";
 import { EmptyState } from "./EmptyState";
 import { MealPlanListItem } from "./MealPlanListItem";
 
 interface MealPlanListProps {
-  mealPlans: MealPlanListItemDto[];
+  mealPlans?: MealPlanListItemDto[];
+  multiDayPlans?: MultiDayPlanListItemDto[];
   isLoading: boolean;
   error: string | null;
   onEdit: (id: string) => void;
+  onView?: (id: string) => void;
   onExport: (id: string) => void;
   onDelete: (id: string, name: string) => void;
   onCreateClick?: () => void;
@@ -21,9 +23,11 @@ interface MealPlanListProps {
  */
 export function MealPlanList({
   mealPlans,
+  multiDayPlans,
   isLoading,
   error,
   onEdit,
+  onView,
   onExport,
   onDelete,
   onCreateClick,
@@ -50,17 +54,20 @@ export function MealPlanList({
     );
   }
 
-  if (mealPlans.length === 0) {
+  const plans = multiDayPlans || mealPlans || [];
+  if (plans.length === 0) {
     return <EmptyState onCreateClick={onCreateClick} />;
   }
 
   return (
     <ul className="space-y-4">
-      {mealPlans.map((mealPlan) => (
+      {plans.map((plan) => (
         <MealPlanListItem
-          key={mealPlan.id}
-          mealPlan={mealPlan}
+          key={plan.id}
+          mealPlan={mealPlans ? (plan as MealPlanListItemDto) : undefined}
+          multiDayPlan={multiDayPlans ? (plan as MultiDayPlanListItemDto) : undefined}
           onEdit={onEdit}
+          onView={onView}
           onExport={onExport}
           onDelete={onDelete}
         />

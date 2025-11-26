@@ -1,0 +1,14 @@
+---
+import PrivateLayout from "../../../layouts/PrivateLayout.astro";
+import { AIChatInterfaceWrapper } from "../../../components/AIChatInterfaceWrapper";
+
+const { id } = Astro.params;
+
+if (!id) {
+  return Astro.redirect("/app/dashboard");
+}
+---
+
+<PrivateLayout title="Edit Meal Plan - Diet Planner">
+  <AIChatInterfaceWrapper planId={id} client:load />
+</PrivateLayout>

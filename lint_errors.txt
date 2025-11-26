@@ -1,0 +1,96 @@
+
+> 10x-astro-starter@0.0.1 lint
+> eslint .
+
+
+E:\DietPlanner\src\components\AIChatInterface.tsx
+   23:3   error    'MultiDayPlanChatData' is defined but never used                                                             @typescript-eslint/no-unused-vars
+  121:7   warning  Unexpected console statement                                                                                 no-console
+  270:7   warning  Unexpected console statement                                                                                 no-console
+  279:6   warning  React Hook useCallback has an unnecessary dependency: 't'. Either exclude it or remove the dependency array  react-hooks/exhaustive-deps
+  490:7   warning  Unexpected console statement                                                                                 no-console
+  701:17  error    The autoFocus prop should not be used, as it can reduce usability and accessibility for users                jsx-a11y/no-autofocus
+
+E:\DietPlanner\src\components\ExportButton.tsx
+  10:51  error  'ExportOptions' is defined but never used  @typescript-eslint/no-unused-vars
+  66:14  error  'err' is defined but never used            @typescript-eslint/no-unused-vars
+
+E:\DietPlanner\src\components\MealPlanInfo.tsx
+  1:44  error  'MultiDayPlanListItemDto' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\DietPlanner\src\env.d.ts
+  1:1  error  Do not use a triple slash reference for ../.astro/types.d.ts, use `import` style instead  @typescript-eslint/triple-slash-reference
+
+E:\DietPlanner\src\lib\multi-day-plans\multi-day-plan.service.ts
+   80:51  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  296:66  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+E:\DietPlanner\src\lib\utils\chat-helpers.ts
+  6:3  error  'MultiDayStartupFormData' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\DietPlanner\src\pages\api\multi-day-plans\[id].ts
+   64:7  warning  Unexpected console statement  no-console
+   76:5  warning  Unexpected console statement  no-console
+  199:7  warning  Unexpected console statement  no-console
+  211:5  warning  Unexpected console statement  no-console
+  278:7  warning  Unexpected console statement  no-console
+  290:5  warning  Unexpected console statement  no-console
+
+E:\DietPlanner\src\pages\api\multi-day-plans\[id]\export.ts
+  121:40  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  157:7   warning  Unexpected console statement              no-console
+  169:5   warning  Unexpected console statement              no-console
+
+E:\DietPlanner\src\pages\api\multi-day-plans\index.ts
+   71:7  warning  Unexpected console statement  no-console
+   83:5  warning  Unexpected console statement  no-console
+  179:7  warning  Unexpected console statement  no-console
+  191:5  warning  Unexpected console statement  no-console
+
+E:\DietPlanner\src\test\e2e\meal-plan-creation-flow.spec.ts
+  38:9   warning  Unexpected console statement  no-console
+  46:11  warning  Unexpected console statement  no-console
+  60:7   warning  Unexpected console statement  no-console
+
+E:\DietPlanner\src\test\e2e\utils\test-cleanup.ts
+   54:9  warning  Unexpected console statement  no-console
+   57:7  warning  Unexpected console statement  no-console
+   76:7  warning  Unexpected console statement  no-console
+   82:7  warning  Unexpected console statement  no-console
+   86:5  warning  Unexpected console statement  no-console
+   91:5  warning  Unexpected console statement  no-console
+  123:9  warning  Unexpected console statement  no-console
+  127:7  warning  Unexpected console statement  no-console
+  146:7  warning  Unexpected console statement  no-console
+  151:7  warning  Unexpected console statement  no-console
+  172:5  warning  Unexpected console statement  no-console
+  176:7  warning  Unexpected console statement  no-console
+  199:5  warning  Unexpected console statement  no-console
+  217:5  warning  Unexpected console statement  no-console
+  229:5  warning  Unexpected console statement  no-console
+
+E:\DietPlanner\src\test\unit\lib\multi-day-plans\multi-day-plan.service.test.ts
+  286:48  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  287:48  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  321:48  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  322:48  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  353:48  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  354:48  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  387:48  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  388:48  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  430:48  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  431:48  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  472:87  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  542:83  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  574:83  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  644:48  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  645:48  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  679:48  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  680:48  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  715:88  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  749:88  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  783:88  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  931:84  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+✖ 65 problems (31 errors, 34 warnings)
+

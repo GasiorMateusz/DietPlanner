@@ -21,19 +21,22 @@ This document provides a comprehensive overview of the Diet Planner MVP project 
 
 ## Project Overview
 
-Diet Planner is a Minimum Viable Product (MVP) web application designed to streamline the work of dietitians by automating and accelerating the creation of personalized, 1-day meal plans using AI.
+Diet Planner is a Minimum Viable Product (MVP) web application designed to streamline the work of dietitians by automating and accelerating the creation of personalized meal plans (1-day and multi-day) using AI.
 
 ### Core Workflow
 
-1. **Form Input**: The dietitian fills out a structured form with patient parameters, caloric goals, macronutrients, and exclusions.
-2. **AI Generation**: The AI generates a 1-day meal plan in a conversational interface, allowing for iterative corrections.
-3. **Manual Edit & Export**: Once accepted, the plan is transferred to a text editor for final manual modifications, saving, and exporting to a .doc file.
+1. **Form Input**: The dietitian fills out a structured form with patient parameters, caloric goals, macronutrients, and exclusions. For multi-day plans, the form includes options for number of days and meal variety.
+2. **AI Generation & Save**: The AI generates a meal plan in a conversational interface, allowing for iterative corrections. Once accepted, the plan is saved directly and can be exported to a .doc file.
+3. **Plan Editing**: Saved plans can be edited through the AI chat interface, allowing modifications while preserving the original plan structure. Users can choose to overwrite the existing plan or create a new one.
 
 ### Key Features
 
 - User Authentication (email/password with Supabase Auth)
 - Dashboard (view, search, delete meal plans)
-- Meal Plan Creation (Startup Form → AI Chat → Manual Editor)
+- Meal Plan Creation (Startup Form → AI Chat → Save & Export)
+- Multi-Day Meal Plans (support for 1-7 day plans)
+- Plan Editing (edit existing plans via AI chat with overwrite/new plan options)
+- Plan Viewing (view saved plans with day-by-day breakdown)
 - Export to .doc file
 - Terms and Privacy Policy (bilingual: English/Polish)
 - Language Switching (English/Polish)
@@ -42,10 +45,8 @@ Diet Planner is a Minimum Viable Product (MVP) web application designed to strea
 
 ### Out of Scope (MVP)
 
-- Multi-day meal plans
 - External recipe database integration
 - Mobile application
-- Automatic nutrition recalculation after manual edits
 - Social features
 - Patient entity management
 
@@ -56,7 +57,7 @@ Diet Planner is a Minimum Viable Product (MVP) web application designed to strea
 ### Frontend
 
 - **Astro 5** - Fast, performant static site generation with minimal JavaScript
-- **React 19** - Interactive components (chat, editor, forms)
+- **React 19** - Interactive components (chat, forms)
 - **TypeScript 5** - Static type checking
 - **Tailwind 4** - Utility-first CSS styling
 - **Shadcn/ui** - Accessible React component library (New York style, neutral color)
@@ -137,13 +138,11 @@ DietPlanner/
 │   │   ├── hooks/                # Custom React hooks
 │   │   │   ├── useDebounce.ts
 │   │   │   ├── useAIChatForm.ts
-│   │   │   ├── useMealPlanEditor.ts
 │   │   │   ├── useMealPlansList.ts
 │   │   │   ├── useSessionConfirmation.ts
 │   │   │   └── useStartupForm.ts
 │   │   ├── AIChatInterface.tsx   # AI chat component
 │   │   ├── DashboardView.tsx     # Dashboard component
-│   │   ├── MealPlanEditor.tsx    # Meal plan editor
 │   │   ├── LanguageSelector.tsx  # Language toggle
 │   │   ├── ThemeToggle.tsx       # Theme toggle
 │   │   ├── NavBar.tsx            # Navigation bar
@@ -166,6 +165,7 @@ DietPlanner/
 │   │   ├── api/                  # API client utilities
 │   │   │   ├── base.client.ts
 │   │   │   ├── meal-plans.client.ts
+│   │   │   ├── multi-day-plans.client.ts
 │   │   │   ├── user-preferences.client.ts
 │   │   │   └── ai-chat.client.ts
 │   │   ├── auth/                 # Authentication utilities
@@ -184,6 +184,8 @@ DietPlanner/
 │   │   ├── meal-plans/           # Meal plan services
 │   │   │   ├── meal-plan.service.ts
 │   │   │   └── doc-generator.service.ts
+│   │   ├── multi-day-plans/      # Multi-day meal plan services
+│   │   │   └── multi-day-plan.service.ts
 │   │   ├── terms/                # Terms and Privacy Policy
 │   │   │   ├── terms.config.ts   # Required section IDs
 │   │   │   ├── terms.types.ts    # TypeScript types
@@ -222,15 +224,21 @@ DietPlanner/
 │   │   │   │   │   ├── export.ts      # GET /api/meal-plans/[id]/export
 │   │   │   │   │   └── index.ts       # GET, PUT, DELETE /api/meal-plans/[id]
 │   │   │   │   └── index.ts           # GET, POST /api/meal-plans
+│   │   │   ├── multi-day-plans/
+│   │   │   │   ├── [id]/
+│   │   │   │   │   ├── export.ts      # GET /api/multi-day-plans/[id]/export
+│   │   │   │   │   └── index.ts       # GET, PUT, DELETE /api/multi-day-plans/[id]
+│   │   │   │   └── index.ts           # GET, POST /api/multi-day-plans
 │   │   │   └── user-preferences/
 │   │   │       └── index.ts           # GET, PUT /api/user-preferences
 │   │   ├── app/                  # Private pages (require auth)
 │   │   │   ├── account.astro     # Account profile page
 │   │   │   ├── dashboard.astro   # Dashboard page
-│   │   │   ├── create.astro      # AI chat page
-│   │   │   └── editor/
-│   │   │       └── [id].astro    # Meal plan editor (edit mode)
-│   │   │   └── editor.astro      # Meal plan editor (create mode)
+│   │   │   ├── create.astro      # AI chat page (create mode)
+│   │   │   ├── edit/
+│   │   │   │   └── [id].astro    # AI chat page (edit mode)
+│   │   │   └── view/
+│   │   │       └── [id].astro    # View meal plan page
 │   │   ├── auth/                 # Public auth pages
 │   │   │   ├── login.astro
 │   │   │   ├── register.astro
@@ -310,7 +318,6 @@ DietPlanner/
 **Meal Plans Implementation** - Meal plan management feature:
 - Dashboard view
 - Meal plan creation flow
-- Editor implementation
 - Export functionality
 - API endpoints
 
@@ -330,13 +337,6 @@ DietPlanner/
 - Session management
 - Error handling
 
-### `.ai/editor-view-implementation-plan.md`
-**Editor Implementation** - Meal plan editor:
-- Create and edit modes
-- Form validation
-- Meal card components
-- Save functionality
-- Export integration
 
 ### `.ai/export-implementation-plan.md` & `.ai/export-feature-extension-implementation-plan.md`
 **Export Implementation** - Document export functionality:
@@ -479,6 +479,7 @@ DietPlanner/
 - `meal_names` (text)
 - `exclusions_guidelines` (text)
 - `source_chat_session_id` (uuid, foreign key to ai_chat_sessions)
+- `is_day_plan` (boolean) - Indicates if this meal plan is part of a multi-day plan
 - `created_at` (timestamptz)
 - `updated_at` (timestamptz)
 
@@ -489,6 +490,65 @@ DietPlanner/
 **RLS Policies:**
 - Authenticated users can SELECT, INSERT, UPDATE, DELETE their own meal plans
 - Anonymous users have no access
+
+#### `multi_day_plans`
+- `id` (uuid, primary key)
+- `user_id` (uuid, foreign key to auth.users)
+- `name` (text)
+- `number_of_days` (integer) - Number of days in the plan (1-7, constraint enforced)
+- `average_kcal` (numeric) - Average calories per day (calculated automatically)
+- `average_proteins` (numeric) - Average proteins per day (calculated automatically)
+- `average_fats` (numeric) - Average fats per day (calculated automatically)
+- `average_carbs` (numeric) - Average carbs per day (calculated automatically)
+- `common_exclusions_guidelines` (text, nullable) - Common dietary exclusions across all days
+- `common_allergens` (jsonb, nullable) - Common allergens array
+- `source_chat_session_id` (uuid, nullable, foreign key to ai_chat_sessions)
+- `is_draft` (boolean, default false) - Status tracking flag
+- `created_at` (timestamptz)
+- `updated_at` (timestamptz)
+
+**Indexes:**
+- `idx_multi_day_plans_user_id` (btree on user_id)
+- `idx_multi_day_plans_source_chat_session_id` (btree on source_chat_session_id)
+- `idx_multi_day_plans_is_draft` (btree on is_draft)
+- `idx_multi_day_plans_name_trgm` (gin trigram on name) - for search
+
+**RLS Policies:**
+- Authenticated users can SELECT, INSERT, UPDATE, DELETE their own multi-day plans
+- Anonymous users have no access
+
+**Triggers:**
+- `on_multi_day_plan_update` - Updates `updated_at` timestamp
+- `on_multi_day_plan_days_change` - Recalculates summary when day plans are added/removed/updated
+- `on_day_plan_update_recalculate_multi_day` - Recalculates summary when day plan content is updated
+
+**Functions:**
+- `recalculate_multi_day_plan_summary()` - Calculates averages from linked day plans
+- `trigger_recalculate_multi_day_plan_summary()` - Trigger function for junction table changes
+- `trigger_recalculate_on_day_plan_update()` - Trigger function for day plan content updates
+
+#### `multi_day_plan_days`
+- `id` (uuid, primary key)
+- `multi_day_plan_id` (uuid, foreign key to multi_day_plans, on delete cascade)
+- `day_plan_id` (uuid, foreign key to meal_plans, on delete cascade)
+- `day_number` (integer) - Day number (1-7, constraint enforced)
+- `created_at` (timestamptz)
+
+**Constraints:**
+- Unique constraint on (`multi_day_plan_id`, `day_number`) - Ensures one day per number per plan
+- Unique constraint on `day_plan_id` - Ensures each day plan belongs to only one multi-day plan
+
+**Indexes:**
+- `idx_multi_day_plan_days_multi_day_plan_id` (btree on multi_day_plan_id)
+- `idx_multi_day_plan_days_day_plan_id` (btree on day_plan_id)
+- `idx_multi_day_plan_days_day_number` (btree on multi_day_plan_id, day_number)
+
+**RLS Policies:**
+- Authenticated users can SELECT, INSERT, UPDATE, DELETE their own day plan links (via multi-day plan ownership)
+- Anonymous users have no access
+
+**Triggers:**
+- `on_multi_day_plan_days_change` - Automatically recalculates summary in `multi_day_plans` when day links are added/removed/updated
 
 #### `ai_chat_sessions`
 - `id` (uuid, primary key)
@@ -533,12 +593,26 @@ DietPlanner/
 
 #### `handle_updated_at()`
 - Updates `updated_at` timestamp on table updates
-- Used by triggers on `meal_plans` and `user_preferences`
+- Used by triggers on `meal_plans`, `user_preferences`, and `multi_day_plans`
 
 #### `handle_terms_accepted_at()`
 - Sets `terms_accepted_at` timestamp when `terms_accepted` changes to true
 - Clears `terms_accepted_at` when `terms_accepted` changes to false
 - Used by trigger on `user_preferences`
+
+#### `recalculate_multi_day_plan_summary(p_multi_day_plan_id uuid)`
+- Calculates average macros (kcal, proteins, fats, carbs) from all linked day plans
+- Updates `number_of_days`, `average_kcal`, `average_proteins`, `average_fats`, `average_carbs` in `multi_day_plans`
+- Called automatically by triggers when day plans are added/removed/updated
+- Security definer function for RLS bypass
+
+#### `trigger_recalculate_multi_day_plan_summary()`
+- Trigger function that calls `recalculate_multi_day_plan_summary()` when junction table changes
+- Handles INSERT, UPDATE, DELETE operations on `multi_day_plan_days`
+
+#### `trigger_recalculate_on_day_plan_update()`
+- Trigger function that recalculates summary when day plan content is updated
+- Only triggers when `is_day_plan = true` and `plan_content` changes
 
 ---
 
@@ -581,6 +655,53 @@ DietPlanner/
 #### `GET /api/meal-plans/[id]/export`
 - **Description**: Export meal plan to .doc file
 - **Response**: `200 OK` with .doc file (Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document)
+- **Auth**: Required (own plans only)
+
+### Multi-Day Plans Endpoints
+
+#### `GET /api/multi-day-plans`
+- **Description**: Get all multi-day plans for authenticated user
+- **Query Params**: 
+  - `search` (optional) - Search by name (case-insensitive partial match)
+  - `sort` (optional) - Sort field: `created_at`, `updated_at`, or `name` (default: `updated_at`)
+  - `order` (optional) - Sort order: `asc` or `desc` (default: `desc`)
+- **Response**: `200 OK` with array of `MultiDayPlanListItemDto`
+- **Auth**: Required
+
+#### `POST /api/multi-day-plans`
+- **Description**: Create a new multi-day plan with all day plans
+- **Request Body**: `CreateMultiDayPlanCommand` (name, number_of_days, source_chat_session_id, common_exclusions_guidelines, common_allergens, day_plans array)
+- **Response**: `201 Created` with `CreateMultiDayPlanResponseDto` (includes all day plans)
+- **Auth**: Required
+- **Note**: Creates the main plan record, individual day plans (with `is_day_plan = true`), and junction table links. Automatically calculates summary averages.
+
+#### `GET /api/multi-day-plans/[id]`
+- **Description**: Get a specific multi-day plan with all day plans
+- **Response**: `200 OK` with `GetMultiDayPlanByIdResponseDto` (includes all day plans with full meal plan data)
+- **Auth**: Required (own plans only)
+
+#### `PUT /api/multi-day-plans/[id]`
+- **Description**: Update a multi-day plan (supports updating day plans, name, and other fields)
+- **Request Body**: `UpdateMultiDayPlanCommand` (partial update, all fields optional)
+- **Response**: `200 OK` with `GetMultiDayPlanByIdResponseDto`
+- **Auth**: Required (own plans only)
+- **Note**: When updating `day_plans`, all existing day plans are deleted and new ones are created. Summary is automatically recalculated.
+
+#### `DELETE /api/multi-day-plans/[id]`
+- **Description**: Delete a multi-day plan and all associated day plans
+- **Response**: `204 No Content`
+- **Auth**: Required (own plans only)
+- **Note**: Cascade deletes all linked day plans via foreign key constraints
+
+#### `GET /api/multi-day-plans/[id]/export`
+- **Description**: Export multi-day plan to .doc or HTML file
+- **Query Params**:
+  - `format` (required) - `doc` or `html`
+  - `dailySummary` (optional, default: `true`) - Include daily summary
+  - `mealsSummary` (optional, default: `true`) - Include meals summary
+  - `ingredients` (optional, default: `true`) - Include ingredients
+  - `preparation` (optional, default: `true`) - Include preparation instructions
+- **Response**: `200 OK` with file (Content-Type: `application/vnd.openxmlformats-officedocument.wordprocessingml.document` for DOC or `text/html` for HTML)
 - **Auth**: Required (own plans only)
 
 ### AI Chat Endpoints
@@ -741,7 +862,6 @@ DietPlanner/
 - **Form state**: React Hook Form with Zod validation
 - **Global state**: React Context (TranslationProvider, ThemeProvider)
 - **No global state manager**: Redux, Zustand, etc. not used
-- **State bridge**: Client-side variable for passing data between views (AI Chat → Editor)
 
 ### Error Handling
 
@@ -927,6 +1047,17 @@ npm run test:all      # Run all test suites
 - **Unauthenticated Users**: Language stored in localStorage only (no API call on 401)
 - **Authenticated Users**: Language saved to database via API
 - **Cross-island Sync**: localStorage events and custom events for same-tab sync
+- **Edit Mode Initial Message**: Language preference read directly from localStorage to ensure correct language in edit mode initial message
+
+### Plan Editing
+
+- **Edit Mode**: Plans can be edited via `/app/edit/[id]` route
+- **Initial Message**: Existing plan is loaded and displayed as initial assistant message in the chat
+- **Save Options**: When saving edited plan, users can choose to:
+  - **Overwrite existing plan** (default): Updates the existing plan with new name and content
+  - **Create new plan**: Creates a new plan with the modified content, leaving the original unchanged
+- **Checkbox UI**: "Create as new plan" checkbox appears in save modal when in edit mode
+- **Day Plan Updates**: When updating day plans (e.g., changing from 4 days to 2), all existing day plans are deleted and new ones are created
 
 ### Theme Switching
 
@@ -938,6 +1069,7 @@ npm run test:all      # Run all test suites
 
 ### Meal Plan Data Structure
 
+**Single-Day Plan:**
 ```typescript
 interface MealPlanContent {
   daily_summary: {
@@ -960,21 +1092,75 @@ interface MealPlanContent {
 }
 ```
 
+**Multi-Day Plan:**
+```typescript
+interface MultiDayPlanContent {
+  multi_day_plan: {
+    days: Array<{
+      day_number: number;
+      name?: string;
+      meal_plan: {
+        daily_summary: {
+          kcal: number;
+          proteins: number;
+          fats: number;
+          carbs: number;
+        };
+        meals: Array<{
+          name: string;
+          ingredients: string;
+          preparation: string;
+          summary: {
+            kcal: number;
+            protein: number;
+            fat: number;
+            carb: number;
+          };
+        }>;
+      };
+    }>;
+    summary: {
+      number_of_days: number;
+      average_kcal: number;
+      average_proteins: number;
+      average_fats: number;
+      average_carbs: number;
+    };
+  };
+  comments?: string; // Optional AI comments
+}
+```
+
 ### AI Chat Flow
 
+**Create Mode:**
 1. User fills startup form → `POST /api/ai/sessions`
 2. API creates session, calls OpenRouter API
 3. First AI message returned → Navigate to `/app/create`
 4. User sends follow-up messages → `POST /api/ai/sessions/[id]/message`
-5. User accepts plan → Store in client-side variable → Navigate to `/app/editor`
-6. Editor loads data from variable → User edits → Save
+5. User accepts plan → Modal opens for plan name → Save directly → Navigate to `/app/view/[id]`
+
+**Edit Mode:**
+1. User clicks edit on existing plan → Navigate to `/app/edit/[id]`
+2. Existing plan loaded and displayed in chat as initial assistant message
+3. User sends modification requests → `POST /api/ai/sessions/[id]/message`
+4. User accepts changes → Modal opens with plan name and "Create as new plan" checkbox
+5. User saves → Either updates existing plan or creates new one → Navigate to `/app/view/[id]`
 
 ### Export Flow
 
+**Single-Day Plans:**
 1. User clicks "Export" → `GET /api/meal-plans/[id]/export`
 2. API generates .doc file using `docx` library
 3. File downloaded via `Content-Disposition: attachment` header
 4. Browser downloads file automatically
+
+**Multi-Day Plans:**
+1. User clicks "Export" from view page → `GET /api/multi-day-plans/[id]/export?format=doc&...`
+2. API generates .doc or HTML file with all days using `docx` library
+3. File downloaded via `Content-Disposition: attachment` header
+4. Browser downloads file automatically
+5. Export options modal allows customization of content sections (daily summary, meals summary, ingredients, preparation)
 
 ### Error Handling Patterns
 
@@ -1098,30 +1284,45 @@ npm run test:e2e         # Run E2E tests
 ### Key Components
 
 - **Auth Forms**: `src/components/auth/*.tsx`
-- **Dashboard**: `src/components/DashboardView.tsx`
-- **AI Chat**: `src/components/AIChatInterface.tsx`
-- **Editor**: `src/components/MealPlanEditor.tsx`
+- **Dashboard**: `src/components/DashboardView.tsx` (displays multi-day plans)
+- **AI Chat**: `src/components/AIChatInterface.tsx` (supports both create and edit modes for single-day and multi-day plans)
+- **Multi-Day Plan View**: `src/components/MultiDayPlanView.tsx` (read-only view with all days)
+- **Multi-Day Plan Display**: `src/components/MultiDayMealPlanDisplay.tsx` (display in AI chat interface)
+- **Day Plan Components**: 
+  - `src/components/DayPlanView.tsx` (individual day display)
+  - `src/components/DayPlanCard.tsx` (day card for chat interface)
+  - `src/components/DaysList.tsx` (scrollable list of days)
+  - `src/components/PlanSummary.tsx` (plan summary with averages)
+- **Export**: `src/components/ExportButton.tsx`, `src/components/ExportOptionsModal.tsx`
+- **Edit**: `src/components/EditButton.tsx` (navigation to edit mode)
 - **Terms Modal**: `src/components/terms/TermsAndPrivacyModal.tsx`
 - **Account Profile**: `src/components/account/AccountProfile.tsx`
 
 ### Key Services
 
 - **Meal Plans**: `src/lib/meal-plans/meal-plan.service.ts`
+- **Multi-Day Plans**: `src/lib/multi-day-plans/multi-day-plan.service.ts` (CRUD operations, summary calculation)
 - **AI Chat**: `src/lib/ai/openrouter.service.ts`, `session.service.ts`
 - **User Preferences**: `src/lib/user-preferences/user-preference.service.ts`
 - **Account**: `src/lib/account/account.service.ts`
-- **Export**: `src/lib/meal-plans/doc-generator.service.ts`
+- **Export**: `src/lib/meal-plans/doc-generator.service.ts` (includes `generateMultiDayDoc` function)
 
 ### API Endpoints
 
 - **Meal Plans**: `/api/meal-plans`, `/api/meal-plans/[id]`, `/api/meal-plans/[id]/export`
-- **AI Chat**: `/api/ai/sessions`, `/api/ai/sessions/[id]/message`
+- **Multi-Day Plans**: 
+  - `/api/multi-day-plans` (GET list, POST create)
+  - `/api/multi-day-plans/[id]` (GET, PUT, DELETE)
+  - `/api/multi-day-plans/[id]/export` (GET with format and content options)
+- **AI Chat**: `/api/ai/sessions`, `/api/ai/sessions/[id]/message` (supports both single-day and multi-day plans)
 - **User Preferences**: `/api/user-preferences`
 - **Account**: `/api/account` (DELETE)
 
 ### Database Tables
 
-- **meal_plans**: User meal plans
+- **meal_plans**: User meal plans (can be standalone or part of multi-day plans via `is_day_plan` flag)
+- **multi_day_plans**: User multi-day meal plans with summary statistics (automatically calculated)
+- **multi_day_plan_days**: Junction table linking multi-day plans to day plans with day ordering
 - **ai_chat_sessions**: AI conversation history (telemetry)
 - **user_preferences**: User preferences (language, theme, terms acceptance)
 
@@ -1136,6 +1337,9 @@ npm run test:e2e         # Run E2E tests
 3. **20250125200000_add_terms_acceptance_to_preferences.sql** - Added terms_accepted and terms_accepted_at columns
 4. **20250123192000_create_diet_planner_schema.sql** - Created meal_plans and ai_chat_sessions tables
 5. **20250124120000_production_security_fixes.sql** - Security fixes for triggers and functions
+6. **20251115203543_create_multi_day_plans_schema.sql** - Created multi_day_plans and multi_day_plan_days tables, added is_day_plan column to meal_plans, created triggers and functions for automatic summary calculation
+7. **20251115205411_fix_recalculate_multi_day_plan_summary.sql** - Fixed summary recalculation function
+8. **20251115211342_fix_recalculate_trigger_constraint.sql** - Fixed trigger constraint issues
 
 ### Running Migrations
 
@@ -1156,7 +1360,6 @@ psql -f supabase/migrations/YYYYMMDDHHmmss_migration_name.sql
 - Change password functionality
 - Email notifications for terms updates
 - Terms version tracking
-- Multi-day meal plans
 - Recipe database integration
 - Mobile application
 - Automatic nutrition recalculation
@@ -1196,7 +1399,6 @@ psql -f supabase/migrations/YYYYMMDDHHmmss_migration_name.sql
 - `.ai/meal-plans-implementation-plan.md` - Meal Plans Implementation
 - `.ai/dashboard-view-implementation-plan.md` - Dashboard Implementation
 - `.ai/chat-view-implementation-plan.md` - AI Chat Implementation
-- `.ai/editor-view-implementation-plan.md` - Editor Implementation
 - `.ai/export-implementation-plan.md` - Export Implementation
 - `.ai/language-implementation-plan.md` - Language Implementation
 - `.ai/dark-mode-implementation-plan.md` - Dark Mode Implementation
@@ -1219,7 +1421,7 @@ psql -f supabase/migrations/YYYYMMDDHHmmss_migration_name.sql
 
 ---
 
-**Last Updated**: 2025-01-25
+**Last Updated**: 2025-01-26
 **Version**: MVP
 **Status**: In Development
 

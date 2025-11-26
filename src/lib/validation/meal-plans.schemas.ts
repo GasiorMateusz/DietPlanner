@@ -117,3 +117,65 @@ export const exportMealPlanQuerySchema = z.object({
   preparation: z.enum(["true", "false"]).optional().default("true"),
   format: z.enum(["doc", "html"]),
 });
+
+// =================================================================
+//   MULTI-DAY MEAL PLANS SCHEMAS
+// =================================================================
+
+export const multiDayStartupFormDataSchema = mealPlanStartupDataSchema
+  .extend({
+    number_of_days: z.number().int().min(1).max(7),
+    ensure_meal_variety: z.boolean().default(true),
+    different_guidelines_per_day: z.boolean().default(false),
+    per_day_guidelines: z.string().max(2000).nullable().optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.different_guidelines_per_day && (!data.per_day_guidelines || data.per_day_guidelines.trim() === "")) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Per-day guidelines are required when 'Different guidelines per day' is enabled",
+        path: ["per_day_guidelines"],
+      });
+    }
+  });
+
+const dayPlanSchema = z.object({
+  day_number: z.number().int().min(1).max(7),
+  plan_content: mealPlanContentSchema,
+  startup_data: mealPlanStartupDataSchema,
+  name: z.string().max(255).optional(),
+});
+
+export const createMultiDayPlanSchema = z.object({
+  name: z.string().min(1).max(255),
+  source_chat_session_id: z.string().uuid(),
+  number_of_days: z.number().int().min(1).max(7),
+  common_exclusions_guidelines: z.string().max(2000).nullable().optional(),
+  common_allergens: z.array(z.string()).nullable().optional(),
+  day_plans: z.array(dayPlanSchema).min(1),
+});
+
+export const updateMultiDayPlanSchema = z.object({
+  name: z.string().min(1).max(255).optional(),
+  day_plans: z.array(dayPlanSchema).optional(),
+  common_exclusions_guidelines: z.string().max(2000).nullable().optional(),
+  common_allergens: z.array(z.string()).nullable().optional(),
+});
+
+export const listMultiDayPlansQuerySchema = z.object({
+  search: z.string().max(100).optional(),
+  sort: z.enum(["created_at", "updated_at", "name"]).optional().default("updated_at"),
+  order: z.enum(["asc", "desc"]).optional().default("desc"),
+});
+
+export const multiDayPlanIdParamSchema = z.object({
+  id: z.string().uuid(),
+});
+
+export const exportMultiDayPlanQuerySchema = z.object({
+  dailySummary: z.enum(["true", "false"]).optional().default("true"),
+  mealsSummary: z.enum(["true", "false"]).optional().default("true"),
+  ingredients: z.enum(["true", "false"]).optional().default("true"),
+  preparation: z.enum(["true", "false"]).optional().default("true"),
+  format: z.enum(["doc", "html"]),
+});

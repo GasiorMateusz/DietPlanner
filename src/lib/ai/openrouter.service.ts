@@ -1,6 +1,13 @@
 import type { AssistantChatMessage, ChatMessage } from "../../types.ts";
 
 /**
+ * Default AI model used for all conversations.
+ * This is the single source of truth for the model configuration.
+ * To change the model, update this constant only.
+ */
+export const DEFAULT_AI_MODEL = "openai/gpt-4.1-nano";
+
+/**
  * Custom error class for OpenRouter API failures.
  * Used to distinguish OpenRouter errors from other errors in error handling.
  */
@@ -122,8 +129,7 @@ export class OpenRouterService {
 
     // Set default values
     this.baseUrl = config?.baseUrl || "https://openrouter.ai/api/v1";
-    // openai/gpt-4.1-nano
-    this.defaultModel = config?.defaultModel || "openai/gpt-4.1-nano";
+    this.defaultModel = config?.defaultModel || DEFAULT_AI_MODEL;
     this.defaultHeaders = config?.defaultHeaders || {};
     this.timeout = config?.timeout || 30000;
     this.maxRetries = config?.maxRetries || 3;

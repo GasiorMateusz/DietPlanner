@@ -373,3 +373,177 @@ export interface ExportMealPlanRequest {
   content: ExportContentOptions;
   format: ExportFormat;
 }
+
+// =================================================================
+//   5. MULTI-DAY MEAL PLANS
+// =================================================================
+
+/**
+ * Strongly-typed version of the `multi_day_plans` table Row.
+ * Overrides `common_allergens` from `Json` to `string[] | null`.
+ */
+export type TypedMultiDayPlanRow = Omit<Tables<"multi_day_plans">, "common_allergens"> & {
+  common_allergens: string[] | null; // Parsed from JSON or comma-separated string
+};
+
+/**
+ * Strongly-typed version of the `multi_day_plan_days` table Row.
+ */
+export type TypedMultiDayPlanDaysRow = Tables<"multi_day_plan_days">;
+
+/**
+ * Extended startup form data for multi-day meal plans.
+ * Includes all fields from MealPlanStartupData plus multi-day specific options.
+ */
+export interface MultiDayStartupFormData extends MealPlanStartupData {
+  /** Number of days for the meal plan (1-7) */
+  number_of_days: number;
+  /** Whether to ensure meal variety across days (default: true) */
+  ensure_meal_variety: boolean;
+  /** Whether different guidelines should be applied per day (default: false) */
+  different_guidelines_per_day: boolean;
+  /** Optional guidelines to apply per day (shown when different_guidelines_per_day is true) */
+  per_day_guidelines?: string | null;
+}
+
+/**
+ * Multi-day plan data structure used in AI chat context.
+ * Represents a complete multi-day plan with all days and summary.
+ */
+export interface MultiDayPlanChatData {
+  days: {
+    day_number: number;
+    plan_content: MealPlanContent;
+    name?: string; // Optional day plan name
+  }[];
+  summary: {
+    number_of_days: number;
+    average_kcal: number;
+    average_proteins: number;
+    average_fats: number;
+    average_carbs: number;
+  };
+}
+
+/**
+ * **Command**: The request payload for creating a new multi-day meal plan.
+ * @Endpoint `POST /api/multi-day-plans`
+ */
+export interface CreateMultiDayPlanCommand {
+  name: string;
+  source_chat_session_id: string;
+  number_of_days: number;
+  common_exclusions_guidelines: string | null;
+  common_allergens: string[] | null;
+  day_plans: {
+    day_number: number;
+    plan_content: MealPlanContent;
+    startup_data: MealPlanStartupData;
+    name?: string; // Optional day plan name
+  }[];
+}
+
+/**
+ * **DTO**: The response after creating a new multi-day meal plan.
+ * @Endpoint `POST /api/multi-day-plans`
+ */
+export type CreateMultiDayPlanResponseDto = TypedMultiDayPlanRow & {
+  days: {
+    day_number: number;
+    day_plan: TypedMealPlanRow;
+  }[];
+};
+
+/**
+ * **DTO**: The response for retrieving a single multi-day meal plan.
+ * @Endpoint `GET /api/multi-day-plans/{id}`
+ */
+export type GetMultiDayPlanByIdResponseDto = TypedMultiDayPlanRow & {
+  days: {
+    day_number: number;
+    day_plan: TypedMealPlanRow;
+  }[];
+};
+
+/**
+ * **Command**: The request payload for updating an existing multi-day meal plan.
+ * @Endpoint `PUT /api/multi-day-plans/{id}`
+ */
+export interface UpdateMultiDayPlanCommand {
+  name?: string;
+  day_plans?: {
+    day_number: number;
+    plan_content: MealPlanContent;
+    startup_data: MealPlanStartupData;
+    name?: string;
+  }[];
+  common_exclusions_guidelines?: string | null;
+  common_allergens?: string[] | null;
+}
+
+/**
+ * **DTO**: The response for listing multi-day meal plans.
+ * @Endpoint `GET /api/multi-day-plans`
+ */
+export type GetMultiDayPlansResponseDto = {
+  id: string;
+  name: string;
+  number_of_days: number;
+  average_kcal: number;
+  average_proteins: number;
+  average_fats: number;
+  average_carbs: number;
+  created_at: string;
+  updated_at: string;
+}[];
+
+/**
+ * **DTO**: Represents a single multi-day plan item in the list.
+ * @Endpoint `GET /api/multi-day-plans` (Array Item)
+ */
+export interface MultiDayPlanListItemDto {
+  id: string;
+  name: string;
+  number_of_days: number;
+  average_kcal: number;
+  common_exclusions_guidelines: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+/**
+ * **Command**: The request payload for initiating a new multi-day AI chat session.
+ * @Endpoint `POST /api/ai/sessions`
+ */
+export type CreateMultiDayAiSessionCommand = MultiDayStartupFormData;
+
+/**
+ * **DTO**: The response after initiating a new multi-day AI chat session.
+ * @Endpoint `POST /api/ai/sessions`
+ */
+export interface CreateMultiDayAiSessionResponseDto {
+  session_id: string;
+  message: AssistantChatMessage;
+  prompt_count: number;
+}
+
+/**
+ * **DTO**: Complete multi-day plan view data with all days.
+ */
+export interface MultiDayPlanViewData {
+  id: string;
+  name: string;
+  number_of_days: number;
+  average_kcal: number;
+  average_proteins: number;
+  average_fats: number;
+  average_carbs: number;
+  common_exclusions_guidelines: string | null;
+  common_allergens: string[] | null;
+  days: {
+    day_number: number;
+    day_plan: TypedMealPlanRow;
+  }[];
+  created_at: string;
+  updated_at: string;
+}

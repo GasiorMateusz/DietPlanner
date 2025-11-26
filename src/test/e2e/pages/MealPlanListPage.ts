@@ -26,6 +26,13 @@ export class MealPlanListPage {
   }
 
   /**
+   * Gets the view button for a specific meal plan.
+   */
+  getViewButton(mealPlanName: string): Locator {
+    return this.getMealPlanListItem(mealPlanName).getByTestId("meal-plan-view-button").first();
+  }
+
+  /**
    * Waits for a meal plan to be visible in the list.
    */
   async waitForMealPlanVisible(mealPlanName: string, timeout = 10000): Promise<void> {
@@ -46,22 +53,51 @@ export class MealPlanListPage {
   }
 
   /**
-   * Waits for navigation to editor after clicking edit.
+   * Waits for navigation to edit page (AI chat in edit mode) after clicking edit.
    */
-  async waitForNavigationToEditor(mealPlanId?: string): Promise<void> {
+  async waitForNavigationToEditPage(mealPlanId?: string): Promise<void> {
     if (mealPlanId) {
-      await this.page.waitForURL(new RegExp(`/app/editor/${mealPlanId}`), { timeout: 10000 });
+      await this.page.waitForURL(new RegExp(`/app/edit/${mealPlanId}`), { timeout: 10000 });
     } else {
-      await this.page.waitForURL(/\/app\/editor\/[^/]+/, { timeout: 10000 });
+      await this.page.waitForURL(/\/app\/edit\/[^/]+/, { timeout: 10000 });
     }
   }
 
   /**
-   * Opens a meal plan in the editor by name.
+   * @deprecated Editor removed - use waitForNavigationToEditPage instead
    */
-  async openMealPlanInEditor(mealPlanName: string): Promise<void> {
+  async waitForNavigationToEditor(mealPlanId?: string): Promise<void> {
+    return this.waitForNavigationToEditPage(mealPlanId);
+  }
+
+  /**
+   * Clicks the view button for a specific meal plan.
+   */
+  async clickView(mealPlanName: string): Promise<void> {
+    const listItem = this.getMealPlanListItem(mealPlanName);
+    await listItem.waitFor({ state: "visible" });
+
+    const viewButton = this.getViewButton(mealPlanName);
+    await viewButton.click();
+  }
+
+  /**
+   * Waits for navigation to view page after clicking view.
+   */
+  async waitForNavigationToView(mealPlanId?: string): Promise<void> {
+    if (mealPlanId) {
+      await this.page.waitForURL(new RegExp(`/app/view/${mealPlanId}`), { timeout: 10000 });
+    } else {
+      await this.page.waitForURL(/\/app\/view\/[^/]+/, { timeout: 10000 });
+    }
+  }
+
+  /**
+   * Opens a meal plan in the view page by name.
+   */
+  async openMealPlanInView(mealPlanName: string): Promise<void> {
     await this.waitForMealPlanVisible(mealPlanName);
-    await this.clickEdit(mealPlanName);
-    await this.waitForNavigationToEditor();
+    await this.clickView(mealPlanName);
+    await this.waitForNavigationToView();
   }
 }
