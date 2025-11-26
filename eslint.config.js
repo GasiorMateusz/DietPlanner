@@ -65,6 +65,13 @@ export default tseslint.config(
   baseConfig,
   jsxA11yConfig,
   reactConfig,
+  {
+    files: ["src/test/**/*.{ts,tsx,js,jsx}"],
+    rules: {
+      "no-console": "off",
+      "@typescript-eslint/no-explicit-any": "off",
+    },
+  },
   eslintPluginAstro.configs["flat/recommended"],
   eslintPluginPrettier
 );

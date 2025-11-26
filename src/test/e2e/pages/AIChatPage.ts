@@ -37,7 +37,9 @@ export class AIChatPage {
 
     // Wait for either initializing text or the interface to appear
     // The component shows initializing text first, then the full interface
-    const initializingOrInterface = this.page.locator('[data-testid="ai-chat-initializing"], [data-testid="ai-chat-interface"]').first();
+    const initializingOrInterface = this.page
+      .locator('[data-testid="ai-chat-initializing"], [data-testid="ai-chat-interface"]')
+      .first();
     await initializingOrInterface.waitFor({ state: "visible", timeout: 30000 });
 
     // Check if initializing text is visible

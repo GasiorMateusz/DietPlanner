@@ -51,4 +51,3 @@ export function MultiDayMealPlanDisplay({ planData }: MultiDayMealPlanDisplayPro
     </div>
   );
 }
-

@@ -120,7 +120,7 @@ export class LoginPage {
             .textContent()
             .catch(() => "Unknown error");
           // Log the email used for debugging (but not the password)
-          // eslint-disable-next-line no-console
+
           console.error(`Login failed for email: ${email}`);
           throw new Error(
             `Login failed: ${errorText}. Please verify E2E_USERNAME and E2E_PASSWORD in .env.test are correct.`

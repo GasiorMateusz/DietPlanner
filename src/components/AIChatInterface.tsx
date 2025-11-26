@@ -5,14 +5,7 @@ import { Textarea } from "./ui/textarea";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Checkbox } from "./ui/checkbox";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "./ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "./ui/dialog";
 import { DailySummaryStaticDisplay } from "./DailySummaryStaticDisplay";
 import { MealCardReadOnly } from "./MealCardReadOnly";
 import { MessageItem } from "./MessageItem";
@@ -21,7 +14,13 @@ import { extractCurrentMealPlan, extractCurrentMultiDayPlan } from "../lib/utils
 import { aiChatApi } from "@/lib/api/ai-chat.client";
 import { multiDayPlansApi } from "@/lib/api/multi-day-plans.client";
 import { useAIChatForm } from "./hooks/useAIChatForm";
-import type { ChatMessage, UserChatMessage, AssistantChatMessage, MealPlanStartupData, MultiDayStartupFormData, MultiDayPlanChatData } from "../types";
+import type {
+  ChatMessage,
+  UserChatMessage,
+  AssistantChatMessage,
+  MealPlanStartupData,
+  MultiDayStartupFormData,
+} from "../types";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import type { TranslationKey } from "@/lib/i18n/types";
 import plTranslations from "@/lib/i18n/translations/pl.json";
@@ -118,6 +117,7 @@ export default function AIChatInterface({ editMode = false, existingPlanId }: AI
         isLoading: false,
       }));
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error("Error sending message:", error);
       const errorMessage = error instanceof Error ? error.message : null;
       const errorKey = error instanceof Error ? null : "chat.sendError";
@@ -180,13 +180,13 @@ export default function AIChatInterface({ editMode = false, existingPlanId }: AI
         // Get translated comment based on current language
         // Read language directly from localStorage to ensure we get the correct language
         // even if the translation context hasn't fully loaded yet
-        const currentLanguage = typeof window !== "undefined" 
-          ? (localStorage.getItem("app-language") as "en" | "pl" | null) || "en"
-          : "en";
+        const currentLanguage =
+          typeof window !== "undefined" ? (localStorage.getItem("app-language") as "en" | "pl" | null) || "en" : "en";
         // Use translations directly to avoid timing issues with translation context
         const translations = currentLanguage === "pl" ? plTranslations : enTranslations;
-        const editCommentText = translations["chat.editModeComment"] as string || 
-          (currentLanguage === "pl" 
+        const editCommentText =
+          (translations["chat.editModeComment"] as string) ||
+          (currentLanguage === "pl"
             ? "To jest aktualny {days}-dniowy plan żywieniowy. Możesz pomóc go zmodyfikować na podstawie próśb użytkownika."
             : "This is the current {days}-day meal plan. You can help modify it based on the user's requests.");
         const editComment = editCommentText.replace("{days}", existingPlan.number_of_days.toString());
@@ -267,6 +267,7 @@ export default function AIChatInterface({ editMode = false, existingPlanId }: AI
 
       sessionStorage.removeItem("mealPlanStartupData");
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error("Failed to initialize chat:", error);
       setChatState((prev) => ({
         ...prev,
@@ -276,7 +277,7 @@ export default function AIChatInterface({ editMode = false, existingPlanId }: AI
       }));
       initializationAttemptedRef.current = false;
     }
-  }, [sessionId, editMode, existingPlanId, t]);
+  }, [sessionId, editMode, existingPlanId]);
 
   useEffect(() => {
     initializeChat();
@@ -318,7 +319,9 @@ export default function AIChatInterface({ editMode = false, existingPlanId }: AI
         return;
       }
       // Show modal for multi-day plan creation
-      setPlanName(`Meal Plan - ${startupData.number_of_days} ${startupData.number_of_days === 1 ? t("startup.day") : t("startup.days")}`);
+      setPlanName(
+        `Meal Plan - ${startupData.number_of_days} ${startupData.number_of_days === 1 ? t("startup.day") : t("startup.days")}`
+      );
       setSavePlanModalOpen(true);
     } else {
       // Single-day plan - show modal
@@ -391,7 +394,7 @@ export default function AIChatInterface({ editMode = false, existingPlanId }: AI
         if (editMode && existingPlanId && !createNewPlan) {
           // Update existing plan
           const finalPlanName = providedName || planName || existingPlanName || "Meal Plan";
-          
+
           const updateCommand = {
             name: finalPlanName,
             day_plans: dayPlansData,
@@ -412,7 +415,10 @@ export default function AIChatInterface({ editMode = false, existingPlanId }: AI
           window.location.href = `/app/view/${response.id}`;
         } else {
           // Create new plan with provided name
-          const finalPlanName = providedName || planName || `Meal Plan - ${calculatedNumberOfDays} ${calculatedNumberOfDays === 1 ? t("startup.day") : t("startup.days")}`;
+          const finalPlanName =
+            providedName ||
+            planName ||
+            `Meal Plan - ${calculatedNumberOfDays} ${calculatedNumberOfDays === 1 ? t("startup.day") : t("startup.days")}`;
 
           const createCommand = {
             name: finalPlanName,
@@ -482,6 +488,7 @@ export default function AIChatInterface({ editMode = false, existingPlanId }: AI
         window.location.href = `/app/view/${response.id}`;
       }
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error(`Error ${editMode ? "updating" : "creating"} meal plan:`, error);
       const errorMessage = error instanceof Error ? error.message : null;
       const errorKey = error instanceof Error ? null : "chat.acceptError";
@@ -545,8 +552,9 @@ export default function AIChatInterface({ editMode = false, existingPlanId }: AI
         <Alert className="mb-6 border-destructive bg-destructive/10 text-destructive">
           <AlertDescription className="flex items-center justify-between gap-4">
             <span>{chatState.errorKey ? t(chatState.errorKey) : chatState.error}</span>
-            {(!sessionId || 
-              (chatState.error && (chatState.error.includes("Session not found") || chatState.error.includes("not found"))) ||
+            {(!sessionId ||
+              (chatState.error &&
+                (chatState.error.includes("Session not found") || chatState.error.includes("not found"))) ||
               chatState.errorKey === "chat.noStartupData" ||
               chatState.errorKey === "chat.noSession") && (
               <Button
@@ -571,7 +579,8 @@ export default function AIChatInterface({ editMode = false, existingPlanId }: AI
       ) : isMultiDayPlan && !currentMultiDayPlan && chatState.messageHistory.length > 0 ? (
         <Alert className="mb-6 border-yellow-500 bg-yellow-500/10 text-yellow-600 dark:text-yellow-400">
           <AlertDescription>
-            {t("chat.multiDayPlanParseError") || "Unable to display multi-day plan. The AI response may be in an incorrect format. Please try creating a new plan from the dashboard."}
+            {t("chat.multiDayPlanParseError") ||
+              "Unable to display multi-day plan. The AI response may be in an incorrect format. Please try creating a new plan from the dashboard."}
           </AlertDescription>
         </Alert>
       ) : currentMealPlan && !isMultiDayPlan ? (
@@ -668,7 +677,11 @@ export default function AIChatInterface({ editMode = false, existingPlanId }: AI
       >
         <DialogContent data-testid="save-plan-modal">
           <DialogHeader>
-            <DialogTitle>{editMode ? t("chat.savePlanModal.editTitle") || t("chat.savePlanModal.title") : t("chat.savePlanModal.title")}</DialogTitle>
+            <DialogTitle>
+              {editMode
+                ? t("chat.savePlanModal.editTitle") || t("chat.savePlanModal.title")
+                : t("chat.savePlanModal.title")}
+            </DialogTitle>
             <DialogDescription>
               {editMode
                 ? t("chat.savePlanModal.editDescription") || t("chat.savePlanModal.description")
@@ -687,6 +700,7 @@ export default function AIChatInterface({ editMode = false, existingPlanId }: AI
                 onChange={(e) => setPlanName(e.target.value)}
                 placeholder={t("chat.savePlanModal.planNamePlaceholder")}
                 disabled={isSavingPlan}
+                // eslint-disable-next-line jsx-a11y/no-autofocus
                 autoFocus
                 required
               />
@@ -706,9 +720,7 @@ export default function AIChatInterface({ editMode = false, existingPlanId }: AI
                   >
                     {t("chat.savePlanModal.createNew")}
                   </Label>
-                  <p className="text-xs text-muted-foreground">
-                    {t("chat.savePlanModal.createNewDescription")}
-                  </p>
+                  <p className="text-xs text-muted-foreground">{t("chat.savePlanModal.createNewDescription")}</p>
                 </div>
               </div>
             )}

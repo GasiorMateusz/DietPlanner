@@ -13,4 +13,3 @@ export function MultiDayPlanViewWrapper({ planId }: MultiDayPlanViewWrapperProps
     </TranslationProvider>
   );
 }
-

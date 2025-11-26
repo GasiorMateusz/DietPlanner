@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database, TablesInsert, TablesUpdate } from "../../db/database.types.ts";
+import type { Database, TablesInsert, TablesUpdate, Json } from "../../db/database.types.ts";
 import { DatabaseError, NotFoundError } from "../errors.ts";
 import type {
   CreateMultiDayPlanCommand,
@@ -77,7 +77,7 @@ export async function createMultiDayPlan(
     source_chat_session_id: command.source_chat_session_id,
     number_of_days: command.number_of_days,
     common_exclusions_guidelines: command.common_exclusions_guidelines,
-    common_allergens: command.common_allergens as any,
+    common_allergens: command.common_allergens as unknown as Json,
   };
 
   const { data: multiDayPlan, error: multiDayError } = await supabase
@@ -131,10 +131,7 @@ export async function createMultiDayPlan(
     });
 
     // Mark the meal plan as a day plan
-    const { error: updateError } = await supabase
-      .from("meal_plans")
-      .update({ is_day_plan: true })
-      .eq("id", dayPlan.id);
+    const { error: updateError } = await supabase.from("meal_plans").update({ is_day_plan: true }).eq("id", dayPlan.id);
 
     if (updateError) {
       throw new DatabaseError(`Failed to mark meal plan as day plan: ${updateError.message}`, updateError);
@@ -296,7 +293,7 @@ export async function updateMultiDayPlan(
     updatePayload.common_exclusions_guidelines = command.common_exclusions_guidelines;
   }
   if (command.common_allergens !== undefined) {
-    updatePayload.common_allergens = command.common_allergens as any;
+    updatePayload.common_allergens = command.common_allergens as unknown as Json;
   }
 
   if (Object.keys(updatePayload).length > 0) {
@@ -528,4 +525,3 @@ export async function deleteMultiDayPlan(
     throw new DatabaseError(`Failed to delete multi-day plan: ${deleteError.message}`, deleteError);
   }
 }
-

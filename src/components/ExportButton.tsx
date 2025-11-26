@@ -7,7 +7,7 @@ import { Select } from "./ui/select";
 import { Alert, AlertDescription } from "./ui/alert";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { useMultiDayPlanExport } from "./hooks/useMultiDayPlanExport";
-import type { ExportContentOptions, ExportFormat, ExportOptions } from "@/types";
+import type { ExportContentOptions, ExportFormat } from "@/types";
 
 interface ExportButtonProps {
   planId: string;
@@ -63,7 +63,7 @@ export function ExportButton({ planId }: ExportButtonProps) {
         format,
       });
       setIsModalOpen(false);
-    } catch (err) {
+    } catch {
       // Error handled by hook
     }
   }, [contentOptions, format, exportPlan, validateOptions, t]);
@@ -181,4 +181,3 @@ export function ExportButton({ planId }: ExportButtonProps) {
     </>
   );
 }
-

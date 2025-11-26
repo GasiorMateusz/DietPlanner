@@ -16,7 +16,14 @@ interface MealPlanListItemProps {
  * Displays plan name, timestamps, and action buttons.
  * Supports both single-day and multi-day plans.
  */
-export function MealPlanListItem({ mealPlan, multiDayPlan, onEdit, onView, onExport, onDelete }: MealPlanListItemProps) {
+export function MealPlanListItem({
+  mealPlan,
+  multiDayPlan,
+  onEdit,
+  onView,
+  onExport,
+  onDelete,
+}: MealPlanListItemProps) {
   const plan = multiDayPlan || mealPlan;
   if (!plan) return null;
 
@@ -47,7 +54,13 @@ export function MealPlanListItem({ mealPlan, multiDayPlan, onEdit, onView, onExp
               : undefined
           }
         />
-        <MealPlanActions mealPlanId={plan.id} onView={onView} onEdit={onEdit} onExport={onExport} onDelete={handleDelete} />
+        <MealPlanActions
+          mealPlanId={plan.id}
+          onView={onView}
+          onEdit={onEdit}
+          onExport={onExport}
+          onDelete={handleDelete}
+        />
       </div>
     </li>
   );

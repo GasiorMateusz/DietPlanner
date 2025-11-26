@@ -38,4 +38,3 @@ export function DayPlanCard({ dayNumber, planContent, dayName }: DayPlanCardProp
     </div>
   );
 }
-

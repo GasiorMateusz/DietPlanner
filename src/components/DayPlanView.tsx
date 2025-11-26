@@ -37,4 +37,3 @@ export function DayPlanView({ dayNumber, dayPlan }: DayPlanViewProps) {
     </div>
   );
 }
-

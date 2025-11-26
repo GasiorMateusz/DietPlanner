@@ -28,7 +28,7 @@ export class MultiDayPlanViewPage {
     // Use a more specific selector: find p that contains a number followed by "days" or "day"
     this.numberOfDaysText = page.locator("h1").first().locator("..").locator("p").first();
     // Day cards have "Day X" heading (h3 elements with text like "Day 1", "Day 2", etc.)
-    this.dayCards = page.locator('h3').filter({ hasText: /Day \d+/ });
+    this.dayCards = page.locator("h3").filter({ hasText: /Day \d+/ });
   }
 
   /**
@@ -126,16 +126,11 @@ export class MultiDayPlanViewPage {
     const cardCount = await this.countDayCards();
 
     if (summaryDays !== expectedDays) {
-      throw new Error(
-        `Expected plan to have ${expectedDays} days in summary, but got ${summaryDays}`
-      );
+      throw new Error(`Expected plan to have ${expectedDays} days in summary, but got ${summaryDays}`);
     }
 
     if (cardCount !== expectedDays) {
-      throw new Error(
-        `Expected ${expectedDays} day cards, but found ${cardCount}`
-      );
+      throw new Error(`Expected ${expectedDays} day cards, but found ${cardCount}`);
     }
   }
 }
-

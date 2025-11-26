@@ -82,4 +82,3 @@ export function useMultiDayPlansList(): UseMultiDayPlansListReturn {
     setSort,
   };
 }
-

@@ -14,4 +14,3 @@ export function EditButton({ planId }: EditButtonProps) {
     </Button>
   );
 }
-

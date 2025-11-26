@@ -19,7 +19,11 @@ export const multiDayPlansApi = {
    * @param order - Sort order (default: "desc")
    * @returns Array of multi-day plan list items
    */
-  async getAll(search?: string, sort = "updated_at", order: "asc" | "desc" = "desc"): Promise<GetMultiDayPlansResponseDto> {
+  async getAll(
+    search?: string,
+    sort = "updated_at",
+    order: "asc" | "desc" = "desc"
+  ): Promise<GetMultiDayPlansResponseDto> {
     const headers = await getAuthHeaders();
 
     const params = new URLSearchParams();
@@ -156,4 +160,3 @@ export const multiDayPlansApi = {
     return { blob, filename };
   },
 };
-

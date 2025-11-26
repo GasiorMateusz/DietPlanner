@@ -3,7 +3,6 @@ import type {
   ChatMessage,
   AssistantChatMessage,
   MealPlanStartupData,
-  MultiDayStartupFormData,
   MealPlanMeal,
   MealPlanContentDailySummary,
   MultiDayPlanChatData,
@@ -77,7 +76,7 @@ export function extractCurrentMultiDayPlan(messageHistory: ChatMessage[]): Multi
     // eslint-disable-next-line no-console
     console.log("[extractCurrentMultiDayPlan] Parsing message, length:", lastAssistantMessage.content.length);
     const parsed = parseJsonMultiDayPlan(lastAssistantMessage.content);
-    
+
     // eslint-disable-next-line no-console
     console.log("[extractCurrentMultiDayPlan] Parsed successfully:", {
       days_count: parsed.days.length,
@@ -104,9 +103,14 @@ export function extractCurrentMultiDayPlan(messageHistory: ChatMessage[]): Multi
     // eslint-disable-next-line no-console
     console.debug("[extractCurrentMultiDayPlan] Message preview:", messagePreview);
     // Check if it might be a single-day plan format instead
-    if (lastAssistantMessage.content.includes('"meal_plan"') && !lastAssistantMessage.content.includes('"multi_day_plan"')) {
+    if (
+      lastAssistantMessage.content.includes('"meal_plan"') &&
+      !lastAssistantMessage.content.includes('"multi_day_plan"')
+    ) {
       // eslint-disable-next-line no-console
-      console.warn("[extractCurrentMultiDayPlan] AI returned single-day format instead of multi-day format. Please create a new session.");
+      console.warn(
+        "[extractCurrentMultiDayPlan] AI returned single-day format instead of multi-day format. Please create a new session."
+      );
     }
   }
 
