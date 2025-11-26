@@ -118,7 +118,8 @@ export const GET: APIRoute = async (context) => {
       const docBuffer = await DocumentGeneratorService.generateMultiDayDoc(multiDayPlan, contentOptions, language);
       const filename = `${sanitizedFilename}.doc`;
 
-      return new Response(docBuffer as Buffer, {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return new Response(docBuffer as any, {
         status: 200,
         headers: {
           "Content-Type": "application/msword",
@@ -154,6 +155,7 @@ export const GET: APIRoute = async (context) => {
     }
 
     if (error instanceof DatabaseError) {
+      // eslint-disable-next-line no-console
       console.error("Database error:", error.message, error.originalError);
       return new Response(
         JSON.stringify({
@@ -166,6 +168,7 @@ export const GET: APIRoute = async (context) => {
       );
     }
 
+    // eslint-disable-next-line no-console
     console.error("Internal server error in export endpoint:", error);
     return new Response(
       JSON.stringify({

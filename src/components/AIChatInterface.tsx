@@ -275,7 +275,7 @@ export default function AIChatInterface({ editMode = false, existingPlanId }: AI
       }));
       initializationAttemptedRef.current = false;
     }
-  }, [sessionId, editMode, existingPlanId, t]);
+  }, [sessionId, editMode, existingPlanId]);
 
   useEffect(() => {
     initializeChat();
@@ -486,6 +486,7 @@ export default function AIChatInterface({ editMode = false, existingPlanId }: AI
         window.location.href = `/app/view/${response.id}`;
       }
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error(`Error ${editMode ? "updating" : "creating"} meal plan:`, error);
       const errorMessage = error instanceof Error ? error.message : null;
       const errorKey = error instanceof Error ? null : "chat.acceptError";
@@ -697,6 +698,8 @@ export default function AIChatInterface({ editMode = false, existingPlanId }: AI
                 onChange={(e) => setPlanName(e.target.value)}
                 placeholder={t("chat.savePlanModal.planNamePlaceholder")}
                 disabled={isSavingPlan}
+                // eslint-disable-next-line jsx-a11y/no-autofocus
+                autoFocus
                 required
               />
             </div>

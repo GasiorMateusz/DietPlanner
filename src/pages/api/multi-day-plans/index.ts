@@ -68,6 +68,7 @@ export const GET: APIRoute = async (context) => {
     }
 
     if (error instanceof DatabaseError) {
+      // eslint-disable-next-line no-console
       console.error("Database error:", error.message, error.originalError);
       return new Response(
         JSON.stringify({
@@ -80,6 +81,7 @@ export const GET: APIRoute = async (context) => {
       );
     }
 
+    // eslint-disable-next-line no-console
     console.error("Internal server error:", error);
     return new Response(
       JSON.stringify({
@@ -176,6 +178,7 @@ export const POST: APIRoute = async (context) => {
     }
 
     if (error instanceof DatabaseError) {
+      // eslint-disable-next-line no-console
       console.error("Database error:", error.message, error.originalError);
       return new Response(
         JSON.stringify({
@@ -188,6 +191,7 @@ export const POST: APIRoute = async (context) => {
       );
     }
 
+    // eslint-disable-next-line no-console
     console.error("Internal server error:", error);
     return new Response(
       JSON.stringify({

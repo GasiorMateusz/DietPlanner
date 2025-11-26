@@ -77,7 +77,7 @@ export async function createMultiDayPlan(
     source_chat_session_id: command.source_chat_session_id,
     number_of_days: command.number_of_days,
     common_exclusions_guidelines: command.common_exclusions_guidelines,
-    common_allergens: command.common_allergens as Json,
+    common_allergens: command.common_allergens as unknown as Json,
   };
 
   const { data: multiDayPlan, error: multiDayError } = await supabase
@@ -293,7 +293,7 @@ export async function updateMultiDayPlan(
     updatePayload.common_exclusions_guidelines = command.common_exclusions_guidelines;
   }
   if (command.common_allergens !== undefined) {
-    updatePayload.common_allergens = command.common_allergens as Json;
+    updatePayload.common_allergens = command.common_allergens as unknown as Json;
   }
 
   if (Object.keys(updatePayload).length > 0) {
