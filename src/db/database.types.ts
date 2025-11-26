@@ -234,6 +234,7 @@ export type Database = {
       }
       user_preferences: {
         Row: {
+          ai_model: string | null
           created_at: string
           language: string
           terms_accepted: boolean
@@ -243,6 +244,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          ai_model?: string | null
           created_at?: string
           language?: string
           terms_accepted?: boolean
@@ -252,6 +254,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          ai_model?: string | null
           created_at?: string
           language?: string
           terms_accepted?: boolean

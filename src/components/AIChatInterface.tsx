@@ -117,7 +117,6 @@ export default function AIChatInterface({ editMode = false, existingPlanId }: AI
         isLoading: false,
       }));
     } catch (error) {
-      // eslint-disable-next-line no-console
       console.error("Error sending message:", error);
       const errorMessage = error instanceof Error ? error.message : null;
       const errorKey = error instanceof Error ? null : "chat.sendError";
@@ -267,7 +266,6 @@ export default function AIChatInterface({ editMode = false, existingPlanId }: AI
 
       sessionStorage.removeItem("mealPlanStartupData");
     } catch (error) {
-      // eslint-disable-next-line no-console
       console.error("Failed to initialize chat:", error);
       setChatState((prev) => ({
         ...prev,

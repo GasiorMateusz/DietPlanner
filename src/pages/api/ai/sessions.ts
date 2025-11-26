@@ -65,13 +65,17 @@ export const POST: APIRoute = async (context) => {
     // Fetch user language preference
     const languagePreference = await UserPreferenceService.getUserLanguagePreference(user.id, supabase);
 
+    // Fetch user AI model preference
+    const aiModelPreference = await UserPreferenceService.getUserAiModelPreference(user.id, supabase);
+
     // Create the AI session
     // validation.data matches CreateAiSessionCommand (which is MealPlanStartupData)
     const responseDto = await AiSessionService.createSession(
       validation.data as CreateAiSessionCommand,
       user.id,
       supabase,
-      languagePreference.language
+      languagePreference.language,
+      aiModelPreference.model
     );
 
     return new Response(JSON.stringify(responseDto), {

@@ -464,6 +464,7 @@ function convertHistoryForOpenRouter(
  * @param userId - The authenticated user's ID
  * @param supabase - The Supabase client instance
  * @param language - The user's preferred language ("en" or "pl")
+ * @param model - Optional OpenRouter model identifier. If not provided, will use user's preference or default.
  * @returns The created session response with session ID, message, and prompt count
  * @throws {OpenRouterError} If the OpenRouter API call fails
  * @throws {Error} If the database operation fails
@@ -472,7 +473,8 @@ export async function createSession(
   command: CreateAiSessionCommand,
   userId: string,
   supabase: SupabaseClient<Database>,
-  language: LanguageCode = "en"
+  language: LanguageCode = "en",
+  model?: string
 ): Promise<CreateAiSessionResponseDto> {
   // Generate UUID for the new session
   const newSessionId = crypto.randomUUID();
@@ -506,8 +508,28 @@ export async function createSession(
     );
   }
 
-  // Call OpenRouter API
-  const assistantResponse = await OpenRouterService.getChatCompletion(apiKey, messagesForOpenRouter);
+  // Get user's AI model preference if model not provided
+  let modelToUse = model;
+  if (!modelToUse) {
+    try {
+      const { getUserAiModelPreference } = await import("../user-preferences/user-preference.service.ts");
+      const preference = await getUserAiModelPreference(userId, supabase);
+      modelToUse = preference.model;
+    } catch (error) {
+      // If fetching preference fails, use default (log warning in dev mode)
+      if (import.meta.env.DEV) {
+        // eslint-disable-next-line no-console
+        console.warn("Failed to fetch user AI model preference, using default:", error);
+      }
+      const { DEFAULT_AI_MODEL } = await import("./models.config.ts");
+      modelToUse = DEFAULT_AI_MODEL;
+    }
+  }
+
+  // Call OpenRouter API with model
+  const assistantResponse = await OpenRouterService.getChatCompletion(apiKey, messagesForOpenRouter, {
+    model: modelToUse,
+  });
 
   // Build message history for database storage
   // Store system, user, assistant for telemetry
@@ -562,6 +584,7 @@ export async function createSession(
  * @param command - The user message to send
  * @param userId - The authenticated user's ID
  * @param supabase - The Supabase client instance
+ * @param model - Optional OpenRouter model identifier. If not provided, will use user's preference or default.
  * @returns The response with session ID, assistant message, and updated prompt count
  * @throws {NotFoundError} If the session doesn't exist or doesn't belong to the user
  * @throws {OpenRouterError} If the OpenRouter API call fails
@@ -571,7 +594,8 @@ export async function sendMessage(
   sessionId: string,
   command: SendAiMessageCommand,
   userId: string,
-  supabase: SupabaseClient<Database>
+  supabase: SupabaseClient<Database>,
+  model?: string
 ): Promise<SendAiMessageResponseDto> {
   // Query session by ID (RLS will enforce user ownership)
   const { data: session, error: queryError } = await supabase
@@ -601,7 +625,27 @@ export async function sendMessage(
     );
   }
 
-  const assistantResponse = await OpenRouterService.getChatCompletion(apiKey, messagesForOpenRouter);
+  // Get user's AI model preference if model not provided
+  let modelToUse = model;
+  if (!modelToUse) {
+    try {
+      const { getUserAiModelPreference } = await import("../user-preferences/user-preference.service.ts");
+      const preference = await getUserAiModelPreference(userId, supabase);
+      modelToUse = preference.model;
+    } catch (error) {
+      // If fetching preference fails, use default (log warning in dev mode)
+      if (import.meta.env.DEV) {
+        // eslint-disable-next-line no-console
+        console.warn("Failed to fetch user AI model preference, using default:", error);
+      }
+      const { DEFAULT_AI_MODEL } = await import("./models.config.ts");
+      modelToUse = DEFAULT_AI_MODEL;
+    }
+  }
+
+  const assistantResponse = await OpenRouterService.getChatCompletion(apiKey, messagesForOpenRouter, {
+    model: modelToUse,
+  });
 
   const finalHistory: ChatMessage[] = [...updatedHistory, assistantResponse];
 

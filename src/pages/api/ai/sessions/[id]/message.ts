@@ -5,6 +5,7 @@ import { OpenRouterError } from "../../../../../lib/ai/openrouter.service.ts";
 import { sendAiMessageSchema } from "../../../../../lib/validation/ai.schemas.ts";
 import type { SendAiMessageCommand } from "../../../../../types.ts";
 import { getUserFromRequest } from "@/lib/auth/session.service.js";
+import * as UserPreferenceService from "../../../../../lib/user-preferences/user-preference.service.ts";
 
 export const prerender = false;
 
@@ -79,6 +80,9 @@ export const POST: APIRoute = async (context) => {
       );
     }
 
+    // Fetch user AI model preference
+    const aiModelPreference = await UserPreferenceService.getUserAiModelPreference(user.id, supabase);
+
     // Send the message to the AI session
     // Note: Language is determined from the stored session history (system prompt was set when session was created)
     // validation.data matches SendAiMessageCommand
@@ -86,7 +90,8 @@ export const POST: APIRoute = async (context) => {
       sessionId,
       validation.data as SendAiMessageCommand,
       user.id,
-      supabase
+      supabase,
+      aiModelPreference.model
     );
 
     return new Response(JSON.stringify(responseDto), {

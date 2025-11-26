@@ -10,7 +10,10 @@ import type {
   GetAllPreferencesResponseDto,
   UpdatePreferencesCommand,
   UpdatePreferencesResponseDto,
+  GetAiModelPreferenceResponseDto,
+  UpdateAiModelPreferenceCommand,
 } from "../../types.ts";
+import { DEFAULT_AI_MODEL } from "../../lib/ai/models.config.ts";
 
 /**
  * API client for user preferences endpoints.
@@ -55,8 +58,8 @@ export const userPreferencesApi = {
   },
 
   /**
-   * Gets all user preferences (language, theme, and terms acceptance).
-   * @returns All preferences (defaults to "en", "light", and terms_accepted: false if not set or user not authenticated)
+   * Gets all user preferences (language, theme, terms acceptance, and AI model).
+   * @returns All preferences (defaults to "en", "light", terms_accepted: false, and ai_model: null if not set or user not authenticated)
    * @throws {Error} Only for non-401 errors (network issues, etc.)
    */
   async getAllPreferences(): Promise<GetAllPreferencesResponseDto> {
@@ -64,7 +67,13 @@ export const userPreferencesApi = {
       const token = await getAuthToken();
       if (!token) {
         // User not authenticated, return defaults
-        return { language: "en", theme: "light", terms_accepted: false, terms_accepted_at: null };
+        return {
+          language: "en",
+          theme: "light",
+          terms_accepted: false,
+          terms_accepted_at: null,
+          ai_model: null,
+        };
       }
 
       const headers: HeadersInit = {
@@ -80,7 +89,13 @@ export const userPreferencesApi = {
       if (!response.ok) {
         if (response.status === 401) {
           // User not authenticated, return defaults (don't redirect here)
-          return { language: "en", theme: "light", terms_accepted: false, terms_accepted_at: null };
+          return {
+            language: "en",
+            theme: "light",
+            terms_accepted: false,
+            terms_accepted_at: null,
+            ai_model: null,
+          };
         }
         throw new Error("Failed to fetch user preferences");
       }
@@ -89,14 +104,26 @@ export const userPreferencesApi = {
     } catch (error) {
       // If getAuthToken throws or fetch fails, return defaults
       if (error instanceof Error && error.message === "Unauthorized") {
-        return { language: "en", theme: "light", terms_accepted: false, terms_accepted_at: null };
+        return {
+          language: "en",
+          theme: "light",
+          terms_accepted: false,
+          terms_accepted_at: null,
+          ai_model: null,
+        };
       }
       // For other errors, still return defaults but log in dev
       if (import.meta.env.DEV) {
         // eslint-disable-next-line no-console
         console.warn("Failed to fetch user preferences:", error);
       }
-      return { language: "en", theme: "light", terms_accepted: false, terms_accepted_at: null };
+      return {
+        language: "en",
+        theme: "light",
+        terms_accepted: false,
+        terms_accepted_at: null,
+        ai_model: null,
+      };
     }
   },
 
@@ -125,7 +152,37 @@ export const userPreferencesApi = {
   },
 
   /**
-   * Updates user preferences (language and/or theme).
+   * Gets the current user's AI model preference.
+   * @returns AI model preference (defaults to DEFAULT_AI_MODEL if not set or user not authenticated)
+   * @throws {Error} Only for non-401 errors (network issues, etc.)
+   */
+  async getAiModelPreference(): Promise<GetAiModelPreferenceResponseDto> {
+    try {
+      const allPreferences = await this.getAllPreferences();
+      return { model: allPreferences.ai_model ?? DEFAULT_AI_MODEL };
+    } catch (error) {
+      // If getAllPreferences fails, return default
+      if (import.meta.env.DEV) {
+        // eslint-disable-next-line no-console
+        console.warn("Failed to fetch AI model preference:", error);
+      }
+      return { model: DEFAULT_AI_MODEL };
+    }
+  },
+
+  /**
+   * Updates the current user's AI model preference.
+   * @param command - AI model preference update command
+   * @returns Updated AI model preference
+   * @throws {Error} If the request fails
+   */
+  async updateAiModelPreference(command: UpdateAiModelPreferenceCommand): Promise<GetAiModelPreferenceResponseDto> {
+    const allPreferences = await this.updatePreferences({ ai_model: command.model });
+    return { model: allPreferences.ai_model ?? DEFAULT_AI_MODEL };
+  },
+
+  /**
+   * Updates user preferences (language, theme, terms acceptance, and/or AI model).
    * @param command - Preferences update command (partial)
    * @returns Updated preferences
    * @throws {Error} If the request fails
